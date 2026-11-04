@@ -34,8 +34,9 @@ a production build in `dist/`; use `npm run preview` to serve that build locally
 `/devices`, `/sensors`, `/irrigation`, `/alerts`, `/history`, `/settings`.
 Unknown URLs render the 404 page. Navigation highlights the current page.
 
-Pages are scaffolding: authentication, sensor data, and hardware commands are
-not implemented. Login is a placeholder and routes are not protected yet.
+Most pages are scaffolding: real authentication, sensor data, and hardware
+commands are not implemented. Login includes validation and a clearly labeled
+demo flow; routes are not protected yet.
 Original Stitch references are stored in `../../docs/design/stitch/`.
 
 ## API configuration
@@ -51,3 +52,16 @@ Never put credentials in `VITE_*` variables: they are included in browser code.
 
 Configure the web server to serve `index.html` for application routes so that
 refreshing a URL such as `/devices` works with BrowserRouter.
+
+## Login demo (issue #6)
+
+Open `/login`. Use `demo@smartfarm.local` / `SmartFarm123!`, or click the button
+to fill the public demo credentials. Submit to navigate to `/dashboard`.
+Other credentials display an error. Email format and required fields are checked;
+the form supports keyboard submission, inline errors, password visibility, and
+a disabled loading state. No passwords or tokens are persisted. The mock
+adapter in `src/services/auth-service.ts` must be replaced with the real backend
+authentication contract in issue #7; this is not a security boundary.
+
+Run `npm test` to check login behavior and `npm run build` for production checks.
+See `../../docs/testing/issue-6-login.md` for acceptance evidence and manual QA.
