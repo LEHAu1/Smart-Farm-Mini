@@ -1,0 +1,46 @@
+@import '@fontsource/be-vietnam-pro/400.css';
+@import '@fontsource/be-vietnam-pro/500.css';
+@import '@fontsource/be-vietnam-pro/600.css';
+@import '@fontsource/be-vietnam-pro/700.css';
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Be Vietnam Pro', sans-serif;
+  --color-primary: #216348;
+  --color-canvas: #f8f9ff;
+  --color-ink: #121c2a;
+  --color-muted: #52615b;
+  --color-line: #e0e7e3;
+}
+
+@layer base {
+  body { @apply m-0 bg-canvas font-sans text-ink antialiased; }
+  a { @apply transition-colors; }
+  :focus-visible { outline: 3px solid #106493; outline-offset: 4px; }
+}
+
+@layer components {
+  .brand-icon { @apply inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary text-xl font-bold text-white; }
+  .nav-link { @apply rounded-lg px-4 py-3 text-sm font-medium text-muted hover:bg-canvas; }
+  .nav-active { @apply bg-primary/10 text-primary; }
+  .badge { @apply rounded-full bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-800; }
+  .panel { @apply rounded-2xl border border-line bg-white p-6; }
+  .eyebrow { @apply text-xs font-semibold tracking-widest text-primary; }
+  .button { @apply inline-flex items-center justify-center rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-white hover:bg-primary/90; }
+  .skip-link { @apply fixed top-3 left-3 z-50 -translate-y-24 rounded-lg bg-primary px-4 py-3 text-white focus:translate-y-0; }
+  .login-shell { @apply min-h-screen lg:grid lg:grid-cols-2; }
+  .login-story { @apply hidden flex-col justify-between overflow-hidden bg-primary p-10 text-white lg:flex xl:p-16; }
+  .login-mark { @apply flex size-10 items-center justify-center rounded-xl border border-white/30 text-xl; }
+  .login-form-side { @apply flex min-h-screen items-center justify-center bg-white px-6 py-12 sm:px-12; }
+  .login-label { @apply mb-2 block text-sm font-medium text-ink; }
+  .login-input { @apply min-h-12 w-full rounded-xl border border-line bg-white px-4 py-3 text-sm text-ink transition-colors placeholder:text-muted/70 focus:border-primary disabled:bg-canvas disabled:text-muted; }
+  .login-input[aria-invalid='true'] { @apply border-red-500 bg-red-50/30; }
+  .login-field-error { @apply mt-2 text-xs leading-5 text-red-700; }
+}
+
+.garden-art { position: relative; width: 260px; height: 200px; margin: 40px auto 0; border-bottom: 1px solid #ffffff30; }
+.garden-stem { position: absolute; bottom: 55px; left: 128px; width: 4px; height: 115px; background: #b5ddab; border-radius: 4px; }
+.garden-leaf { position: absolute; width: 78px; height: 44px; background: #93d4b3; }
+.garden-leaf-left { top: 49px; left: 51px; border-radius: 0 70px 0 70px; transform: rotate(20deg); }
+.garden-leaf-right { top: 22px; left: 131px; border-radius: 70px 0 70px 0; transform: rotate(-20deg); background: #b5ddab; }
+.garden-pot { position: absolute; bottom: 0; left: 82px; width: 96px; height: 70px; background: #d8b296; clip-path: polygon(0 0, 100% 0, 85% 100%, 15% 100%); }
