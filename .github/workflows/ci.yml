@@ -1,0 +1,101 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, master, develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend/smartfarm-web
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/smartfarm-web/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Test
+        run: npm test -- --reporter=default --reporter=junit --outputFile=test-results/junit.xml
+      - name: Typecheck and build
+        run: npm run build
+      - name: Upload test evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-test-results
+          path: frontend/smartfarm-web/test-results/
+          retention-days: 14
+          if-no-files-found: warn
+
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      DOTNET_NOLOGO: 'true'
+      DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+      - name: Restore
+        run: dotnet restore Smart_Farm_Mini.slnx
+      - name: Build
+        run: dotnet build Smart_Farm_Mini.slnx --configuration Release --no-restore
+      - name: Test
+        run: dotnet test backend/SmartFarm.UnitTests/SmartFarm.UnitTests.csproj --configuration Release --no-build --no-restore --logger "trx;LogFileName=backend.trx" --results-directory test-results/backend
+      - name: Report test count
+        if: ${{ always() }}
+        shell: python
+        run: |
+          import os
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+
+          total = executed = failed = 0
+          for report in Path('test-results/backend').glob('*.trx'):
+              root = ET.parse(report).getroot()
+              for counters in root.iter():
+                  if counters.tag.rsplit('}', 1)[-1] == 'Counters':
+                      total += int(counters.get('total', '0'))
+                      executed += int(counters.get('executed', '0'))
+                      failed += int(counters.get('failed', '0'))
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as summary:
+              summary.write(f'### Backend tests\nDiscovered: {total}; executed: {executed}; failed: {failed}.\n')
+              if executed == 0:
+                  summary.write('\nNo backend tests executed. Build success does not establish backend behavior.\n')
+          if executed == 0:
+              print('::warning::No backend tests executed; current test files are scaffolding. Add real tests as features are implemented.')
+      - name: Upload test evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-results
+          path: test-results/backend/
+          retention-days: 14
+          if-no-files-found: warn

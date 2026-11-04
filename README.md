@@ -74,6 +74,13 @@ dotnet run --project backend/SmartFarm.API/SmartFarm.API.csproj
 2. Implement the React application in `frontend/smartfarm-web/`.
 3. Start with mock data, then integrate confirmed backend APIs and SignalR events.
 
+## Contributing and CI
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for branch naming, local checks, PR review,
+and merge rules. GitHub Actions builds and tests frontend/backend on each PR.
+See [issue #9 validation](docs/testing/issue-9-ci.md) for verification evidence
+and the remaining GitHub setup steps.
+
 ## Team
 
 Smart Farm Mini Team

@@ -25,6 +25,8 @@ appsettings.Local.json
 
 # Test results
 TestResults/
+test-results/
+.ci-validation/
 coverage/
 
 # Node.js
