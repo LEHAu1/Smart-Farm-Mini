@@ -32,9 +32,21 @@ namespace SmartFarm.WebAPI.Middlewares
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi chưa được xử lý khi thực hiện request: {Method} {Path}", context.Request.Method, context.Request.Path);
+                var method = SanitizeForLog(context.Request.Method);
+                var path = SanitizeForLog(context.Request.Path.Value);
+                _logger.LogError(ex, "Lỗi chưa được xử lý khi thực hiện request: {Method} {Path}", method, path);
                 await HandleExceptionAsync(context, ex);
             }
+        }
+
+        private static string SanitizeForLog(string? input)
+        {
+            if (string.IsNullOrEmpty(input))
+            {
+                return string.Empty;
+            }
+
+            return input.Replace("\r", string.Empty).Replace("\n", string.Empty);
         }
 
         private async Task HandleExceptionAsync(HttpContext context, Exception exception)
