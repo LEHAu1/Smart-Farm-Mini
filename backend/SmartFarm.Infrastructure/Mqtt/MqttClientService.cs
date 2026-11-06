@@ -4,7 +4,7 @@ using System.Text;
 
 namespace SmartFarm.Infrastructure.Mqtt
 {
-    internal class Class1
+    internal class MqttClientService
     {
     }
 }

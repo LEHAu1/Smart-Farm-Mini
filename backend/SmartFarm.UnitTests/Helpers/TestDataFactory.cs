@@ -4,7 +4,7 @@ using System.Text;
 
 namespace SmartFarm.UnitTests.Helpers
 {
-    internal class Class1
+    internal class TestDataFactory
     {
     }
 }

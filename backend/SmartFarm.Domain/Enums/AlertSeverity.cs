@@ -4,7 +4,10 @@ using System.Text;
 
 namespace SmartFarm.Domain.Enums
 {
-    internal class AlertSeverity
+    public enum AlertSeverity
     {
+        Info = 1,
+        Warning = 2,
+        Critical = 3
     }
 }
