@@ -1,16 +1,10 @@
-using SmartFarm.Application.DTOs.Device;
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace SmartFarm.Application.Contracts.Services
 {
-    /// <summary>
-    /// Giao diện xử lý nghiệp vụ thiết bị IoT (Use Cases)
-    /// </summary>
-    public interface IDeviceService
+    internal interface IDeviceService
     {
-        Task<DeviceDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
-        Task<DeviceDto?> GetByCodeAsync(string deviceCode, CancellationToken cancellationToken = default);
-        Task<IReadOnlyList<DeviceDto>> GetAllAsync(CancellationToken cancellationToken = default);
-        Task<DeviceDto> CreateAsync(CreateDeviceRequest request, CancellationToken cancellationToken = default);
-        Task DeactivateAsync(Guid id, CancellationToken cancellationToken = default);
     }
 }

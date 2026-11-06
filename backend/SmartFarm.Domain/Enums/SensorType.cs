@@ -4,12 +4,7 @@ using System.Text;
 
 namespace SmartFarm.Domain.Enums
 {
-    public enum SensorType
+    internal class SensorType
     {
-        SoilMoisture = 1,
-        AirTemperature = 2,
-        AirHumidity = 3,
-        WaterTemperature = 4,
-        WaterLevel = 5
     }
 }

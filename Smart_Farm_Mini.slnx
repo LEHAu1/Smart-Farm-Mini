@@ -3,6 +3,5 @@
   <Project Path="backend/SmartFarm.Domain/SmartFarm.Domain.csproj" />
   <Project Path="backend/SmartFarm.Infrastructure/SmartFarm.Infrastructure.csproj" />
   <Project Path="backend/SmartFarm.UnitTests/SmartFarm.UnitTests.csproj" />
-  <Project Path="backend/SmartFarm.WebAPI/SmartFarm.WebAPI.csproj" />
+  <Project Path="backend/SmartFarm.API/SmartFarm.API.csproj" />
 </Solution>
-

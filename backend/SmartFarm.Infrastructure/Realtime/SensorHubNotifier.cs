@@ -4,7 +4,7 @@ using System.Text;
 
 namespace SmartFarm.Infrastructure.Realtime
 {
-    internal class SensorHubNotifier
+    internal class Class1
     {
     }
 }

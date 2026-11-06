@@ -4,11 +4,7 @@ using System.Text;
 
 namespace SmartFarm.Domain.Enums
 {
-    public enum CommandStatus
+    internal class CommandStatus
     {
-        Pending = 1,
-        Acknowledged = 2,
-        Completed = 3,
-        Failed = 4
     }
 }

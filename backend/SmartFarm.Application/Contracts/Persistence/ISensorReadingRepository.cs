@@ -4,7 +4,7 @@ using System.Text;
 
 namespace SmartFarm.Application.Contracts.Persistence
 {
-    internal interface ISensorReadingRepository
+    internal interface Interface2
     {
     }
 }
