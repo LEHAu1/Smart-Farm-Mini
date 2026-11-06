@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"secondary-fixed-dim":"#90cdff","tertiary":"#653400","outline":"#707973","surface":"#f8f9ff","error":"#ba1a1a","surface-bright":"#f8f9ff","surface-container":"#e6eeff","primary-container":"#216348","on-tertiary-fixed":"#2f1500","on-tertiary-container":"#ffc292","on-secondary":"#ffffff","on-tertiary":"#ffffff","on-primary":"#ffffff","secondary-fixed":"#cbe6ff","tertiary-container":"#874700","inverse-surface":"#27313f","inverse-on-surface":"#eaf1ff","on-secondary-container":"#005581","on-error-container":"#93000a","surface-dim":"#d0dbed","on-error":"#ffffff","on-secondary-fixed":"#001e31","on-surface":"#121c2a","surface-container-lowest":"#ffffff","on-primary-fixed-variant":"#075138","inverse-primary":"#93d4b3","primary-fixed":"#aef1ce","secondary":"#106493","primary":"#004b32","on-primary-fixed":"#002114","surface-container-low":"#eff4ff","secondary-container":"#8acaff","surface-tint":"#296a4e","outline-variant":"#bfc9c1","surface-variant":"#d9e3f6","surface-container-highest":"#d9e3f6","error-container":"#ffdad6","on-secondary-fixed-variant":"#004b72","on-tertiary-fixed-variant":"#6e3900","on-background":"#121c2a","surface-container-high":"#dee9fc","on-surface-variant":"#404943","on-primary-container":"#9addba","background":"#f8f9ff","tertiary-fixed":"#ffdcc3","primary-fixed-dim":"#93d4b3","tertiary-fixed-dim":"#ffb77d"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"gutter":"1rem","margin":"1rem","space-xs":"0.25rem","space-xl":"1.75rem","space-lg":"1.25rem","margin-desktop":"2rem","space-sm":"0.5rem","gutter-desktop":"1.5rem","space-md":"0.875rem"},"fontFamily":{"body-lg":["Be Vietnam Pro"],"body-md":["Be Vietnam Pro"],"headline-lg":["Be Vietnam Pro"],"label-sm":["Be Vietnam Pro"],"headline-lg-mobile":["Be Vietnam Pro"],"metric-md":["Be Vietnam Pro"],"display-lg":["Be Vietnam Pro"],"label-md":["Be Vietnam Pro"],"headline-md":["Be Vietnam Pro"],"metric-xl":["Be Vietnam Pro"]},"fontSize":{"body-lg":["16px",{"lineHeight":"24px","fontWeight":"400"}],"body-md":["14px",{"lineHeight":"20px","fontWeight":"400"}],"headline-lg":["28px",{"lineHeight":"36px","fontWeight":"700"}],"label-sm":["11px",{"lineHeight":"16px","fontWeight":"600"}],"headline-lg-mobile":["24px",{"lineHeight":"32px","fontWeight":"700"}],"metric-md":["22px",{"lineHeight":"28px","fontWeight":"700"}],"display-lg":["36px",{"lineHeight":"44px","fontWeight":"700"}],"label-md":["13px",{"lineHeight":"18px","fontWeight":"500"}],"headline-md":["20px",{"lineHeight":"28px","fontWeight":"600"}],"metric-xl":["32px",{"lineHeight":"36px","fontWeight":"700"}]}}}};</script></head><body class="bg-surface font-body-md text-on-surface"><aside class="fixed left-0 top-0 h-full w-64 bg-surface-container-lowest border-r border-surface-variant/60 z-50 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="flex flex-col"><div class="h-16 px-space-md flex items-center gap-space-sm border-b border-surface-variant/40"><img alt="Smart Farm Mini Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1WMGVXlcxKuaAc9oTNw_9nK-P3Tnki2mxYzuwLOWxrr-mQYFlwvB30MHeLF6nguHTjOJ5Ysj67XNjS8VuZfcJazxsUpQ9YSBl2b9JUpV1HnQ5B84TsCdWoGXPXupqRdQvr26On9F6T8_0hzis91dP63uQE_yUOtgn0zZhntegi2HZqTjo6lfkaL5B0aohUpRLKPzCj71VMsLA0YyHJf5pq9ETzDq-vPD5jj87hP0N4"/><div class="flex flex-col"><span class="font-headline-md text-label-md font-bold tracking-tight text-primary leading-tight">Smart Farm Mini</span><span class="font-label-sm text-label-sm text-on-surface-variant">IoT Garden OS v1.2</span></div></div><nav class="flex flex-col gap-space-xs p-space-sm mt-space-sm" data-active-classes="bg-primary-container text-on-primary font-semibold shadow-sm"><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="tong-quan" href="#"><span class="material-symbols-outlined text-xl">dashboard</span><span class="font-label-md text-label-md">Tổng quan</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="thiet-bi" href="#"><span class="material-symbols-outlined text-xl">memory</span><span class="font-label-md text-label-md">Thiết bị</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="tuoi-nuoc" href="#"><span class="material-symbols-outlined text-xl">water_drop</span><span class="font-label-md text-label-md">Tưới nước</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="lich-su-cam-bien" href="#"><span class="material-symbols-outlined text-xl">show_chart</span><span class="font-label-md text-label-md">Lịch sử cảm biến</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="canh-bao" href="#"> <div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-xl">notifications_active</span><span class="font-label-md text-label-md">Cảnh báo</span></div><span class="px-space-xs py-0.5 rounded-full bg-tertiary-container text-on-tertiary font-label-sm text-label-sm">3</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="nhat-ky-he-thong" href="#"><span class="material-symbols-outlined text-xl">terminal</span><span class="font-label-md text-label-md">Nhật ký hệ thống</span></a></nav></div><div class="p-space-sm m-space-sm rounded-lg bg-surface-container border border-surface-variant/40"><div class="flex items-center gap-space-xs"><span class="relative flex h-2.5 w-2.5"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span><span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span></span><span class="font-label-sm text-label-sm font-semibold text-primary">Broker MQTT</span></div><p class="mt-1 font-body-md text-label-sm text-on-surface-variant">Kết nối ổn định</p></div></aside><div class="pl-64"><header class="fixed top-0 left-64 right-0 h-16 bg-surface-container-lowest/90 backdrop-blur-md border-b border-surface-variant/50 shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 px-space-lg flex items-center justify-between"><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-sm bg-surface-container-low border border-surface-variant/60 rounded-lg px-space-md py-1.5 cursor-pointer hover:bg-surface-container transition-colors"><span class="text-body-md">🌱</span><span class="font-body-md text-label-md font-medium text-on-surface">Vườn ban công — ESP32-01</span><div class="flex items-center gap-1 bg-surface-container-lowest border border-outline-variant/50 px-2 py-0.5 rounded-full"><span class="w-1.5 h-1.5 rounded-full bg-primary"></span><span class="font-label-sm text-label-sm text-primary">Online</span></div><span class="material-symbols-outlined text-on-surface-variant text-body-md">expand_more</span></div></div><div class="flex items-center gap-space-lg"><div class="hidden xl:flex items-center gap-space-md border-r border-surface-variant/60 pr-space-lg"><div class="flex items-center gap-space-xs bg-surface-container-low px-space-sm py-1 rounded-md"><span class="material-symbols-outlined text-primary text-body-lg">sensors</span><span class="font-label-sm text-label-sm text-on-surface-variant">SignalR: <strong class="text-primary font-semibold">Đã kết nối</strong></span></div><div class="flex items-center gap-space-xs text-on-surface-variant"><span class="material-symbols-outlined text-body-md">schedule</span><span class="font-label-sm text-label-sm">Cập nhật 5s trước (14:32:05)</span></div></div><button class="relative p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-xl">notifications</span><span class="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-error text-on-error font-label-sm text-[10px] font-bold">2</span></button><div class="flex items-center gap-space-sm pl-space-xs"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxOgLxvuaqFm8DZ7JYmU5pArJgYf2SxNcx4rQhiulskxplsRMKedQYuH4bmyTGn51__0uzWaYNNQItTJbhjhzgqTsujfkoaThQisDWkrP5REi3r3eDplDYCiJu9Ayeh4RhPYybzdat1WtKyzwwvAeq8DAkTho2VvyHaSgeBN15YbGRHycZDywJwWh8-bTtRXW_o2m2N3-36E6L-EtEXCu691W76hF0kIF9LbGe-2g"/><div class="flex flex-col text-left"><span class="font-body-md text-label-md font-semibold text-on-surface leading-tight">Kỹ sư Hạnh D.</span><span class="font-label-sm text-label-sm text-on-surface-variant leading-none">Quản trị viên</span></div></div></div></header><main class="w-full pt-16 bg-surface min-h-screen"><div class="flex flex-col w-full">
+<!-- Content Canvas Area -->
+<div class="p-space-lg lg:p-margin-desktop flex flex-col gap-space-lg">
+<!-- Top Header & Context Description -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-space-md">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded-full bg-primary/10 text-primary font-label-sm text-label-sm uppercase tracking-wider">Telemetry Edge v1.2</span>
+<span class="text-on-surface-variant font-label-sm text-label-sm flex items-center gap-1">
+<span class="inline-block w-1.5 h-1.5 rounded-full bg-primary"></span>
+            3 trạm quan trắc đăng ký
+          </span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Danh sách &amp; Quản lý Thiết bị</h1>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-2xl">
+          Giám sát trạng thái vật lý, thông số phần cứng trạm điều khiển ESP32, độ nhạy cảm biến và rơ-le kích hoạt tưới tiêu cục bộ theo thời gian thực.
+        </p>
+</div>
+<!-- Quick Telemetry Health Metric Card Pill -->
+<div class="flex items-center gap-3 bg-surface-container-lowest p-2.5 rounded-xl shadow-sm self-start md:self-auto">
+<div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-container-low">
+<span class="material-symbols-outlined text-primary text-body-lg">memory</span>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant leading-none">Tổng MCU</span>
+<span class="font-metric-md text-label-md font-bold text-on-surface">3 Trạm ESP32</span>
+</div>
+</div>
+<div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary-container/10">
+<span class="material-symbols-outlined text-primary text-body-lg">wifi_tethering</span>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant leading-none">Mạng Mesh</span>
+<span class="font-metric-md text-label-md font-bold text-primary">66.7% Online</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Toolbar: Search, Filters, Refresh & Action CTA -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-space-md">
+<!-- Search Input & Status Tabs -->
+<div class="flex flex-col md:flex-row items-stretch md:items-center gap-space-md flex-1">
+<!-- Search Field -->
+<div class="relative min-w-[280px] max-w-md flex-1">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-body-lg pointer-events-none">search</span>
+<input class="w-full h-10 pl-10 pr-4 bg-surface-container-low rounded-lg font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/70 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all" id="deviceSearchInput" placeholder="Tìm theo tên trạm, mã ESP32, vị trí..." type="text"/>
+</div>
+<!-- Filter Chips -->
+<div class="flex items-center gap-1.5 p-1 bg-surface-container-low rounded-lg overflow-x-auto">
+<button class="filter-btn active px-3 py-1.5 rounded-md font-label-md text-label-md font-semibold bg-surface-container-lowest text-primary shadow-sm transition-all" data-filter="all" type="button">
+            Tất cả (3)
+          </button>
+<button class="filter-btn px-3 py-1.5 rounded-md font-label-md text-label-md font-medium text-on-surface-variant hover:text-on-surface transition-all flex items-center gap-1.5" data-filter="online" type="button">
+<span class="w-2 h-2 rounded-full bg-primary inline-block"></span>
+            Online (2)
+          </button>
+<button class="filter-btn px-3 py-1.5 rounded-md font-label-md text-label-md font-medium text-on-surface-variant hover:text-on-surface transition-all flex items-center gap-1.5" data-filter="offline" type="button">
+<span class="w-2 h-2 rounded-full bg-error inline-block"></span>
+            Offline (1)
+          </button>
+</div>
+</div>
+<!-- Quick Action Buttons -->
+<div class="flex items-center gap-space-sm self-end xl:self-auto">
+<button class="h-10 px-3.5 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface flex items-center gap-2 font-label-md text-label-md transition-colors" id="btnRefreshList" title="Làm mới danh sách &amp; ping lại" type="button">
+<span class="material-symbols-outlined text-body-lg" id="refreshIcon">sync</span>
+<span class="hidden sm:inline">Làm mới</span>
+</button>
+<button class="h-10 px-4 rounded-lg bg-primary-container text-on-primary hover:bg-primary shadow-sm flex items-center gap-2 font-label-md text-label-md font-semibold transition-all transform active:scale-95" id="btnOpenAddModal" type="button">
+<span class="material-symbols-outlined text-body-lg">add_circle</span>
+<span>Thêm thiết bị mới</span>
+</button>
+</div>
+</div>
+<!-- Master-Detail 2-Column Responsive Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start">
+<!-- LEFT COLUMN: Master List / Device Registry (7 Cols on LG) -->
+<div class="lg:col-span-7 flex flex-col gap-space-md">
+<div class="flex items-center justify-between px-1">
+<span class="font-label-md text-label-md font-semibold text-on-surface-variant uppercase tracking-wider">Danh sách trạm phần cứng</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant" id="deviceCountLabel">Hiển thị 3/3 thiết bị</span>
+</div>
+<!-- Device Cards List (Card / Row Hybrid) -->
+<div class="flex flex-col gap-3" id="deviceListContainer">
+<!-- ITEM 1: ESP32-01 (Selected / Active) -->
+<div class="device-card active group relative bg-surface-container-lowest rounded-xl p-space-md shadow-sm transition-all cursor-pointer ring-2 ring-primary bg-gradient-to-r from-primary/5 via-transparent to-transparent" data-device-id="ESP32-01" data-device-status="online">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm pb-space-sm">
+<div class="flex items-start gap-3">
+<div class="w-10 h-10 rounded-xl bg-primary-container/10 flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-metric-md">potted_plant</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2 flex-wrap">
+<span class="font-headline-md text-body-lg font-bold text-on-surface">Vườn ban công</span>
+<span class="px-2 py-0.5 rounded font-label-sm text-label-sm bg-surface-container-high text-primary font-bold">ESP32-01</span>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+                      Online
+                    </span>
+</div>
+<span class="font-body-md text-label-md text-on-surface-variant flex items-center gap-1 mt-0.5">
+<span class="material-symbols-outlined text-body-md">location_on</span>
+                    Ban công tầng 3 — Giàn leo phía Nam
+                  </span>
+</div>
+</div>
+<!-- Radio / Selection Indicator -->
+<div class="flex items-center gap-2 self-end sm:self-center">
+<span class="px-2.5 py-1 rounded-full bg-primary text-on-primary font-label-sm text-label-sm font-semibold flex items-center gap-1 shadow-sm">
+<span class="material-symbols-outlined text-sm">check_circle</span>
+                  Đang chọn
+                </span>
+</div>
+</div>
+<!-- Specs Grid Row Inside Card -->
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-space-sm mt-space-xs bg-surface-container-low/60 p-2.5 rounded-lg">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Wi-Fi RSSI</span>
+<span class="font-label-md text-label-md font-semibold text-on-surface flex items-center gap-1">
+<span class="material-symbols-outlined text-sm text-primary">wifi</span>
+                  -62 dBm
+                </span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Độ trễ Ping</span>
+<span class="font-label-md text-label-md font-semibold text-primary">42 ms</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Lần liên lạc cuối</span>
+<span class="font-label-md text-label-md font-medium text-on-surface">5 giây trước</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Tải Relay</span>
+<span class="font-label-md text-label-md font-semibold text-on-surface-variant">Bơm chờ (OFF)</span>
+</div>
+</div>
+<!-- Quick Action Toolbar Footer -->
+<div class="flex items-center justify-between pt-3 mt-2">
+<div class="flex items-center gap-2 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-sm">sensors</span>
+                3 cảm biến tích cực
+              </div>
+<div class="flex items-center gap-1">
+<button class="btn-select-device p-1.5 rounded-lg text-primary hover:bg-primary-container/15 font-label-sm text-label-sm font-semibold flex items-center gap-1" data-target="ESP32-01" type="button">
+<span class="material-symbols-outlined text-body-md">visibility</span>
+<span>Xem chi tiết</span>
+</button>
+<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container font-label-sm text-label-sm flex items-center gap-1" title="Cấu hình thông số" type="button">
+<span class="material-symbols-outlined text-body-md">tune</span>
+</button>
+<button class="p-1.5 rounded-lg text-on-surface-variant hover:text-error hover:bg-error-container/20 font-label-sm text-label-sm flex items-center gap-1" title="Khởi động lại MCU từ xa" type="button">
+<span class="material-symbols-outlined text-body-md">restart_alt</span>
+</button>
+</div>
+</div>
+</div>
+<!-- ITEM 2: ESP32-02 (Hydroponics - Online) -->
+<div class="device-card group relative bg-surface-container-lowest rounded-xl p-space-md shadow-sm transition-all cursor-pointer hover:shadow-md" data-device-id="ESP32-02" data-device-status="online">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm pb-space-sm">
+<div class="flex items-start gap-3">
+<div class="w-10 h-10 rounded-xl bg-secondary-container/30 flex items-center justify-center text-secondary shrink-0">
+<span class="material-symbols-outlined text-metric-md">water_drop</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2 flex-wrap">
+<span class="font-headline-md text-body-lg font-bold text-on-surface">Khu rau thủy canh</span>
+<span class="px-2 py-0.5 rounded font-label-sm text-label-sm bg-surface-container-high text-on-surface font-semibold">ESP32-02</span>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                      Online
+                    </span>
+</div>
+<span class="font-body-md text-label-md text-on-surface-variant flex items-center gap-1 mt-0.5">
+<span class="material-symbols-outlined text-body-md">location_on</span>
+                    Sân thượng phía Đông — Ống PVC trụ đứng
+                  </span>
+</div>
+</div>
+<!-- Select Button -->
+<button class="btn-select-device text-on-surface-variant group-hover:text-primary px-3 py-1 rounded-lg bg-surface-container-low font-label-sm text-label-sm font-medium transition-all" data-target="ESP32-02" type="button">
+                Chọn trạm này
+              </button>
+</div>
+<!-- Specs Grid Row Inside Card -->
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-space-sm mt-space-xs bg-surface-container-low/60 p-2.5 rounded-lg">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Wi-Fi RSSI</span>
+<span class="font-label-md text-label-md font-semibold text-on-surface flex items-center gap-1">
+<span class="material-symbols-outlined text-sm text-tertiary">wifi_2_bar</span>
+                  -85 dBm
+                </span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Độ trễ Ping</span>
+<span class="font-label-md text-label-md font-semibold text-on-surface">118 ms</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Lần liên lạc cuối</span>
+<span class="font-label-md text-label-md font-medium text-on-surface">1 phút trước</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Tải Relay</span>
+<span class="font-label-md text-label-md font-semibold text-secondary">Bơm sục khí ON</span>
+</div>
+</div>
+<!-- Card Actions -->
+<div class="flex items-center justify-between pt-3 mt-2">
+<div class="flex items-center gap-2 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-sm">sensors</span>
+                2 cảm biến (EC dinh dưỡng &amp; Mực nước)
+              </div>
+<div class="flex items-center gap-1">
+<button class="btn-select-device p-1.5 rounded-lg text-primary hover:bg-primary-container/15 font-label-sm text-label-sm font-semibold flex items-center gap-1" data-target="ESP32-02" type="button">
+<span class="material-symbols-outlined text-body-md">visibility</span>
+<span>Xem</span>
+</button>
+<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container" title="Cấu hình" type="button">
+<span class="material-symbols-outlined text-body-md">tune</span>
+</button>
+<button class="p-1.5 rounded-lg text-on-surface-variant hover:text-error hover:bg-error-container/20" title="Khởi động lại" type="button">
+<span class="material-symbols-outlined text-body-md">restart_alt</span>
+</button>
+</div>
+</div>
+</div>
+<!-- ITEM 3: ESP32-03 (Strawberry Nursery - OFFLINE) -->
+<div class="device-card group relative bg-surface-container-lowest rounded-xl p-space-md shadow-sm transition-all cursor-pointer hover:shadow-md opacity-90" data-device-id="ESP32-03" data-device-status="offline">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm pb-space-sm">
+<div class="flex items-start gap-3">
+<div class="w-10 h-10 rounded-xl bg-error-container/40 flex items-center justify-center text-error shrink-0">
+<span class="material-symbols-outlined text-metric-md">cloud_off</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2 flex-wrap">
+<span class="font-headline-md text-body-lg font-bold text-on-surface">Vườn ươm dâu tây</span>
+<span class="px-2 py-0.5 rounded font-label-sm text-label-sm bg-surface-container-high text-on-surface font-semibold">ESP32-03</span>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+                      Offline (Mất mạng)
+                    </span>
+</div>
+<span class="font-body-md text-label-md text-on-surface-variant flex items-center gap-1 mt-0.5">
+<span class="material-symbols-outlined text-body-md">location_on</span>
+                    Giàn treo hướng Nam — Khay ươm nhiệt độ thấp
+                  </span>
+</div>
+</div>
+<!-- Select Button -->
+<button class="btn-select-device text-on-surface-variant group-hover:text-primary px-3 py-1 rounded-lg bg-surface-container-low font-label-sm text-label-sm font-medium transition-all" data-target="ESP32-03" type="button">
+                Xem chẩn đoán
+              </button>
+</div>
+<!-- Specs Grid Row Inside Card -->
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-space-sm mt-space-xs bg-error-container/10 p-2.5 rounded-lg">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Wi-Fi RSSI</span>
+<span class="font-label-md text-label-md font-semibold text-error flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">signal_wifi_bad</span>
+                  Mất sóng
+                </span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Mất kết nối từ</span>
+<span class="font-label-md text-label-md font-semibold text-error">4 giờ trước</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Thời điểm cuối</span>
+<span class="font-label-md text-label-md font-medium text-on-surface-variant">10:32 Sáng nay</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Cơ chế an toàn</span>
+<span class="font-label-md text-label-md font-semibold text-error">Đã ngắt Relay</span>
+</div>
+</div>
+<!-- Card Actions -->
+<div class="flex items-center justify-between pt-3 mt-2">
+<div class="flex items-center gap-2 text-error font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-sm">warning</span>
+                Yêu cầu kiểm tra nguồn cấp vật lý 5V adapter
+              </div>
+<div class="flex items-center gap-1">
+<button class="btn-select-device p-1.5 rounded-lg text-primary hover:bg-primary-container/15 font-label-sm text-label-sm font-semibold flex items-center gap-1" data-target="ESP32-03" type="button">
+<span class="material-symbols-outlined text-body-md">manage_search</span>
+<span>Chẩn đoán</span>
+</button>
+<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container" title="Cấu hình lại IP" type="button">
+<span class="material-symbols-outlined text-body-md">settings_suggest</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Pagination / Summary Bar -->
+<div class="flex items-center justify-between px-2 py-1 text-on-surface-variant font-label-sm text-label-sm">
+<span>Hỗ trợ giao thức: MQTT v3.1.1 over WebSockets (SSL/TLS 8883)</span>
+<span class="flex items-center gap-1 text-primary">
+<span class="material-symbols-outlined text-sm">verified</span>
+            Auto-reconnect Daemon: Active
+          </span>
+</div>
+</div>
+<!-- RIGHT COLUMN: Detail Panel (Active Device Detail) (5 Cols on LG) -->
+<div class="lg:col-span-5 flex flex-col gap-space-md">
+<!-- Panel Card Container -->
+<div class="bg-surface-container-lowest rounded-xl shadow-md p-space-lg flex flex-col gap-space-lg sticky top-20">
+<!-- Panel Header -->
+<div class="flex items-start justify-between gap-space-md pb-space-sm border-b-0">
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="inline-block w-2.5 h-2.5 rounded-full bg-primary animate-ping"></span>
+<span class="font-label-sm text-label-sm font-bold uppercase tracking-wider text-primary">Chi tiết phần cứng trạm</span>
+</div>
+<h2 class="font-headline-md text-headline-md font-bold text-on-surface mt-1" id="detailDeviceTitle">
+                Vườn ban công — ESP32-01
+              </h2>
+<div class="flex items-center gap-2 mt-1 flex-wrap">
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-surface-container-high text-on-surface-variant font-mono">MAC: 24:6F:28:9A:C4:12</span>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-surface-container-high text-on-surface-variant font-mono">IP: 192.168.1.105</span>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-primary/10 text-primary font-semibold">FW v1.2.4-prod</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded-xl bg-primary-container/10 flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-headline-md">memory</span>
+</div>
+</div>
+<!-- Micro Hardware Telemetry Indicators -->
+<div class="grid grid-cols-3 gap-2">
+<div class="bg-surface-container-low p-2.5 rounded-lg flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Nguồn DC</span>
+<span class="font-metric-md text-label-md font-bold text-primary mt-0.5 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">bolt</span>
+                5.02V Ổn định
+              </span>
+</div>
+<div class="bg-surface-container-low p-2.5 rounded-lg flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Nhiệt SoC ESP32</span>
+<span class="font-metric-md text-label-md font-bold text-on-surface mt-0.5">38.5°C</span>
+</div>
+<div class="bg-surface-container-low p-2.5 rounded-lg flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Free Heap RAM</span>
+<span class="font-metric-md text-label-md font-bold text-on-surface mt-0.5">184 KB</span>
+</div>
+</div>
+<!-- Connected Sensors Section -->
+<div class="flex flex-col gap-2.5">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md font-bold text-on-surface flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-body-lg">sensors</span>
+                Cảm biến kết nối trực tiếp (3)
+              </span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Tần suất mẫu: 5s/lần</span>
+</div>
+<!-- Sensor 1: Soil Moisture Capacitive -->
+<div class="bg-surface-container-low/70 rounded-xl p-3 flex items-center justify-between gap-space-sm hover:bg-surface-container-low transition-colors">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-surface-container-lowest flex items-center justify-center text-primary shadow-sm shrink-0">
+<span class="material-symbols-outlined text-body-lg">grass</span>
+</div>
+<div class="flex flex-col">
+<span class="font-body-md text-body-md font-semibold text-on-surface leading-tight">Độ ẩm đất điện dung v1.2</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Chân ADC: GPIO34 (A0) • Trở kháng 10kΩ</span>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-metric-md text-headline-md font-bold text-primary tabular-nums">42%</span>
+<span class="font-label-sm text-label-sm text-primary font-semibold">Tối ưu (Bình thường)</span>
+</div>
+</div>
+<!-- Sensor 2: DHT22 Air Temp/Humidity -->
+<div class="bg-surface-container-low/70 rounded-xl p-3 flex items-center justify-between gap-space-sm hover:bg-surface-container-low transition-colors">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-surface-container-lowest flex items-center justify-center text-secondary shadow-sm shrink-0">
+<span class="material-symbols-outlined text-body-lg">device_thermostat</span>
+</div>
+<div class="flex flex-col">
+<span class="font-body-md text-body-md font-semibold text-on-surface leading-tight">Cảm biến DHT22 không khí</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Giao tiếp Digital 1-Wire: GPIO04</span>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-metric-md text-headline-md font-bold text-on-surface tabular-nums">29.4°C</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Ẩm độ: 71% RH</span>
+</div>
+</div>
+<!-- Sensor 3: DS18B20 Waterproof Probe -->
+<div class="bg-surface-container-low/70 rounded-xl p-3 flex items-center justify-between gap-space-sm hover:bg-surface-container-low transition-colors">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-surface-container-lowest flex items-center justify-center text-tertiary shadow-sm shrink-0">
+<span class="material-symbols-outlined text-body-lg">thermostat</span>
+</div>
+<div class="flex flex-col">
+<span class="font-body-md text-body-md font-semibold text-on-surface leading-tight">DS18B20 Đầu dò nhiệt đất</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">OneWire Dallas: GPIO15</span>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-metric-md text-headline-md font-bold text-on-surface tabular-nums">27.8°C</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Độ trễ: ±0.1°C</span>
+</div>
+</div>
+</div>
+<!-- Actuator & Pump Relay Control Section -->
+<div class="flex flex-col gap-space-sm pt-2">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md font-bold text-on-surface flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-body-lg">power_settings_new</span>
+                Bộ truyền động &amp; Relay Chấp hành
+              </span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface font-label-sm text-label-sm">Optocoupler 10A</span>
+</div>
+<div class="bg-surface-container-low rounded-xl p-3.5 flex flex-col gap-3">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-lg bg-surface-container-lowest flex items-center justify-center text-on-surface-variant shadow-sm" id="relayIconContainer">
+<span class="material-symbols-outlined text-body-lg" id="relayIcon">water_pump</span>
+</div>
+<div class="flex flex-col">
+<span class="font-body-md text-body-md font-bold text-on-surface">Relay Kênh 1 — Bơm mini 12V DC</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">GPIO12 • Sẵn sàng nhận lệnh từ xa</span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm font-semibold text-on-surface-variant" id="relayStatusText">Đang TẮT</span>
+<button class="w-11 h-6 rounded-full bg-outline-variant/60 flex items-center p-0.5 transition-colors cursor-pointer" id="toggleRelay" title="Bật/Tắt Relay thủ công" type="button">
+<div class="w-5 h-5 rounded-full bg-surface-container-lowest shadow-sm transform transition-transform" id="relayToggleThumb"></div>
+</button>
+</div>
+</div>
+<!-- Interactive Test Button with Timer -->
+<div class="flex flex-col sm:flex-row items-center justify-between gap-2 pt-2 border-t-0">
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">info</span>
+                  Kiểm tra lưu lượng van từ xa không ảnh hưởng lịch tưới
+                </span>
+<button class="w-full sm:w-auto px-3.5 py-1.5 rounded-lg bg-surface-container-highest hover:bg-primary hover:text-on-primary text-on-surface font-label-md text-label-md font-semibold transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-95" id="btnTestPump5s" type="button">
+<span class="material-symbols-outlined text-body-md">play_arrow</span>
+<span id="testPumpBtnLabel">Kích hoạt thử nghiệm 5s</span>
+</button>
+</div>
+<!-- Offline Safety Note Box (Shown conditionally if device is offline) -->
+<div class="hidden p-3 rounded-lg bg-error-container/40 text-on-error-container flex items-start gap-2.5" id="offlineSafetyWarning">
+<span class="material-symbols-outlined text-error text-body-lg mt-0.5 shrink-0">shield</span>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold text-error">Chế độ khóa an toàn phần cứng (Fail-Safe)</span>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-0.5">
+                    Dữ liệu đã cũ (Cache 4 giờ trước). Thao tác gửi lệnh tưới và kích hoạt rơ-le đã bị vô hiệu hóa tự động để bảo vệ an toàn phần cứng và chống tràn nước.
+                  </p>
+</div>
+</div>
+</div>
+</div>
+<!-- Activity & Sync Logs Mini Feed -->
+<div class="flex flex-col gap-2 pt-1">
+<span class="font-label-md text-label-md font-bold text-on-surface flex items-center gap-1.5">
+<span class="material-symbols-outlined text-body-lg text-on-surface-variant">history</span>
+              Nhật ký truyền tin &amp; NTP gần nhất
+            </span>
+<div class="flex flex-col gap-1.5 font-mono text-label-sm text-label-sm bg-surface-container-low/50 p-2.5 rounded-lg">
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary inline-block"></span>
+                  MQTT PUB: garden/esp32-01/telemetry
+                </span>
+<span class="text-on-surface">14:32:05 (Vừa xong)</span>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary inline-block"></span>
+                  NTP SYNC: time.google.com (UTC+7)
+                </span>
+<span class="text-on-surface">14:00:00 (Thành công)</span>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary inline-block"></span>
+                  Wi-Fi BSSID: AP_SmartFarm_5G (Ch. 6)
+                </span>
+<span class="text-on-surface">-62 dBm (Tốt)</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- MODAL: Thêm thiết bị IoT mới (Dialog Overlay) -->
+<div aria-labelledby="modalAddTitle" aria-modal="true" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-inverse-surface/40 backdrop-blur-sm opacity-0 pointer-events-none transition-all duration-300" id="modalAddDevice" role="dialog">
+<!-- Modal Container -->
+<div class="bg-surface-container-lowest rounded-2xl shadow-xl max-w-xl w-full max-h-[942px] overflow-y-auto transform scale-95 transition-all duration-300" id="modalAddContent">
+<!-- Modal Header -->
+<div class="p-space-lg flex items-start justify-between border-b border-surface-variant/40">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-metric-md">add_circle</span>
+<h3 class="font-headline-md text-headline-md font-bold text-on-surface" id="modalAddTitle">
+              Thêm thiết bị IoT mới
+            </h3>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">
+            Cấu hình trạm ESP32 mới vào hệ thống quản lý vườn thông minh (Dữ liệu đề xuất cho prototype).
+          </p>
+</div>
+<button class="p-1 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" id="btnCloseModal" title="Đóng modal" type="button">
+<span class="material-symbols-outlined text-headline-md">close</span>
+</button>
+</div>
+<!-- Modal Body Form -->
+<form class="p-space-lg flex flex-col gap-space-md" id="formAddDevice" onsubmit="event.preventDefault();">
+<!-- Field 1: Device Name -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md font-semibold text-on-surface" for="inputDevName">
+            Tên gợi nhớ thiết bị <span class="text-error">*</span>
+</label>
+<input class="h-10 px-3.5 bg-surface-container-low rounded-lg font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all" id="inputDevName" placeholder="VD: Vườn hoa hồng sân trước, Giàn dưa leo tầng 2..." required="" type="text" value="Vườn hoa hồng sân trước"/>
+</div>
+<!-- Row: MAC ID & Location -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
+<!-- Hardware ID -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md font-semibold text-on-surface" for="inputDevId">
+              Mã ESP32 / Chip ID <span class="text-error">*</span>
+</label>
+<input class="h-10 px-3.5 font-mono bg-surface-container-low rounded-lg font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all" id="inputDevId" placeholder="VD: ESP32-04_A8B3" required="" type="text" value="ESP32-04_A8B3"/>
+</div>
+<!-- Location -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md font-semibold text-on-surface" for="inputLocation">
+              Vị trí lắp đặt <span class="text-error">*</span>
+</label>
+<input class="h-10 px-3.5 bg-surface-container-low rounded-lg font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all" id="inputLocation" placeholder="VD: Ban công tầng 2, Vườn sau..." required="" type="text" value="Sân trước — Cụm chậu đất nung"/>
+</div>
+</div>
+<!-- Field: MQTT Topic Prefix -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md font-semibold text-on-surface" for="inputMqttTopic">
+            Broker MQTT Topic tiền tố <span class="text-error">*</span>
+</label>
+<div class="relative">
+<input class="w-full h-10 px-3.5 font-mono bg-surface-container-low rounded-lg font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all" id="inputMqttTopic" required="" type="text" value="smartfarm/esp32-04/"/>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-body-md">lock</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Mặc định mã hóa TLS 8883, sử dụng tài khoản xác thực đã lưu trong hệ thống.</span>
+</div>
+<!-- Sensors Selection Checklist -->
+<div class="flex flex-col gap-2 pt-1">
+<span class="font-label-md text-label-md font-semibold text-on-surface">
+            Cụm cảm biến gắn kèm phần cứng
+          </span>
+<div class="flex flex-col gap-2">
+<label class="flex items-center gap-3 p-2.5 rounded-lg bg-surface-container-low hover:bg-surface-container cursor-pointer transition-colors">
+<input checked="" class="w-4 h-4 rounded text-primary focus:ring-primary accent-primary" type="checkbox"/>
+<div class="flex flex-col">
+<span class="font-body-md text-body-md font-medium text-on-surface">Cảm biến độ ẩm đất điện dung v1.2</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Chống ăn mòn, ngõ ra ADC Analog GPIO34</span>
+</div>
+</label>
+<label class="flex items-center gap-3 p-2.5 rounded-lg bg-surface-container-low hover:bg-surface-container cursor-pointer transition-colors">
+<input checked="" class="w-4 h-4 rounded text-primary focus:ring-primary accent-primary" type="checkbox"/>
+<div class="flex flex-col">
+<span class="font-body-md text-body-md font-medium text-on-surface">DHT22 — Cảm biến nhiệt độ &amp; độ ẩm không khí</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Chính xác cao ±0.5°C, bus Digital GPIO04</span>
+</div>
+</label>
+<label class="flex items-center gap-3 p-2.5 rounded-lg bg-surface-container-low hover:bg-surface-container cursor-pointer transition-colors">
+<input class="w-4 h-4 rounded text-primary focus:ring-primary accent-primary" type="checkbox"/>
+<div class="flex flex-col">
+<span class="font-body-md text-body-md font-medium text-on-surface">DS18B20 — Đầu dò kim loại chống nước</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Đo trực tiếp rễ cây, giao thức OneWire GPIO15</span>
+</div>
+</label>
+</div>
+</div>
+<!-- Modal Footer Actions -->
+<div class="flex items-center justify-end gap-space-sm pt-space-md border-t border-surface-variant/40 mt-2">
+<button class="h-10 px-4 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface font-label-md text-label-md font-medium transition-colors" id="btnCancelModal" type="button">
+            Hủy bỏ
+          </button>
+<button class="h-10 px-5 rounded-lg bg-primary-container text-on-primary hover:bg-primary font-label-md text-label-md font-semibold shadow-sm transition-all flex items-center gap-2" id="btnSaveNewDevice" type="submit">
+<span class="material-symbols-outlined text-body-md">wifi_find</span>
+<span>Lưu &amp; Kết nối thử nghiệm</span>
+</button>
+</div>
+</form>
+</div>
+</div>
+<!-- Interactive JavaScript micro-engine -->
+<script>
+    (function initDeviceManager() {
+      // Elements
+      const openModalBtn = document.getElementById('btnOpenAddModal');
+      const closeModalBtn = document.getElementById('btnCloseModal');
+      const cancelModalBtn = document.getElementById('btnCancelModal');
+      const modal = document.getElementById('modalAddDevice');
+      const modalContent = document.getElementById('modalAddContent');
+      const searchInput = document.getElementById('deviceSearchInput');
+      const filterBtns = document.querySelectorAll('.filter-btn');
+      const deviceCards = document.querySelectorAll('.device-card');
+      const deviceCountLabel = document.getElementById('deviceCountLabel');
+      const refreshBtn = document.getElementById('btnRefreshList');
+      const refreshIcon = document.getElementById('refreshIcon');
+
+      // Right detail elements
+      const detailTitle = document.getElementById('detailDeviceTitle');
+      const testPumpBtn = document.getElementById('btnTestPump5s');
+      const testPumpLabel = document.getElementById('testPumpBtnLabel');
+      const toggleRelayBtn = document.getElementById('toggleRelay');
+      const relayThumb = document.getElementById('relayToggleThumb');
+      const relayStatusText = document.getElementById('relayStatusText');
+      const relayIconContainer = document.getElementById('relayIconContainer');
+      const relayIcon = document.getElementById('relayIcon');
+      const offlineWarning = document.getElementById('offlineSafetyWarning');
+
+      let currentSelectedId = 'ESP32-01';
+      let relayIsOn = false;
+      let pumpCountdownInterval = null;
+
+      // Mock Data Details for Switching
+      const deviceDetailsDB = {
+        'ESP32-01': {
+          title: 'Vườn ban công — ESP32-01',
+          status: 'online',
+          mac: '24:6F:28:9A:C4:12',
+          ip: '192.168.1.105',
+          firmware: 'FW v1.2.4-prod'
+        },
+        'ESP32-02': {
+          title: 'Khu rau thủy canh — ESP32-02',
+          status: 'online',
+          mac: '24:6F:28:B1:00:FF',
+          ip: '192.168.1.106',
+          firmware: 'FW v1.2.4-prod'
+        },
+        'ESP32-03': {
+          title: 'Vườn ươm dâu tây — ESP32-03',
+          status: 'offline',
+          mac: '24:6F:28:11:77:8A',
+          ip: '192.168.1.107 (Unreachable)',
+          firmware: 'FW v1.2.2-legacy'
+        }
+      };
+
+      // Modal Open/Close Logic
+      function openModal() {
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+        modal.classList.add('opacity-100');
+        modalContent.classList.remove('scale-95');
+        modalContent.classList.add('scale-100');
+      }
+
+      function closeModal() {
+        modal.classList.add('opacity-0', 'pointer-events-none');
+        modal.classList.remove('opacity-100');
+        modalContent.classList.add('scale-95');
+        modalContent.classList.remove('scale-100');
+      }
+
+      if (openModalBtn) openModalBtn.addEventListener('click', openModal);
+      if (closeModalBtn) closeModalBtn.addEventListener('click', closeModal);
+      if (cancelModalBtn) cancelModalBtn.addEventListener('click', closeModal);
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+      });
+
+      // Form Save Micro-Interaction
+      const form = document.getElementById('formAddDevice');
+      if (form) {
+        form.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const saveBtn = document.getElementById('btnSaveNewDevice');
+          const originalText = saveBtn.innerHTML;
+          saveBtn.innerHTML = '<span class="material-symbols-outlined animate-spin text-body-md">progress_activity</span> Đang kiểm tra MQTT...';
+          saveBtn.disabled = true;
+
+          setTimeout(() => {
+            saveBtn.innerHTML = '<span class="material-symbols-outlined text-body-md">check</span> Đã kết nối thành công!';
+            setTimeout(() => {
+              saveBtn.innerHTML = originalText;
+              saveBtn.disabled = false;
+              closeModal();
+              // Trigger refresh toast simulation
+              simulateRefresh();
+            }, 800);
+          }, 1200);
+        });
+      }
+
+      // Device Selection Logic
+      function selectDevice(deviceId) {
+        currentSelectedId = deviceId;
+        const info = deviceDetailsDB[deviceId] || deviceDetailsDB['ESP32-01'];
+
+        // Update list styling
+        deviceCards.forEach(card => {
+          if (card.dataset.deviceId === deviceId) {
+            card.classList.add('ring-2', 'ring-primary', 'bg-gradient-to-r', 'from-primary/5', 'via-transparent', 'to-transparent');
+          } else {
+            card.classList.remove('ring-2', 'ring-primary', 'bg-gradient-to-r', 'from-primary/5', 'via-transparent', 'to-transparent');
+          }
+        });
+
+        // Update Right Detail Panel Title
+        if (detailTitle) {
+          detailTitle.textContent = info.title;
+        }
+
+        // Handle Online vs Offline Safety
+        if (info.status === 'offline') {
+          if (offlineWarning) offlineWarning.classList.remove('hidden');
+          if (testPumpBtn) {
+            testPumpBtn.disabled = true;
+            testPumpBtn.classList.add('opacity-40', 'cursor-not-allowed');
+          }
+          if (toggleRelayBtn) {
+            toggleRelayBtn.disabled = true;
+            toggleRelayBtn.classList.add('opacity-40', 'cursor-not-allowed');
+          }
+          setRelayState(false);
+        } else {
+          if (offlineWarning) offlineWarning.classList.add('hidden');
+          if (testPumpBtn) {
+            testPumpBtn.disabled = false;
+            testPumpBtn.classList.remove('opacity-40', 'cursor-not-allowed');
+          }
+          if (toggleRelayBtn) {
+            toggleRelayBtn.disabled = false;
+            toggleRelayBtn.classList.remove('opacity-40', 'cursor-not-allowed');
+          }
+        }
+      }
+
+      // Event delegation for card clicks
+      deviceCards.forEach(card => {
+        card.addEventListener('click', (e) => {
+          const deviceId = card.dataset.deviceId;
+          selectDevice(deviceId);
+        });
+      });
+
+      // Filter Tabs Handling
+      filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          filterBtns.forEach(b => {
+            b.classList.remove('bg-surface-container-lowest', 'text-primary', 'shadow-sm', 'font-semibold');
+            b.classList.add('text-on-surface-variant', 'font-medium');
+          });
+          btn.classList.add('bg-surface-container-lowest', 'text-primary', 'shadow-sm', 'font-semibold');
+          btn.classList.remove('text-on-surface-variant', 'font-medium');
+
+          const filterVal = btn.dataset.filter;
+          let visibleCount = 0;
+
+          deviceCards.forEach(card => {
+            const status = card.dataset.deviceStatus;
+            const matchesSearch = card.innerText.toLowerCase().includes(searchInput.value.toLowerCase().trim());
+            const matchesFilter = (filterVal === 'all') || (filterVal === status);
+
+            if (matchesFilter && matchesSearch) {
+              card.classList.remove('hidden');
+              visibleCount++;
+            } else {
+              card.classList.add('hidden');
+            }
+          });
+
+          if (deviceCountLabel) {
+            deviceCountLabel.textContent = `Hiển thị ${visibleCount}/3 thiết bị`;
+          }
+        });
+      });
+
+      // Search Filter Handling
+      if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+          const term = e.target.value.toLowerCase().trim();
+          let visibleCount = 0;
+          const activeFilter = document.querySelector('.filter-btn.bg-surface-container-lowest')?.dataset.filter || 'all';
+
+          deviceCards.forEach(card => {
+            const matchesSearch = card.innerText.toLowerCase().includes(term);
+            const status = card.dataset.deviceStatus;
+            const matchesFilter = (activeFilter === 'all') || (activeFilter === status);
+
+            if (matchesSearch && matchesFilter) {
+              card.classList.remove('hidden');
+              visibleCount++;
+            } else {
+              card.classList.add('hidden');
+            }
+          });
+
+          if (deviceCountLabel) {
+            deviceCountLabel.textContent = `Hiển thị ${visibleCount}/3 thiết bị`;
+          }
+        });
+      }
+
+      // Refresh Button Animation
+      function simulateRefresh() {
+        if (!refreshIcon) return;
+        refreshIcon.classList.add('animate-spin');
+        refreshBtn.disabled = true;
+
+        setTimeout(() => {
+          refreshIcon.classList.remove('animate-spin');
+          refreshBtn.disabled = false;
+        }, 800);
+      }
+
+      if (refreshBtn) {
+        refreshBtn.addEventListener('click', simulateRefresh);
+      }
+
+      // Relay State Management
+      function setRelayState(isOn) {
+        relayIsOn = isOn;
+        if (relayIsOn) {
+          toggleRelayBtn.classList.remove('bg-outline-variant/60');
+          toggleRelayBtn.classList.add('bg-secondary');
+          relayThumb.classList.add('translate-x-5');
+          relayStatusText.textContent = 'ĐANG BẬT';
+          relayStatusText.classList.remove('text-on-surface-variant');
+          relayStatusText.classList.add('text-secondary', 'font-bold');
+          relayIconContainer.classList.add('bg-secondary', 'text-on-secondary');
+          relayIconContainer.classList.remove('text-on-surface-variant');
+        } else {
+          toggleRelayBtn.classList.add('bg-outline-variant/60');
+          toggleRelayBtn.classList.remove('bg-secondary');
+          relayThumb.classList.remove('translate-x-5');
+          relayStatusText.textContent = 'Đang TẮT';
+          relayStatusText.classList.remove('text-secondary', 'font-bold');
+          relayStatusText.classList.add('text-on-surface-variant');
+          relayIconContainer.classList.remove('bg-secondary', 'text-on-secondary');
+          relayIconContainer.classList.add('text-on-surface-variant');
+        }
+      }
+
+      if (toggleRelayBtn) {
+        toggleRelayBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          setRelayState(!relayIsOn);
+        });
+      }
+
+      // Test Pump 5s Micro Interaction
+      if (testPumpBtn) {
+        testPumpBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (pumpCountdownInterval) return;
+
+          setRelayState(true);
+          let timeLeft = 5;
+          testPumpBtn.classList.add('bg-secondary', 'text-on-secondary');
+          testPumpLabel.textContent = `Đang chạy: ${timeLeft}s`;
+
+          pumpCountdownInterval = setInterval(() => {
+            timeLeft--;
+            if (timeLeft > 0) {
+              testPumpLabel.textContent = `Đang chạy: ${timeLeft}s`;
+            } else {
+              clearInterval(pumpCountdownInterval);
+              pumpCountdownInterval = null;
+              setRelayState(false);
+              testPumpBtn.classList.remove('bg-secondary', 'text-on-secondary');
+              testPumpLabel.textContent = 'Kích hoạt thử nghiệm 5s';
+            }
+          }, 1000);
+        });
+      }
+
+      // Initial Selection
+      selectDevice('ESP32-01');
+    })();
+  </script>
+</div></main></div></body></html>
