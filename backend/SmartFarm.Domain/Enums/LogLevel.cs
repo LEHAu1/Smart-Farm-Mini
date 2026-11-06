@@ -4,7 +4,12 @@ using System.Text;
 
 namespace SmartFarm.Domain.Enums
 {
-    internal class LogLevel
+    public enum LogLevel
     {
+        Debug = 1,
+        Information = 2,
+        Warning = 3,
+        Error = 4,
+        Critical = 5
     }
 }

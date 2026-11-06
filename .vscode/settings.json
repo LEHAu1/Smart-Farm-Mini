@@ -1,0 +1,8 @@
+{
+  "dotnetAcquisitionExtension.existingDotnetPath": [
+    {
+      "extensionId": "ms-mssql.mssql",
+      "path": "C:\\Program Files\\dotnet\\dotnet.exe"
+    }
+  ]
+}

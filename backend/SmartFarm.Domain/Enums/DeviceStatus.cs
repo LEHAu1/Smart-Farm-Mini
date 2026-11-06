@@ -4,7 +4,10 @@ using System.Text;
 
 namespace SmartFarm.Domain.Enums
 {
-    internal class DeviceStatus
+    public enum DeviceStatus
     {
+        Offline = 1,
+        Online = 2,
+        Maintenance = 3
     }
 }

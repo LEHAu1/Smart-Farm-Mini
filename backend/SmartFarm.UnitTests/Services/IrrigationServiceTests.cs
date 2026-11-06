@@ -4,7 +4,7 @@ using System.Text;
 
 namespace SmartFarm.UnitTests.Services
 {
-    internal class Class4
+    internal class IrrigationServiceTests
     {
     }
 }

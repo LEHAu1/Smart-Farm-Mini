@@ -4,7 +4,7 @@ using System.Text;
 
 namespace SmartFarm.UnitTests.Validators
 {
-    internal class Class1
+    internal class IrrigationRuleValidatorTests
     {
     }
 }
