@@ -4,7 +4,7 @@ using System.Text;
 
 namespace SmartFarm.Infrastructure.Logging
 {
-    internal class DatabaseLogService
+    internal class Class1
     {
     }
 }

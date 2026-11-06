@@ -4,7 +4,7 @@ using System.Text;
 
 namespace SmartFarm.UnitTests.Domain
 {
-    internal class SensorReadingTests
+    internal class Class2
     {
     }
 }

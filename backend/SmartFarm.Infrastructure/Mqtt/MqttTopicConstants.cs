@@ -4,7 +4,7 @@ using System.Text;
 
 namespace SmartFarm.Infrastructure.Mqtt
 {
-    internal class MqttTopicConstants
+    internal class Class3
     {
     }
 }

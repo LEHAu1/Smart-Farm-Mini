@@ -2,10 +2,6 @@
 
 Date: 2026-11-04 (Asia/Ho_Chi_Minh).
 
-Update 2026-11-06: develop now includes JWT backend endpoints. The frontend
-still uses the labeled demo adapter; integrating the real API remains separate.
-References below to missing backend authentication describe the original run.
-
 ## Scope
 
 Responsive Vietnamese login UI, styled consistently with Smart Farm Mini.
