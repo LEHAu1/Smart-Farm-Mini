@@ -9,7 +9,7 @@
 
 ## 1. Giới thiệu dự án (Introduction)
 
-**Smart Farm Mini** là giải pháp IoT ứng dụng thực tế nhằm giám sát các chỉ số sinh trưởng và tự động hóa quá trình tưới tiêu cho một chậu cây cảnh/cây trồng thông minh. 
+**Smart Farm Mini** là giải pháp IoT ứng dụng thực tế nhằm giám sát các chỉ số sinh trưởng và tự động hóa quá trình tưới tiêu cho một chậu cây cảnh/cây trồng thông minh.
 
 Dự án kết hợp giữa phần cứng nhúng biên (**ESP32** với cơ chế bảo vệ **Edge Safety**), truyền thông không đồng bộ (**MQTT**), nền tảng xử lý dữ liệu backend hiệu năng cao (**ASP.NET Core Web API**, **Entity Framework Core**, **SQL Server**), truyền thông thời gian thực (**SignalR**) và giao diện bảng điều khiển trực quan (**React + TypeScript**).
 
@@ -139,7 +139,7 @@ Smart-Farm-Mini/
 
 Trước khi tiến hành cài đặt và chạy hệ thống, đảm bảo máy tính đã cài đặt các công cụ sau:
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) (Kiểm tra bằng lệnh `dotnet --version` $\ge$ 10.0.x).
-- [Node.js](https://nodejs.org/) (Phiên bản LTS 20.x hoặc 22.x).
+- [Node.js](https://nodejs.org/) (Phiên bản 24.x; tối thiểu 22.12.0).
 - [Microsoft SQL Server](https://www.microsoft.com/en-us/sql-server/sql-server-downloads) (2019/2022 Local, Express hoặc Docker container).
 - [Git](https://git-scm.com/) (Hỗ trợ Git Bash trên Windows).
 - Một MQTT Broker nội bộ (Ví dụ: [EMQX](https://www.emqx.io/) hoặc [Mosquitto](https://mosquitto.org/)).
@@ -158,7 +158,7 @@ git clone https://github.com/LEHAu1/Smart-Farm-Mini.git
 cd Smart-Farm-Mini
 
 # 3. Kiểm tra các nhánh và chuyển sang nhánh phát triển
-git checkout feature/backend-setup
+git checkout develop
 ```
 
 ---
@@ -191,10 +191,7 @@ git checkout feature/backend-setup
 
 ### 10.1 Khôi phục gói thư viện và biên dịch
 ```bash
-# Di chuyển vào thư mục backend
-cd backend
-
-# Khôi phục dependencies và biên dịch
+# Từ thư mục gốc repository: khôi phục dependencies và biên dịch
 dotnet restore Smart_Farm_Mini.slnx
 dotnet build Smart_Farm_Mini.slnx
 ```
@@ -202,7 +199,7 @@ dotnet build Smart_Farm_Mini.slnx
 ### 10.2 Khởi chạy Web API
 ```bash
 # Di chuyển vào thư mục Web API
-cd SmartFarm.WebAPI
+cd backend/SmartFarm.WebAPI
 
 # Chạy ứng dụng
 dotnet run
@@ -258,7 +255,7 @@ develop (Integration Branch)
 
 1. **Chuẩn bị trước khi tạo PR:**
    - Đảm bảo nhánh làm việc đã đồng bộ với nhánh cha (`git pull origin develop`).
-   - Mã nguồn phải biên dịch thành công không có lỗi (`cd backend && dotnet build`).
+   - Mã nguồn phải biên dịch thành công không có lỗi (`dotnet build Smart_Farm_Mini.slnx`).
    - Toàn bộ unit tests hiện có phải vượt qua 100% (`dotnet test`).
    - Không chứa commit rác, không commit secret hay file cấu hình cá nhân.
 
@@ -281,7 +278,7 @@ develop (Integration Branch)
    - Chuẩn hóa Domain Layer (Entities, Enums, Constants, Exceptions).
 
    ## 🧪 Bằng chứng kiểm thử (Verification)
-   - [x] Đã chạy `dotnet build backend/Smart_Farm_Mini.slnx` thành công 100%.
+   - [x] Đã chạy `dotnet build Smart_Farm_Mini.slnx` thành công 100%.
    - [x] Endpoint `GET /health` trả về HTTP 200 {"status":"Healthy"}.
    - [x] Swagger UI hiển thị đầy đủ tài liệu API tại `/swagger`.
    ```
@@ -295,3 +292,7 @@ develop (Integration Branch)
 ## 14. Đội ngũ phát triển (Authors & Contributors)
 
 Dự án được xây dựng và duy trì bởi nhóm kỹ sư **Smart Farm Mini Team**. Mọi đóng góp xin vui lòng gửi qua GitHub Pull Request.
+
+## CI và quy trình đóng góp
+
+Xem [CONTRIBUTING.md](CONTRIBUTING.md) để biết quy trình review, merge và cách bật bảo vệ nhánh. Workflow CI kiểm tra frontend/backend trên mỗi PR. Bằng chứng local: [issue #9](docs/testing/issue-9-ci.md).

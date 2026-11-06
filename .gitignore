@@ -102,3 +102,7 @@ pnpm-debug.log*
 ehthumbs.db
 Thumbs.db
 [Dd]esktop.ini
+
+# CI reports and isolated dependency validation
+test-results/
+.ci-validation/
