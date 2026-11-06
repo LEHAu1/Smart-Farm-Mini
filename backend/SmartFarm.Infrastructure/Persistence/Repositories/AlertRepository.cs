@@ -4,7 +4,7 @@ using System.Text;
 
 namespace SmartFarm.Infrastructure.Persistence.Repositories
 {
-    internal class Class6
+    internal class AlertRepository
     {
     }
 }

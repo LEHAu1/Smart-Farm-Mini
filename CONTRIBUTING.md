@@ -59,8 +59,9 @@ Hai job độc lập dùng Node.js 24 và .NET SDK 10.0.x trên Ubuntu.
 - Backend: restore, Release build và test xUnit.
 - Báo cáo test được lưu thành artifact trong 14 ngày, kể cả khi job thất bại
   nếu báo cáo đã được sinh ra. Mở Actions → lần chạy → Artifacts để tải về.
-- Backend hiện chưa có test thực sự. CI hiển thị số test và cảnh báo khi không
-  có test được thực thi; trạng thái xanh không chứng minh nghiệp vụ đã đúng.
+- Backend có test domain, device service và token. CI hiển thị số test và cảnh
+  báo nếu không có test được thực thi; trạng thái xanh không thay thế kiểm tra
+  mức độ bao phủ nghiệp vụ.
 - CI này không triển khai ứng dụng, chạy SQL Server/MQTT hoặc test phần cứng.
 - Không sử dụng path filters để các check bắt buộc luôn được tạo cho mỗi PR.
 

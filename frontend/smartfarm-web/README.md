@@ -34,7 +34,7 @@ a production build in `dist/`; use `npm run preview` to serve that build locally
 `/devices`, `/sensors`, `/irrigation`, `/alerts`, `/history`, `/settings`.
 Unknown URLs render the 404 page. Navigation highlights the current page.
 
-Most pages are scaffolding: real authentication, sensor data, and hardware
+Most pages are scaffolding: backend authentication integration, sensor data, and hardware
 commands are not implemented. Login includes validation and a clearly labeled
 demo flow; routes are not protected yet.
 Original Stitch references are stored in `../../docs/design/stitch/`.
@@ -44,7 +44,7 @@ Original Stitch references are stored in `../../docs/design/stitch/`.
 Copy `.env.example` to `.env.local` if configuration is needed and restart Vite.
 `VITE_API_BASE_URL` defaults to `http://localhost:5205`, matching the backend HTTP
 launch profile. `src/services/api-client.ts` exports a shared Axios instance
-with a 15-second timeout. Endpoint contracts are not assumed. For direct
+with a 15-second timeout. The backend now provides /api/Auth/login and related auth endpoints; the frontend still uses the demo adapter. For direct
 cross-origin calls the backend must allow the frontend origin through CORS.
 Never put credentials in `VITE_*` variables: they are included in browser code.
 

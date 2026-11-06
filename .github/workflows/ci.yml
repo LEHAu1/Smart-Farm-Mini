@@ -90,7 +90,7 @@ jobs:
               if executed == 0:
                   summary.write('\nNo backend tests executed. Build success does not establish backend behavior.\n')
           if executed == 0:
-              print('::warning::No backend tests executed; current test files are scaffolding. Add real tests as features are implemented.')
+              print('::warning::No backend tests executed. Check test discovery and the generated test report.')
       - name: Upload test evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@v4

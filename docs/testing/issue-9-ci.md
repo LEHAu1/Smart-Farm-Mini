@@ -2,6 +2,10 @@
 
 Ngày kiểm tra: 04/11/2026 (Asia/Ho_Chi_Minh).
 
+Lưu ý 06/11/2026: đã tích hợp backend từ origin/develop (fe17e41), có test
+domain/service/token và API JWT. Kết quả 0 test dưới đây là bằng chứng lịch sử
+trước khi merge; xem phần kiểm tra sau merge ở cuối tài liệu.
+
 ## Thay đổi
 
 - `.github/workflows/ci.yml`: hai job Frontend và Backend, chạy trên PR,
@@ -63,3 +67,17 @@ Các kiểm tra frontend dùng thư mục ứng dụng đã khôi phục và đ�
 Chưa push, tạo PR hoặc thay đổi cài đặt bảo vệ nhánh trong tác vụ này. Bằng chứng
 local không thay thế kết quả chạy GitHub Actions và không có nghĩa backend đã
 có độ bao phủ kiểm thử nghiệp vụ.
+
+## Kiểm tra sau merge develop — 06/11/2026
+
+- Tích hợp `origin/develop` tại `fe17e41`, giữ project API tại
+  `backend/SmartFarm.WebAPI/` theo solution mới.
+- Giải quyết xung đột `.gitignore`, README gốc và README frontend; giữ cấu hình
+  CI, quy trình PR, Login demo và tài liệu backend mới.
+- `dotnet restore Smart_Farm_Mini.slnx`: đạt.
+- Backend Release build: đạt, 0 warning / 0 error.
+- Backend test: 32 đạt, 0 lỗi, 0 bỏ qua; báo cáo TRX được cập nhật.
+- Frontend: 5 test đạt; TypeScript và Vite production build thành công.
+- Frontend chưa gọi API JWT thật; bộ kiểm tra backend chưa chứng minh kết nối
+  SQL Server, MQTT hoặc toàn bộ luồng đăng nhập end-to-end.
+- Chưa push hoặc xác minh workflow trên runner GitHub trong lần kiểm tra này.
