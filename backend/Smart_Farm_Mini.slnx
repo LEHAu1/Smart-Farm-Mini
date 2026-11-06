@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="SmartFarm.Application/SmartFarm.Application.csproj" />
+  <Project Path="SmartFarm.Domain/SmartFarm.Domain.csproj" />
+  <Project Path="SmartFarm.Infrastructure/SmartFarm.Infrastructure.csproj" />
+  <Project Path="SmartFarm.UnitTests/SmartFarm.UnitTests.csproj" />
+  <Project Path="SmartFarm.WebAPI/SmartFarm.WebAPI.csproj" />
+</Solution>
