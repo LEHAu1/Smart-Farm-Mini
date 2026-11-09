@@ -6,6 +6,7 @@ namespace SmartFarm.Application.DTOs.Sensor
     {
         public Guid Id { get; init; }
         public Guid DeviceId { get; init; }
+        public Guid? MessageId { get; init; }
         public SensorType SensorType { get; init; }
         public string SensorTypeName => SensorType.ToString();
         public decimal Value { get; init; }

@@ -52,11 +52,17 @@ namespace SmartFarm.Infrastructure.Persistence.Configurations
             builder.HasOne<Device>()
                 .WithMany()
                 .HasForeignKey(r => r.DeviceId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
             // Index cho lấy quy tắc đang hoạt động của thiết bị
             builder.HasIndex(r => new { r.DeviceId, r.IsEnabled })
                 .HasDatabaseName("IX_IrrigRules_DeviceId_IsEnabled");
+
+            // Filtered Unique Index: Mỗi thiết bị chỉ có tối đa 1 quy tắc tưới đang BẬT (IsEnabled = 1)
+            builder.HasIndex(r => r.DeviceId)
+                .IsUnique()
+                .HasFilter("[IsEnabled] = 1")
+                .HasDatabaseName("IX_IrrigRules_OneActivePerDevice");
 
             // CHECK constraints phản ánh Domain validation
             builder.ToTable(t =>
@@ -65,8 +71,11 @@ namespace SmartFarm.Infrastructure.Persistence.Configurations
                     "CK_IrrigRules_TargetGtThreshold",
                     "[TargetMoisture] > [MoistureThreshold]");
                 t.HasCheckConstraint(
+                    "CK_IrrigRules_MoistureRange",
+                    "[MoistureThreshold] >= 0 AND [MoistureThreshold] <= 100 AND [TargetMoisture] >= 0 AND [TargetMoisture] <= 100");
+                t.HasCheckConstraint(
                     "CK_IrrigRules_MaxDuration",
-                    "[MaxDurationSeconds] > 0");
+                    "[MaxDurationSeconds] > 0 AND [MaxDurationSeconds] <= 300");
                 t.HasCheckConstraint(
                     "CK_IrrigRules_MinInterval",
                     "[MinIntervalMinutes] >= 0");

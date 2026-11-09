@@ -1,8 +1,10 @@
 -- ==============================================================================
--- SMART FARM MINI — DATABASE DDL SCHEMA SCRIPT (v2.0)
+-- SMART FARM MINI — DATABASE DDL SCHEMA SCRIPT (v2.1 Production-Ready)
 -- RDBMS: Microsoft SQL Server (2019/2022)
 -- Database Name: SmartFarmMiniDb
 -- Schema: 13 Tables (4 Identity UserContext, 1 RefreshTokens, 8 Domain)
+-- Bao gồm đầy đủ: Idempotent MQTT MessageId, Strict Check Constraints,
+-- Filtered Unique Indexes (chống conflict tưới), và Bảo vệ lịch sử (No Action Delete).
 -- ==============================================================================
 
 USE [master];
@@ -184,6 +186,7 @@ GO
 
 -- ------------------------------------------------------------------------------
 -- BẢNG 7: SensorReadings (Dữ liệu thô cảm biến - lưu 90 ngày)
+-- Thêm MessageId chống duplicate từ MQTT reconnect, ON DELETE NO ACTION bảo vệ lịch sử
 -- ------------------------------------------------------------------------------
 IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'SensorReadings' AND type = 'U')
 BEGIN
@@ -191,6 +194,7 @@ BEGIN
     (
         [Id]             UNIQUEIDENTIFIER NOT NULL DEFAULT NEWID(),
         [DeviceId]       UNIQUEIDENTIFIER NOT NULL,
+        [MessageId]      UNIQUEIDENTIFIER NULL, -- Idempotency MQTT packet ID
         [SensorType]     TINYINT          NOT NULL, -- 1=SoilMoisture, 2=AirTemp, 3=AirHum, 4=WaterTemp, 5=WaterLevel
         [Value]          DECIMAL(10, 2)   NOT NULL,
         [Unit]           NVARCHAR(20)     NOT NULL,
@@ -199,9 +203,11 @@ BEGIN
 
         CONSTRAINT [PK_SensorReadings] PRIMARY KEY CLUSTERED ([Id] ASC),
         CONSTRAINT [FK_SensorReadings_Devices_DeviceId] FOREIGN KEY ([DeviceId])
-            REFERENCES [dbo].[Devices] ([Id]) ON DELETE CASCADE
+            REFERENCES [dbo].[Devices] ([Id]) ON DELETE NO ACTION,
+        CONSTRAINT [CK_SensorReadings_ReceivedAfterRecorded] CHECK ([ReceivedAtUtc] >= [RecordedAtUtc])
     );
 
+    CREATE UNIQUE NONCLUSTERED INDEX [IX_SensorReadings_MessageId_SensorType] ON [dbo].[SensorReadings] ([MessageId] ASC, [SensorType] ASC) WHERE [MessageId] IS NOT NULL;
     CREATE NONCLUSTERED INDEX [IX_SensorReadings_DeviceId_RecordedAt] ON [dbo].[SensorReadings] ([DeviceId] ASC, [RecordedAtUtc] DESC);
     CREATE NONCLUSTERED INDEX [IX_SensorReadings_SensorType_RecordedAt] ON [dbo].[SensorReadings] ([SensorType] ASC, [RecordedAtUtc] DESC);
 END
@@ -209,6 +215,7 @@ GO
 
 -- ------------------------------------------------------------------------------
 -- BẢNG 8: SensorReadingAggregates (Dữ liệu tổng hợp theo giờ - lưu vĩnh viễn)
+-- Bổ sung CHECK SampleCount > 0, MinValue <= AvgValue <= MaxValue, SensorType 1..5
 -- ------------------------------------------------------------------------------
 IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'SensorReadingAggregates' AND type = 'U')
 BEGIN
@@ -227,7 +234,10 @@ BEGIN
 
         CONSTRAINT [PK_SensorReadingAggregates] PRIMARY KEY CLUSTERED ([Id] ASC),
         CONSTRAINT [FK_SensorReadingAggregates_Devices_DeviceId] FOREIGN KEY ([DeviceId])
-            REFERENCES [dbo].[Devices] ([Id]) ON DELETE CASCADE
+            REFERENCES [dbo].[Devices] ([Id]) ON DELETE NO ACTION,
+        CONSTRAINT [CK_SensorAgg_SampleCount] CHECK ([SampleCount] > 0),
+        CONSTRAINT [CK_SensorAgg_Values] CHECK ([MinValue] <= [AvgValue] AND [AvgValue] <= [MaxValue]),
+        CONSTRAINT [CK_SensorAgg_SensorType] CHECK ([SensorType] BETWEEN 1 AND 5)
     );
 
     CREATE UNIQUE NONCLUSTERED INDEX [IX_SensorAgg_Device_Type_Hour] ON [dbo].[SensorReadingAggregates] ([DeviceId] ASC, [SensorType] ASC, [HourBucket] ASC);
@@ -236,6 +246,7 @@ GO
 
 -- ------------------------------------------------------------------------------
 -- BẢNG 9: IrrigationRules (Quy tắc tưới tự động)
+-- Bổ sung CHECK độ ẩm 0..100, MaxDuration 1..300s, Unique Filtered Index 1 active rule/device
 -- ------------------------------------------------------------------------------
 IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'IrrigationRules' AND type = 'U')
 BEGIN
@@ -255,18 +266,21 @@ BEGIN
 
         CONSTRAINT [PK_IrrigationRules] PRIMARY KEY CLUSTERED ([Id] ASC),
         CONSTRAINT [FK_IrrigationRules_Devices_DeviceId] FOREIGN KEY ([DeviceId])
-            REFERENCES [dbo].[Devices] ([Id]) ON DELETE CASCADE,
+            REFERENCES [dbo].[Devices] ([Id]) ON DELETE NO ACTION,
         CONSTRAINT [CK_IrrigRules_TargetGtThreshold] CHECK ([TargetMoisture] > [MoistureThreshold]),
-        CONSTRAINT [CK_IrrigRules_MaxDuration] CHECK ([MaxDurationSeconds] > 0),
+        CONSTRAINT [CK_IrrigRules_MoistureRange] CHECK ([MoistureThreshold] >= 0 AND [MoistureThreshold] <= 100 AND [TargetMoisture] >= 0 AND [TargetMoisture] <= 100),
+        CONSTRAINT [CK_IrrigRules_MaxDuration] CHECK ([MaxDurationSeconds] > 0 AND [MaxDurationSeconds] <= 300),
         CONSTRAINT [CK_IrrigRules_MinInterval] CHECK ([MinIntervalMinutes] >= 0)
     );
 
+    CREATE UNIQUE NONCLUSTERED INDEX [IX_IrrigRules_OneActivePerDevice] ON [dbo].[IrrigationRules] ([DeviceId] ASC) WHERE [IsEnabled] = 1;
     CREATE NONCLUSTERED INDEX [IX_IrrigRules_DeviceId_IsEnabled] ON [dbo].[IrrigationRules] ([DeviceId] ASC, [IsEnabled] ASC);
 END
 GO
 
 -- ------------------------------------------------------------------------------
 -- BẢNG 10: IrrigationLogs (Lịch sử các phiên tưới cây)
+-- Bổ sung CHECK thời gian, Unique Filtered Index chỉ 1 phiên tưới InProgress/device
 -- ------------------------------------------------------------------------------
 IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'IrrigationLogs' AND type = 'U')
 BEGIN
@@ -286,9 +300,13 @@ BEGIN
 
         CONSTRAINT [PK_IrrigationLogs] PRIMARY KEY CLUSTERED ([Id] ASC),
         CONSTRAINT [FK_IrrigationLogs_Devices_DeviceId] FOREIGN KEY ([DeviceId])
-            REFERENCES [dbo].[Devices] ([Id]) ON DELETE CASCADE
+            REFERENCES [dbo].[Devices] ([Id]) ON DELETE NO ACTION,
+        CONSTRAINT [CK_IrrigLogs_DurationNonNegative] CHECK ([DurationSeconds] IS NULL OR [DurationSeconds] >= 0),
+        CONSTRAINT [CK_IrrigLogs_CompletedAfterStarted] CHECK ([CompletedAtUtc] IS NULL OR [CompletedAtUtc] >= [StartedAtUtc]),
+        CONSTRAINT [CK_IrrigLogs_InProgressNoCompleted] CHECK (([Status] = 1 AND [CompletedAtUtc] IS NULL) OR ([Status] != 1))
     );
 
+    CREATE UNIQUE NONCLUSTERED INDEX [IX_IrrigLogs_OneRunningPerDevice] ON [dbo].[IrrigationLogs] ([DeviceId] ASC) WHERE [Status] = 1;
     CREATE NONCLUSTERED INDEX [IX_IrrigLogs_DeviceId_StartedAt] ON [dbo].[IrrigationLogs] ([DeviceId] ASC, [StartedAtUtc] DESC);
     CREATE NONCLUSTERED INDEX [IX_IrrigLogs_InProgress] ON [dbo].[IrrigationLogs] ([Status] ASC) WHERE [Status] = 1;
 END
@@ -296,6 +314,7 @@ GO
 
 -- ------------------------------------------------------------------------------
 -- BẢNG 11: Alerts (Cảnh báo bất thường)
+-- ON DELETE NO ACTION bảo vệ lịch sử sự cố
 -- ------------------------------------------------------------------------------
 IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'Alerts' AND type = 'U')
 BEGIN
@@ -313,7 +332,7 @@ BEGIN
 
         CONSTRAINT [PK_Alerts] PRIMARY KEY CLUSTERED ([Id] ASC),
         CONSTRAINT [FK_Alerts_Devices_DeviceId] FOREIGN KEY ([DeviceId])
-            REFERENCES [dbo].[Devices] ([Id]) ON DELETE CASCADE
+            REFERENCES [dbo].[Devices] ([Id]) ON DELETE NO ACTION
     );
 
     CREATE NONCLUSTERED INDEX [IX_Alerts_DeviceId_IsResolved_Created] ON [dbo].[Alerts] ([DeviceId] ASC, [IsResolved] ASC, [CreatedAtUtc] DESC);
@@ -322,6 +341,7 @@ GO
 
 -- ------------------------------------------------------------------------------
 -- BẢNG 12: DeviceCommands (Lệnh điều khiển gửi tới ESP32)
+-- Bổ sung CHECK Status 1..4, ON DELETE NO ACTION
 -- ------------------------------------------------------------------------------
 IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'DeviceCommands' AND type = 'U')
 BEGIN
@@ -340,7 +360,8 @@ BEGIN
 
         CONSTRAINT [PK_DeviceCommands] PRIMARY KEY CLUSTERED ([Id] ASC),
         CONSTRAINT [FK_DeviceCommands_Devices_DeviceId] FOREIGN KEY ([DeviceId])
-            REFERENCES [dbo].[Devices] ([Id]) ON DELETE CASCADE
+            REFERENCES [dbo].[Devices] ([Id]) ON DELETE NO ACTION,
+        CONSTRAINT [CK_DevCmds_Status] CHECK ([Status] BETWEEN 1 AND 4)
     );
 
     CREATE NONCLUSTERED INDEX [IX_DevCmds_DeviceId_Status] ON [dbo].[DeviceCommands] ([DeviceId] ASC, [Status] ASC);

@@ -15,6 +15,9 @@ namespace SmartFarm.Domain.Entities
         // Loại cảm biến
         public SensorType SensorType { get; private set; }
 
+        // Mã định danh gói tin MQTT (Idempotency - chống trùng lặp dữ liệu)
+        public Guid? MessageId { get; private set; }
+
         // Giá trị đo được
         public decimal Value { get; private set; }
 
@@ -34,7 +37,8 @@ namespace SmartFarm.Domain.Entities
             decimal value,
             string unit,
             DateTimeOffset recordedAtUtc,
-            DateTimeOffset receivedAtUtc)
+            DateTimeOffset receivedAtUtc,
+            Guid? messageId = null)
         {
             if (deviceId == Guid.Empty)
                 throw new ArgumentException(
@@ -59,6 +63,7 @@ namespace SmartFarm.Domain.Entities
             Id = Guid.NewGuid();
             DeviceId = deviceId;
             SensorType = sensorType;
+            MessageId = messageId;
             Value = value;
             Unit = unit.Trim();
             RecordedAtUtc = recordedAtUtc;

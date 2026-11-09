@@ -41,10 +41,11 @@ namespace SmartFarm.Infrastructure.Persistence.Configurations
 
             builder.Property(a => a.ResolvedAtUtc);
 
+            // Không cascade delete để bảo vệ lịch sử sự cố
             builder.HasOne<Device>()
                 .WithMany()
                 .HasForeignKey(a => a.DeviceId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
             // Index dashboard — cảnh báo chưa xử lý theo thiết bị
             builder.HasIndex(a => new { a.DeviceId, a.IsResolved, a.CreatedAtUtc })

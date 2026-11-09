@@ -43,10 +43,11 @@ namespace SmartFarm.Infrastructure.Persistence.Configurations
 
             builder.Property(l => l.DurationSeconds);
 
+            // Bảo vệ lịch sử tưới
             builder.HasOne<Device>()
                 .WithMany()
                 .HasForeignKey(l => l.DeviceId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
             // Index lịch sử tưới theo thiết bị
             builder.HasIndex(l => new { l.DeviceId, l.StartedAtUtc })
@@ -56,6 +57,20 @@ namespace SmartFarm.Infrastructure.Persistence.Configurations
             builder.HasIndex(l => l.Status)
                 .HasFilter("[Status] = 1")
                 .HasDatabaseName("IX_IrrigLogs_InProgress");
+
+            // Unique Filtered Index: Mỗi thiết bị chỉ được có tối đa 1 phiên tưới đang chạy (Status = 1)
+            builder.HasIndex(l => l.DeviceId)
+                .IsUnique()
+                .HasFilter("[Status] = 1")
+                .HasDatabaseName("IX_IrrigLogs_OneRunningPerDevice");
+
+            // CHECK constraints
+            builder.ToTable(t =>
+            {
+                t.HasCheckConstraint("CK_IrrigLogs_DurationNonNegative", "[DurationSeconds] IS NULL OR [DurationSeconds] >= 0");
+                t.HasCheckConstraint("CK_IrrigLogs_CompletedAfterStarted", "[CompletedAtUtc] IS NULL OR [CompletedAtUtc] >= [StartedAtUtc]");
+                t.HasCheckConstraint("CK_IrrigLogs_InProgressNoCompleted", "([Status] = 1 AND [CompletedAtUtc] IS NULL) OR ([Status] != 1)");
+            });
         }
     }
 }
