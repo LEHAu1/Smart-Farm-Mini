@@ -65,6 +65,13 @@ namespace SmartFarm.Infrastructure
 
             // ── 4. Repositories ───────────────────────────────────────────────
             services.AddScoped<IDeviceRepository, DeviceRepository>();
+            services.AddScoped<ISensorReadingRepository, SensorReadingRepository>();
+            services.AddScoped<ISensorReadingAggregateRepository, SensorReadingAggregateRepository>();
+            services.AddScoped<IIrrigationRuleRepository, IrrigationRuleRepository>();
+            services.AddScoped<IIrrigationLogRepository, IrrigationLogRepository>();
+            services.AddScoped<IAlertRepository, AlertRepository>();
+            services.AddScoped<IDeviceCommandRepository, DeviceCommandRepository>();
+            services.AddScoped<ISystemLogRepository, SystemLogRepository>();
 
             // ── 5. Services ───────────────────────────────────────────────────
             services.AddScoped<ITokenService, TokenService>();

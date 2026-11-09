@@ -1,10 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using SmartFarm.Domain.Entities;
 
 namespace SmartFarm.Application.Contracts.Persistence
 {
-    internal interface IIrrigationLogRepository
+    /// <summary>
+    /// Giao diện kho lưu trữ nhật ký tưới nước (IrrigationLog Repository)
+    /// </summary>
+    public interface IIrrigationLogRepository
     {
+        Task<IrrigationLog?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<IrrigationLog>> GetByDeviceIdAsync(Guid deviceId, int limit = 20, CancellationToken cancellationToken = default);
+        Task<IrrigationLog?> GetLatestByDeviceIdAsync(Guid deviceId, CancellationToken cancellationToken = default);
+        Task<IrrigationLog?> GetCurrentInProgressByDeviceIdAsync(Guid deviceId, CancellationToken cancellationToken = default);
+        Task AddAsync(IrrigationLog log, CancellationToken cancellationToken = default);
+        Task UpdateAsync(IrrigationLog log, CancellationToken cancellationToken = default);
+        Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     }
 }

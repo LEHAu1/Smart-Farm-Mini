@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
 namespace SmartFarm.Application.DTOs.Irrigation
 {
-    internal class IrrigationCommandRequest
+    public class IrrigationCommandRequest
     {
+        public Guid DeviceId { get; set; }
+        public int DurationSeconds { get; set; } = 30;
     }
 }

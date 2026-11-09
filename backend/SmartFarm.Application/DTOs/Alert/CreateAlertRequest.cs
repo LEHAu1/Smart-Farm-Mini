@@ -1,10 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using SmartFarm.Domain.Enums;
 
 namespace SmartFarm.Application.DTOs.Alert
 {
-    internal class Class2
+    public class CreateAlertRequest
     {
+        public Guid DeviceId { get; set; }
+        public string AlertCode { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public string Message { get; set; } = string.Empty;
+        public AlertSeverity Severity { get; set; } = AlertSeverity.Warning;
     }
 }
