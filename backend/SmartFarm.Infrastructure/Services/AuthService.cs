@@ -240,6 +240,97 @@ namespace SmartFarm.Infrastructure.Services
             }
         }
 
+        public async Task<UserProfileDto> GetProfileAsync(Guid userId, CancellationToken cancellationToken = default)
+        {
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user == null)
+                throw new KeyNotFoundException($"Không tìm thấy người dùng với ID '{userId}'.");
+
+            var claims = await _userManager.GetClaimsAsync(user);
+            var role = claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value ?? "User";
+
+            return new UserProfileDto
+            {
+                Id = user.Id,
+                UserName = user.UserName ?? string.Empty,
+                Email = user.Email ?? string.Empty,
+                DisplayName = user.DisplayName,
+                PhoneNumber = user.PhoneNumber,
+                Role = role,
+                CreatedAtUtc = user.CreatedAtUtc
+            };
+        }
+
+        public async Task<UserProfileDto> UpdateProfileAsync(Guid userId, UpdateProfileRequest request, CancellationToken cancellationToken = default)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user == null)
+                throw new KeyNotFoundException($"Không tìm thấy người dùng với ID '{userId}'.");
+
+            if (!string.IsNullOrWhiteSpace(request.DisplayName))
+            {
+                user.DisplayName = request.DisplayName.Trim();
+            }
+
+            if (request.PhoneNumber != null)
+            {
+                user.PhoneNumber = string.IsNullOrWhiteSpace(request.PhoneNumber) ? null : request.PhoneNumber.Trim();
+            }
+
+            var updateResult = await _userManager.UpdateAsync(user);
+            if (!updateResult.Succeeded)
+            {
+                var errors = string.Join("; ", updateResult.Errors.Select(e => e.Description));
+                throw new InvalidOperationException($"Cập nhật thông tin thất bại: {errors}");
+            }
+
+            var claims = await _userManager.GetClaimsAsync(user);
+            var role = claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value ?? "User";
+
+            return new UserProfileDto
+            {
+                Id = user.Id,
+                UserName = user.UserName ?? string.Empty,
+                Email = user.Email ?? string.Empty,
+                DisplayName = user.DisplayName,
+                PhoneNumber = user.PhoneNumber,
+                Role = role,
+                CreatedAtUtc = user.CreatedAtUtc
+            };
+        }
+
+        public async Task ChangePasswordAsync(Guid userId, ChangePasswordRequest request, CancellationToken cancellationToken = default)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            if (string.IsNullOrWhiteSpace(request.CurrentPassword))
+                throw new ArgumentException("Mật khẩu hiện tại không được để trống.", nameof(request.CurrentPassword));
+
+            if (string.IsNullOrWhiteSpace(request.NewPassword))
+                throw new ArgumentException("Mật khẩu mới không được để trống.", nameof(request.NewPassword));
+
+            if (request.NewPassword.Length < 8)
+                throw new ArgumentException("Mật khẩu mới phải có ít nhất 8 ký tự.", nameof(request.NewPassword));
+
+            if (request.NewPassword != request.ConfirmNewPassword)
+                throw new ArgumentException("Mật khẩu xác nhận không khớp.", nameof(request.ConfirmNewPassword));
+
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user == null)
+                throw new KeyNotFoundException($"Không tìm thấy người dùng với ID '{userId}'.");
+
+            var changeResult = await _userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
+            if (!changeResult.Succeeded)
+            {
+                var errors = string.Join("; ", changeResult.Errors.Select(e => e.Description));
+                throw new InvalidOperationException($"Đổi mật khẩu thất bại: {errors}");
+            }
+        }
+
         private static UserDto MapToUserDto(AppUser user, string role)
         {
             return new UserDto
