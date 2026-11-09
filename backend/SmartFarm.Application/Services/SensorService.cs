@@ -55,7 +55,8 @@ namespace SmartFarm.Application.Services
                 request.Value,
                 request.Unit,
                 recordedAtUtc,
-                receivedAtUtc);
+                receivedAtUtc,
+                request.MessageId);
 
             await _sensorReadingRepository.AddAsync(reading, cancellationToken);
             await _sensorReadingRepository.SaveChangesAsync(cancellationToken);
@@ -94,7 +95,8 @@ namespace SmartFarm.Application.Services
                     req.Value,
                     req.Unit,
                     recordedAtUtc,
-                    receivedAtUtc);
+                    receivedAtUtc,
+                    req.MessageId);
 
                 readingsToSave.Add(reading);
             }
@@ -172,6 +174,7 @@ namespace SmartFarm.Application.Services
             {
                 Id = entity.Id,
                 DeviceId = entity.DeviceId,
+                MessageId = entity.MessageId,
                 SensorType = entity.SensorType,
                 Value = entity.Value,
                 Unit = entity.Unit,

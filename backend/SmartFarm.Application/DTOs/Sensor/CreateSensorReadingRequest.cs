@@ -5,6 +5,7 @@ namespace SmartFarm.Application.DTOs.Sensor
     public class CreateSensorReadingRequest
     {
         public Guid DeviceId { get; set; }
+        public Guid? MessageId { get; set; }
         public SensorType SensorType { get; set; }
         public decimal Value { get; set; }
         public string Unit { get; set; } = string.Empty;

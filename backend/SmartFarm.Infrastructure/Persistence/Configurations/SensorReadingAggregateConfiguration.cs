@@ -24,7 +24,7 @@ namespace SmartFarm.Infrastructure.Persistence.Configurations
                 .IsRequired()
                 .HasConversion<byte>();
 
-            // Đầu giờ UTC — phải là :00:00 (enforce ở Background Service, không dùng CHECK constraint phức tạp)
+            // Đầu giờ UTC — phải là :00:00 (enforce ở Background Service)
             builder.Property(a => a.HourBucket)
                 .IsRequired();
 
@@ -50,16 +50,24 @@ namespace SmartFarm.Infrastructure.Persistence.Configurations
             builder.Property(a => a.AggregatedAtUtc)
                 .IsRequired();
 
+            // Không xóa cascade để bảo vệ lịch sử thống kê vĩnh viễn
             builder.HasOne<Device>()
                 .WithMany()
                 .HasForeignKey(a => a.DeviceId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
             // Composite Unique — đảm bảo idempotent aggregation
             builder.HasIndex(a => new { a.DeviceId, a.SensorType, a.HourBucket })
                 .IsUnique()
                 .HasDatabaseName("IX_SensorAgg_Device_Type_Hour");
+
+            // CHECK constraints
+            builder.ToTable(t =>
+            {
+                t.HasCheckConstraint("CK_SensorAgg_SampleCount", "[SampleCount] > 0");
+                t.HasCheckConstraint("CK_SensorAgg_Values", "[MinValue] <= [AvgValue] AND [AvgValue] <= [MaxValue]");
+                t.HasCheckConstraint("CK_SensorAgg_SensorType", "[SensorType] BETWEEN 1 AND 5");
+            });
         }
     }
 }
-

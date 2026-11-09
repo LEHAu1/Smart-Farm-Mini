@@ -50,7 +50,7 @@ namespace SmartFarm.Infrastructure.Persistence.Configurations
             builder.HasOne<Device>()
                 .WithMany()
                 .HasForeignKey(c => c.DeviceId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
             // Index tra lệnh đang Pending của thiết bị
             builder.HasIndex(c => new { c.DeviceId, c.Status })
@@ -60,6 +60,12 @@ namespace SmartFarm.Infrastructure.Persistence.Configurations
             builder.HasIndex(c => c.CreatedAtUtc)
                 .HasFilter("[Status] IN (3, 4)")
                 .HasDatabaseName("IX_DevCmds_CreatedAt_Done");
+
+            // CHECK constraint
+            builder.ToTable(t =>
+            {
+                t.HasCheckConstraint("CK_DevCmds_Status", "[Status] BETWEEN 1 AND 4");
+            });
         }
     }
 }
