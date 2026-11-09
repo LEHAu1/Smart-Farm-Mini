@@ -1,5 +1,6 @@
 using SmartFarm.Application.Contracts.Persistence;
 using SmartFarm.Application.Contracts.Services;
+using SmartFarm.Application.DTOs.Common;
 using SmartFarm.Application.DTOs.Device;
 using SmartFarm.Domain.Entities;
 using SmartFarm.Domain.Exceptions;
@@ -39,6 +40,28 @@ namespace SmartFarm.Application.Services
             return devices.Select(MapToDto).ToList();
         }
 
+        public async Task<IReadOnlyList<DeviceDto>> GetByOwnerIdAsync(Guid ownerId, CancellationToken cancellationToken = default)
+        {
+            var devices = await _deviceRepository.GetByOwnerIdAsync(ownerId, cancellationToken);
+            return devices.Select(MapToDto).ToList();
+        }
+
+        public async Task<PageResult<DeviceDto>> GetPagedAsync(
+            Guid? ownerId,
+            string? keyword,
+            bool? isOnline,
+            bool? isActive,
+            int pageNumber,
+            int pageSize,
+            CancellationToken cancellationToken = default)
+        {
+            var (items, totalCount) = await _deviceRepository.GetPagedAsync(
+                ownerId, keyword, isOnline, isActive, pageNumber, pageSize, cancellationToken);
+
+            var dtos = items.Select(MapToDto).ToList();
+            return new PageResult<DeviceDto>(dtos, totalCount, pageNumber, pageSize);
+        }
+
         public async Task<DeviceDto> CreateAsync(CreateDeviceRequest request, CancellationToken cancellationToken = default)
         {
             if (request is null)
@@ -70,6 +93,35 @@ namespace SmartFarm.Application.Services
             return MapToDto(device);
         }
 
+        public async Task<DeviceDto> UpdateAsync(
+            Guid id,
+            Guid currentUserId,
+            bool isAdmin,
+            UpdateDeviceRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            if (request is null)
+                throw new ArgumentNullException(nameof(request));
+
+            if (string.IsNullOrWhiteSpace(request.Name))
+                throw new ArgumentException("Tên thiết bị không được để trống.", nameof(request.Name));
+
+            var device = await _deviceRepository.GetByIdAsync(id, cancellationToken);
+            if (device is null)
+                throw new DeviceNotFoundException(id);
+
+            // Kiểm tra quyền sở hữu
+            if (!isAdmin && device.OwnerId != currentUserId)
+                throw new UnauthorizedAccessException("Bạn không có quyền chỉnh sửa thiết bị của tài khoản khác.");
+
+            device.UpdateInformation(request.Name, request.Description, DateTimeOffset.UtcNow);
+
+            await _deviceRepository.UpdateAsync(device, cancellationToken);
+            await _deviceRepository.SaveChangesAsync(cancellationToken);
+
+            return MapToDto(device);
+        }
+
         public async Task DeactivateAsync(Guid id, CancellationToken cancellationToken = default)
         {
             var device = await _deviceRepository.GetByIdAsync(id, cancellationToken);
@@ -77,24 +129,37 @@ namespace SmartFarm.Application.Services
                 throw new DeviceNotFoundException(id);
 
             device.Deactivate(DateTimeOffset.UtcNow);
+
             await _deviceRepository.UpdateAsync(device, cancellationToken);
             await _deviceRepository.SaveChangesAsync(cancellationToken);
         }
 
-        private static DeviceDto MapToDto(Device device)
+        public async Task ActivateAsync(Guid id, CancellationToken cancellationToken = default)
+        {
+            var device = await _deviceRepository.GetByIdAsync(id, cancellationToken);
+            if (device is null)
+                throw new DeviceNotFoundException(id);
+
+            device.Activate(DateTimeOffset.UtcNow);
+
+            await _deviceRepository.UpdateAsync(device, cancellationToken);
+            await _deviceRepository.SaveChangesAsync(cancellationToken);
+        }
+
+        private static DeviceDto MapToDto(Device entity)
         {
             return new DeviceDto
             {
-                Id = device.Id,
-                OwnerId = device.OwnerId,
-                DeviceCode = device.DeviceCode,
-                Name = device.Name,
-                Description = device.Description,
-                IsOnline = device.IsOnline,
-                IsActive = device.IsActive,
-                CreatedAtUtc = device.CreatedAtUtc,
-                UpdatedAtUtc = device.UpdatedAtUtc,
-                LastSeenAtUtc = device.LastSeenAtUtc
+                Id = entity.Id,
+                OwnerId = entity.OwnerId,
+                DeviceCode = entity.DeviceCode,
+                Name = entity.Name,
+                Description = entity.Description,
+                IsOnline = entity.IsOnline,
+                IsActive = entity.IsActive,
+                CreatedAtUtc = entity.CreatedAtUtc,
+                UpdatedAtUtc = entity.UpdatedAtUtc,
+                LastSeenAtUtc = entity.LastSeenAtUtc
             };
         }
     }

@@ -37,6 +37,61 @@ namespace SmartFarm.Infrastructure.Persistence.Repositories
                 .ToListAsync(cancellationToken);
         }
 
+        public async Task<IReadOnlyList<Device>> GetByOwnerIdAsync(Guid ownerId, CancellationToken cancellationToken = default)
+        {
+            return await _context.Devices
+                .AsNoTracking()
+                .Where(d => d.OwnerId == ownerId)
+                .OrderBy(d => d.CreatedAtUtc)
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<(IReadOnlyList<Device> Items, int TotalCount)> GetPagedAsync(
+            Guid? ownerId,
+            string? keyword,
+            bool? isOnline,
+            bool? isActive,
+            int pageNumber,
+            int pageSize,
+            CancellationToken cancellationToken = default)
+        {
+            var query = _context.Devices.AsNoTracking().AsQueryable();
+
+            if (ownerId.HasValue && ownerId.Value != Guid.Empty)
+            {
+                query = query.Where(d => d.OwnerId == ownerId.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(keyword))
+            {
+                var kw = keyword.Trim().ToLower();
+                query = query.Where(d => d.Name.ToLower().Contains(kw) || d.DeviceCode.ToLower().Contains(kw));
+            }
+
+            if (isOnline.HasValue)
+            {
+                query = query.Where(d => d.IsOnline == isOnline.Value);
+            }
+
+            if (isActive.HasValue)
+            {
+                query = query.Where(d => d.IsActive == isActive.Value);
+            }
+
+            var totalCount = await query.CountAsync(cancellationToken);
+
+            var safePageNumber = pageNumber < 1 ? 1 : pageNumber;
+            var safePageSize = pageSize < 1 ? 20 : pageSize;
+
+            var items = await query
+                .OrderByDescending(d => d.CreatedAtUtc)
+                .Skip((safePageNumber - 1) * safePageSize)
+                .Take(safePageSize)
+                .ToListAsync(cancellationToken);
+
+            return (items, totalCount);
+        }
+
         public async Task AddAsync(Device device, CancellationToken cancellationToken = default)
         {
             await _context.Devices.AddAsync(device, cancellationToken);

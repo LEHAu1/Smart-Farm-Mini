@@ -66,26 +66,56 @@ namespace SmartFarm.WebAPI.Controllers
         }
 
         /// <summary>
-        /// Lấy thông tin tài khoản hiện tại từ JWT Claims (Yêu cầu đăng nhập)
+        /// Lấy thông tin tài khoản hiện tại (Yêu cầu đăng nhập)
         /// </summary>
         [HttpGet("me")]
         [Authorize]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(UserProfileDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public IActionResult GetCurrentUser()
+        public async Task<IActionResult> GetCurrentUser(CancellationToken cancellationToken)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var userName = User.Identity?.Name;
-            var email = User.FindFirstValue(ClaimTypes.Email);
-            var role = User.FindFirstValue(ClaimTypes.Role);
+            var subClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(subClaim, out var userId))
+                return Unauthorized();
 
-            return Ok(new
-            {
-                id = userId,
-                userName,
-                email,
-                role
-            });
+            var profile = await _authService.GetProfileAsync(userId, cancellationToken);
+            return Ok(profile);
+        }
+
+        /// <summary>
+        /// Cập nhật thông tin cá nhân (DisplayName, PhoneNumber)
+        /// </summary>
+        [HttpPut("profile")]
+        [Authorize]
+        [ProducesResponseType(typeof(UserProfileDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request, CancellationToken cancellationToken)
+        {
+            var subClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(subClaim, out var userId))
+                return Unauthorized();
+
+            var updated = await _authService.UpdateProfileAsync(userId, request, cancellationToken);
+            return Ok(updated);
+        }
+
+        /// <summary>
+        /// Đổi mật khẩu tài khoản
+        /// </summary>
+        [HttpPost("change-password")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request, CancellationToken cancellationToken)
+        {
+            var subClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(subClaim, out var userId))
+                return Unauthorized();
+
+            await _authService.ChangePasswordAsync(userId, request, cancellationToken);
+            return NoContent();
         }
     }
 }

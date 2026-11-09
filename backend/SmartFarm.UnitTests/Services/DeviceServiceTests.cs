@@ -195,5 +195,116 @@ namespace SmartFarm.UnitTests.Services
             _mockDeviceRepo.Verify(r => r.UpdateAsync(device, It.IsAny<CancellationToken>()), Times.Once);
             _mockDeviceRepo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
+
+        [Fact]
+        public async Task ActivateAsync_WhenDeviceExists_ShouldActivateAndUpdate()
+        {
+            // Arrange
+            var device = new Device(_testOwnerId, "ESP32-ACT", "Thiết bị sắp bật", DateTimeOffset.UtcNow);
+            device.Deactivate(DateTimeOffset.UtcNow);
+            Assert.False(device.IsActive);
+
+            _mockDeviceRepo.Setup(r => r.GetByIdAsync(device.Id, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(device);
+
+            // Act
+            await _deviceService.ActivateAsync(device.Id);
+
+            // Assert
+            Assert.True(device.IsActive);
+            _mockDeviceRepo.Verify(r => r.UpdateAsync(device, It.IsAny<CancellationToken>()), Times.Once);
+            _mockDeviceRepo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task UpdateAsync_WhenDeviceNotFound_ShouldThrowDeviceNotFoundException()
+        {
+            // Arrange
+            var nonExistentId = Guid.NewGuid();
+            _mockDeviceRepo.Setup(r => r.GetByIdAsync(nonExistentId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync((Device?)null);
+
+            var request = new UpdateDeviceRequest { Name = "Tên mới" };
+
+            // Act & Assert
+            await Assert.ThrowsAsync<DeviceNotFoundException>(() => _deviceService.UpdateAsync(nonExistentId, _testOwnerId, false, request));
+        }
+
+        [Fact]
+        public async Task UpdateAsync_WhenNotOwnerAndNotAdmin_ShouldThrowUnauthorizedAccessException()
+        {
+            // Arrange
+            var device = new Device(_testOwnerId, "ESP32-OWN", "Chậu Cây", DateTimeOffset.UtcNow);
+            _mockDeviceRepo.Setup(r => r.GetByIdAsync(device.Id, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(device);
+
+            var strangerId = Guid.NewGuid();
+            var request = new UpdateDeviceRequest { Name = "Hack Tên" };
+
+            // Act & Assert
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => _deviceService.UpdateAsync(device.Id, strangerId, false, request));
+        }
+
+        [Fact]
+        public async Task UpdateAsync_WhenOwner_ShouldUpdateDeviceSuccessfully()
+        {
+            // Arrange
+            var device = new Device(_testOwnerId, "ESP32-OWN", "Chậu Cây Cũ", DateTimeOffset.UtcNow, "Mô tả cũ");
+            _mockDeviceRepo.Setup(r => r.GetByIdAsync(device.Id, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(device);
+
+            var request = new UpdateDeviceRequest { Name = "Chậu Cây Mới", Description = "Mô tả mới" };
+
+            // Act
+            var result = await _deviceService.UpdateAsync(device.Id, _testOwnerId, false, request);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal("Chậu Cây Mới", result.Name);
+            Assert.Equal("Mô tả mới", result.Description);
+            _mockDeviceRepo.Verify(r => r.UpdateAsync(device, It.IsAny<CancellationToken>()), Times.Once);
+            _mockDeviceRepo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetByOwnerIdAsync_ShouldReturnOwnerDevices()
+        {
+            // Arrange
+            var list = new List<Device>
+            {
+                new Device(_testOwnerId, "ESP32-01", "Chậu 1", DateTimeOffset.UtcNow)
+            };
+            _mockDeviceRepo.Setup(r => r.GetByOwnerIdAsync(_testOwnerId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(list);
+
+            // Act
+            var result = await _deviceService.GetByOwnerIdAsync(_testOwnerId);
+
+            // Assert
+            Assert.Single(result);
+            Assert.Equal("ESP32-01", result[0].DeviceCode);
+        }
+
+        [Fact]
+        public async Task GetPagedAsync_ShouldReturnPagedResult()
+        {
+            // Arrange
+            var list = new List<Device>
+            {
+                new Device(_testOwnerId, "ESP32-01", "Chậu 1", DateTimeOffset.UtcNow)
+            };
+            _mockDeviceRepo.Setup(r => r.GetPagedAsync(_testOwnerId, "Chậu", true, true, 1, 10, It.IsAny<CancellationToken>()))
+                .ReturnsAsync((list, 1));
+
+            // Act
+            var result = await _deviceService.GetPagedAsync(_testOwnerId, "Chậu", true, true, 1, 10);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Single(result.Items);
+            Assert.Equal(1, result.TotalCount);
+            Assert.Equal(1, result.PageIndex);
+            Assert.Equal(10, result.PageSize);
+        }
     }
 }

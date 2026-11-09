@@ -11,6 +11,9 @@ namespace SmartFarm.Application
             // ── Device ────────────────────────────────────────────────
             services.AddScoped<IDeviceService, DeviceService>();
 
+            // ── Dashboard ─────────────────────────────────────────────
+            services.AddScoped<IDashboardService, DashboardService>();
+
             // ── Sensor ────────────────────────────────────────────────
             services.AddScoped<ISensorService, SensorService>();
 

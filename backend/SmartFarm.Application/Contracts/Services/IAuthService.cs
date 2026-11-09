@@ -8,6 +8,8 @@ namespace SmartFarm.Application.Contracts.Services
         Task<AuthResponseDto> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default);
         Task<AuthResponseDto> RefreshTokenAsync(RefreshTokenRequest request, CancellationToken cancellationToken = default);
         Task RevokeTokenAsync(RefreshTokenRequest request, CancellationToken cancellationToken = default);
+        Task<UserProfileDto> GetProfileAsync(Guid userId, CancellationToken cancellationToken = default);
+        Task<UserProfileDto> UpdateProfileAsync(Guid userId, UpdateProfileRequest request, CancellationToken cancellationToken = default);
+        Task ChangePasswordAsync(Guid userId, ChangePasswordRequest request, CancellationToken cancellationToken = default);
     }
 }
-
