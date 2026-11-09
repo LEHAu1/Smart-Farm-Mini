@@ -1,10 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using SmartFarm.Application.DTOs.Sensor;
+using SmartFarm.Domain.Enums;
 
 namespace SmartFarm.Application.Contracts.Services
 {
-    internal interface ISensorService
+    /// <summary>
+    /// Giao diện dịch vụ nghiệp vụ cảm biến (Sensor Service)
+    /// </summary>
+    public interface ISensorService
     {
+        Task<SensorReadingDto> RecordReadingAsync(CreateSensorReadingRequest request, CancellationToken cancellationToken = default);
+        Task<int> RecordReadingsBatchAsync(IEnumerable<CreateSensorReadingRequest> requests, CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<SensorReadingDto>> GetLatestReadingsAsync(Guid deviceId, int count = 10, CancellationToken cancellationToken = default);
+        Task<SensorTelemetryDto> GetCurrentTelemetryAsync(Guid deviceId, CancellationToken cancellationToken = default);
+        Task<SensorHistoryDto> GetSensorHistoryAsync(Guid deviceId, SensorType sensorType, DateTimeOffset fromUtc, DateTimeOffset toUtc, CancellationToken cancellationToken = default);
     }
 }
