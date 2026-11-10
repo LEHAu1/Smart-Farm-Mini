@@ -2,6 +2,8 @@ using Microsoft.Extensions.Logging;
 using SmartFarm.Application.Contracts.Persistence;
 using SmartFarm.Application.Contracts.Services;
 using SmartFarm.Application.DTOs.DeviceCommand;
+using SmartFarm.Application.DTOs.Common;
+using SmartFarm.Domain.Enums;
 using SmartFarm.Domain.Entities;
 using SmartFarm.Domain.Exceptions;
 
@@ -125,6 +127,12 @@ namespace SmartFarm.Application.Services
 
             _logger.LogWarning("Lệnh ID {CommandId} ({CommandCode}) thất bại: {Error}", commandId, command.CommandCode, errorMessage);
             return MapToDto(command);
+        }
+
+        public async Task<PageResult<DeviceCommandDto>> GetPagedAsync(Guid? ownerId, Guid? deviceId, CommandStatus? status, PaginationParams pagination, CancellationToken cancellationToken = default)
+        {
+            var page = await _commandRepository.GetPagedAsync(ownerId, deviceId, status, pagination, cancellationToken);
+            return new PageResult<DeviceCommandDto>(page.Items.Select(MapToDto).ToList(), page.TotalCount, page.PageIndex, page.PageSize);
         }
 
         private static DeviceCommandDto MapToDto(DeviceCommand entity)

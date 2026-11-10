@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using SmartFarm.Application.DTOs.Common;
 using SmartFarm.Application.Contracts.Persistence;
 using SmartFarm.Domain.Entities;
 using SmartFarm.Domain.Enums;
@@ -16,6 +17,36 @@ namespace SmartFarm.Infrastructure.Persistence.Repositories
         public DeviceCommandRepository(SmartFarmDbContext context)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
+        }
+
+        public async Task<PageResult<DeviceCommand>> GetPagedAsync(Guid? ownerId, Guid? deviceId, CommandStatus? status, PaginationParams pagination, CancellationToken cancellationToken = default)
+        {
+            var query = VisibleDeviceCommands(ownerId);
+            if (deviceId.HasValue)
+                query = query.Where(item => item.DeviceId == deviceId.Value);
+            if (status.HasValue)
+                query = query.Where(item => item.Status == status.Value);
+
+            var total = await query.CountAsync(cancellationToken);
+            var offset = ((long)pagination.PageIndex - 1) * pagination.PageSize;
+            if (offset >= total)
+                return new PageResult<DeviceCommand>(Array.Empty<DeviceCommand>(), total, pagination.PageIndex, pagination.PageSize);
+
+            var items = await query.OrderByDescending(item => item.CreatedAtUtc)
+                .ThenByDescending(item => item.Id)
+                .Skip((int)offset)
+                .Take(pagination.PageSize)
+                .ToListAsync(cancellationToken);
+
+            return new PageResult<DeviceCommand>(items, total, pagination.PageIndex, pagination.PageSize);
+        }
+
+        private IQueryable<DeviceCommand> VisibleDeviceCommands(Guid? ownerId)
+        {
+            var query = _context.DeviceCommands.AsNoTracking();
+            if (ownerId.HasValue)
+                query = query.Where(item => _context.Devices.Any(device => device.Id == item.DeviceId && device.OwnerId == ownerId.Value));
+            return query;
         }
 
         public async Task<DeviceCommand?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)

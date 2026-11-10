@@ -2,6 +2,8 @@ using Microsoft.Extensions.Logging;
 using SmartFarm.Application.Contracts.Persistence;
 using SmartFarm.Application.Contracts.Services;
 using SmartFarm.Application.DTOs.Alert;
+using SmartFarm.Application.DTOs.Common;
+using SmartFarm.Domain.Enums;
 using SmartFarm.Domain.Entities;
 using SmartFarm.Domain.Exceptions;
 
@@ -94,6 +96,17 @@ namespace SmartFarm.Application.Services
 
             _logger.LogInformation("Cảnh báo ID {AlertId} đã được đánh dấu xử lý thành công.", alertId);
             return MapToDto(alert);
+        }
+
+        public async Task<PageResult<AlertDto>> GetPagedAsync(Guid? ownerId, Guid? deviceId, AlertSeverity? severity, bool? isResolved, PaginationParams pagination, CancellationToken cancellationToken = default)
+        {
+            var page = await _alertRepository.GetPagedAsync(ownerId, deviceId, severity, isResolved, pagination, cancellationToken);
+            return new PageResult<AlertDto>(page.Items.Select(MapToDto).ToList(), page.TotalCount, page.PageIndex, page.PageSize);
+        }
+
+        public Task<AlertSummaryDto> GetSummaryAsync(Guid? ownerId, CancellationToken cancellationToken = default)
+        {
+            return _alertRepository.GetSummaryAsync(ownerId, cancellationToken);
         }
 
         private static AlertDto MapToDto(Alert entity)

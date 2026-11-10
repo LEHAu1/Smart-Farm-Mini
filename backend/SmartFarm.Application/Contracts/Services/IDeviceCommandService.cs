@@ -1,4 +1,6 @@
 using SmartFarm.Application.DTOs.DeviceCommand;
+using SmartFarm.Application.DTOs.Common;
+using SmartFarm.Domain.Enums;
 
 namespace SmartFarm.Application.Contracts.Services
 {
@@ -7,6 +9,7 @@ namespace SmartFarm.Application.Contracts.Services
     /// </summary>
     public interface IDeviceCommandService
     {
+        Task<PageResult<DeviceCommandDto>> GetPagedAsync(Guid? ownerId, Guid? deviceId, CommandStatus? status, PaginationParams pagination, CancellationToken cancellationToken = default);
         Task<DeviceCommandDto> CreateCommandAsync(CreateDeviceCommandRequest request, CancellationToken cancellationToken = default);
         Task<DeviceCommandDto?> GetByIdAsync(Guid commandId, CancellationToken cancellationToken = default);
         Task<IReadOnlyList<DeviceCommandDto>> GetPendingCommandsAsync(Guid deviceId, CancellationToken cancellationToken = default);

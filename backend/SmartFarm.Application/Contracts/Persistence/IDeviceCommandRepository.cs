@@ -1,4 +1,6 @@
 using SmartFarm.Domain.Entities;
+using SmartFarm.Application.DTOs.Common;
+using SmartFarm.Domain.Enums;
 
 namespace SmartFarm.Application.Contracts.Persistence
 {
@@ -7,6 +9,7 @@ namespace SmartFarm.Application.Contracts.Persistence
     /// </summary>
     public interface IDeviceCommandRepository
     {
+        Task<PageResult<DeviceCommand>> GetPagedAsync(Guid? ownerId, Guid? deviceId, CommandStatus? status, PaginationParams pagination, CancellationToken cancellationToken = default);
         Task<DeviceCommand?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
         Task<DeviceCommand?> GetByCommandCodeAsync(string commandCode, CancellationToken cancellationToken = default);
         Task<IReadOnlyList<DeviceCommand>> GetPendingCommandsByDeviceIdAsync(Guid deviceId, CancellationToken cancellationToken = default);
