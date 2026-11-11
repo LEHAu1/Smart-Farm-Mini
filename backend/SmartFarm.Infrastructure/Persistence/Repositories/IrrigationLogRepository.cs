@@ -37,6 +37,46 @@ namespace SmartFarm.Infrastructure.Persistence.Repositories
                 .ToListAsync(cancellationToken);
         }
 
+        public async Task<(IReadOnlyList<IrrigationLog> Items, int TotalCount)> GetPagedAsync(
+            Guid? ownerId,
+            Guid? deviceId,
+            IrrigationMode? mode,
+            int pageNumber,
+            int pageSize,
+            CancellationToken cancellationToken = default)
+        {
+            var query = _context.IrrigationLogs.AsNoTracking().AsQueryable();
+
+            if (ownerId.HasValue && ownerId.Value != Guid.Empty)
+            {
+                query = query.Where(l =>
+                    _context.Devices.Any(d => d.Id == l.DeviceId && d.OwnerId == ownerId.Value));
+            }
+
+            if (deviceId.HasValue && deviceId.Value != Guid.Empty)
+            {
+                query = query.Where(l => l.DeviceId == deviceId.Value);
+            }
+
+            if (mode.HasValue)
+            {
+                query = query.Where(l => l.Mode == mode.Value);
+            }
+
+            var totalCount = await query.CountAsync(cancellationToken);
+
+            var safePageNumber = pageNumber < 1 ? 1 : pageNumber;
+            var safePageSize = pageSize < 1 ? 20 : Math.Min(pageSize, 100);
+
+            var items = await query
+                .OrderByDescending(l => l.StartedAtUtc)
+                .Skip((safePageNumber - 1) * safePageSize)
+                .Take(safePageSize)
+                .ToListAsync(cancellationToken);
+
+            return (items, totalCount);
+        }
+
         public async Task<IrrigationLog?> GetLatestByDeviceIdAsync(Guid deviceId, CancellationToken cancellationToken = default)
         {
             return await _context.IrrigationLogs

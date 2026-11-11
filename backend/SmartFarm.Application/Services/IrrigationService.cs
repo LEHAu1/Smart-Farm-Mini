@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using SmartFarm.Application.Contracts.Persistence;
 using SmartFarm.Application.Contracts.Services;
+using SmartFarm.Application.DTOs.Common;
 using SmartFarm.Application.DTOs.Irrigation;
 using SmartFarm.Domain.Entities;
 using SmartFarm.Domain.Enums;
@@ -44,6 +45,13 @@ namespace SmartFarm.Application.Services
             {
                 _logger.LogWarning("Không thể tạo quy tắc tưới: Thiết bị {DeviceId} không tồn tại.", request.DeviceId);
                 throw new DeviceNotFoundException(request.DeviceId);
+            }
+
+            // Đảm bảo chỉ có tối đa 1 quy tắc đang bật (khớp filtered unique index IX_IrrigRules_OneActivePerDevice)
+            var existingActive = await _ruleRepository.GetActiveRuleByDeviceIdAsync(request.DeviceId, cancellationToken);
+            if (existingActive != null)
+            {
+                throw new InvalidOperationException("Thiết bị đã có một quy tắc tưới đang hoạt động. Vui lòng tắt quy tắc hiện tại trước khi tạo mới.");
             }
 
             var nowUtc = DateTimeOffset.UtcNow;
@@ -118,6 +126,12 @@ namespace SmartFarm.Application.Services
             var nowUtc = DateTimeOffset.UtcNow;
             if (isEnabled)
             {
+                var existingActive = await _ruleRepository.GetActiveRuleByDeviceIdAsync(rule.DeviceId, cancellationToken);
+                if (existingActive != null && existingActive.Id != rule.Id)
+                {
+                    throw new InvalidOperationException("Thiết bị đã có quy tắc tưới khác đang bật. Vui lòng tắt quy tắc đó trước.");
+                }
+
                 rule.Enable(nowUtc);
             }
             else
@@ -218,6 +232,21 @@ namespace SmartFarm.Application.Services
         {
             var logs = await _logRepository.GetByDeviceIdAsync(deviceId, limit, cancellationToken);
             return logs.Select(MapLogToDto).ToList();
+        }
+
+        public async Task<PageResult<IrrigationLogDto>> GetLogsPagedAsync(
+            Guid? ownerId,
+            Guid? deviceId,
+            IrrigationMode? mode,
+            int pageNumber,
+            int pageSize,
+            CancellationToken cancellationToken = default)
+        {
+            var (items, totalCount) = await _logRepository.GetPagedAsync(
+                ownerId, deviceId, mode, pageNumber, pageSize, cancellationToken);
+
+            var dtos = items.Select(MapLogToDto).ToList();
+            return new PageResult<IrrigationLogDto>(dtos, totalCount, pageNumber < 1 ? 1 : pageNumber, pageSize < 1 ? 20 : Math.Min(pageSize, 100));
         }
 
         public async Task<IrrigationStatusDto> GetCurrentStatusAsync(

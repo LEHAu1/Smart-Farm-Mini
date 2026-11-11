@@ -14,15 +14,18 @@ namespace SmartFarm.Application.Services
     public class SensorService : ISensorService
     {
         private readonly ISensorReadingRepository _sensorReadingRepository;
+        private readonly ISensorReadingAggregateRepository _aggregateRepository;
         private readonly IDeviceRepository _deviceRepository;
         private readonly ILogger<SensorService> _logger;
 
         public SensorService(
             ISensorReadingRepository sensorReadingRepository,
+            ISensorReadingAggregateRepository aggregateRepository,
             IDeviceRepository deviceRepository,
             ILogger<SensorService> logger)
         {
             _sensorReadingRepository = sensorReadingRepository ?? throw new ArgumentNullException(nameof(sensorReadingRepository));
+            _aggregateRepository = aggregateRepository ?? throw new ArgumentNullException(nameof(aggregateRepository));
             _deviceRepository = deviceRepository ?? throw new ArgumentNullException(nameof(deviceRepository));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
@@ -166,6 +169,34 @@ namespace SmartFarm.Application.Services
                 Unit = unit,
                 DataPoints = dataPoints
             };
+        }
+
+        public async Task<IReadOnlyList<SensorAggregateDto>> GetAggregatesAsync(
+            Guid deviceId,
+            SensorType? sensorType,
+            DateTimeOffset fromUtc,
+            DateTimeOffset toUtc,
+            CancellationToken cancellationToken = default)
+        {
+            if (fromUtc > toUtc)
+                throw new ArgumentException("fromUtc cannot be greater than toUtc.", nameof(fromUtc));
+
+            var aggregates = await _aggregateRepository.GetAggregatesAsync(
+                deviceId, sensorType, fromUtc, toUtc, cancellationToken);
+
+            return aggregates.Select(a => new SensorAggregateDto
+            {
+                Id = a.Id,
+                DeviceId = a.DeviceId,
+                SensorType = a.SensorType,
+                HourBucket = a.HourBucket,
+                AvgValue = a.AvgValue,
+                MinValue = a.MinValue,
+                MaxValue = a.MaxValue,
+                SampleCount = a.SampleCount,
+                Unit = a.Unit,
+                AggregatedAtUtc = a.AggregatedAtUtc
+            }).ToList();
         }
 
         private static SensorReadingDto MapToDto(SensorReading entity)
