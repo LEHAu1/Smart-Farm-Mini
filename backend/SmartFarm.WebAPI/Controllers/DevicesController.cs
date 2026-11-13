@@ -111,10 +111,12 @@ namespace SmartFarm.WebAPI.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> Create([FromBody] CreateDeviceRequest request, CancellationToken cancellationToken)
         {
-            var (userId, _) = GetCurrentUserContext();
+            var (userId, isAdmin) = GetCurrentUserContext();
+            if (userId == Guid.Empty)
+                return Unauthorized();
 
-            // Nếu OwnerId chưa truyền, gán ID của người dùng đang đăng nhập
-            if (request.OwnerId == Guid.Empty)
+            // Regular users may only register devices for their own account.
+            if (!isAdmin)
             {
                 request.OwnerId = userId;
             }
@@ -152,6 +154,14 @@ namespace SmartFarm.WebAPI.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Deactivate(Guid id, CancellationToken cancellationToken)
         {
+            var (userId, isAdmin) = GetCurrentUserContext();
+            if (userId == Guid.Empty)
+                return Unauthorized();
+
+            var device = await _deviceService.GetByIdAsync(id, cancellationToken);
+            if (device is null || (!isAdmin && device.OwnerId != userId))
+                return NotFound();
+
             await _deviceService.DeactivateAsync(id, cancellationToken);
             return NoContent();
         }
@@ -165,6 +175,14 @@ namespace SmartFarm.WebAPI.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Activate(Guid id, CancellationToken cancellationToken)
         {
+            var (userId, isAdmin) = GetCurrentUserContext();
+            if (userId == Guid.Empty)
+                return Unauthorized();
+
+            var device = await _deviceService.GetByIdAsync(id, cancellationToken);
+            if (device is null || (!isAdmin && device.OwnerId != userId))
+                return NotFound();
+
             await _deviceService.ActivateAsync(id, cancellationToken);
             return NoContent();
         }
