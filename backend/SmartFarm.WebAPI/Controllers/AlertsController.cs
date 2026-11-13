@@ -41,6 +41,29 @@ namespace SmartFarm.WebAPI.Controllers
             return Ok(await alerts.GetSummaryAsync(ownerId, cancellationToken));
         }
 
+        [HttpGet("{id:guid}")]
+        [ProducesResponseType(typeof(AlertDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<AlertDto>> GetById(Guid id, CancellationToken cancellationToken = default)
+        {
+            if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
+                return Unauthorized();
+
+            var alert = await alerts.GetByIdAsync(id, cancellationToken);
+            if (alert is null)
+                return NotFound(new { message = $"Không tìm thấy cảnh báo với ID '{id}'." });
+
+            if (!User.IsInRole("Admin"))
+            {
+                var device = await devices.GetByIdAsync(alert.DeviceId, cancellationToken);
+                if (device is null || device.OwnerId != userId)
+                    return NotFound(new { message = $"Không tìm thấy cảnh báo với ID '{id}'." });
+            }
+
+            return Ok(alert);
+        }
+
         [HttpPatch("{id:guid}/resolve")]
         public async Task<ActionResult<AlertDto>> Resolve(Guid id, CancellationToken cancellationToken)
         {
