@@ -10,6 +10,7 @@ namespace SmartFarm.Application.Contracts.Persistence
     {
         Task<SensorReading?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
         Task<IReadOnlyList<SensorReading>> GetLatestByDeviceIdAsync(Guid deviceId, int count = 10, CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<SensorReading>> GetLatestByDeviceIdsAsync(IReadOnlyCollection<Guid> deviceIds, int countPerDevice = 10, CancellationToken cancellationToken = default);
         Task<IReadOnlyList<SensorReading>> GetByDeviceIdAndRangeAsync(Guid deviceId, SensorType? sensorType, DateTimeOffset fromUtc, DateTimeOffset toUtc, CancellationToken cancellationToken = default);
         Task AddAsync(SensorReading reading, CancellationToken cancellationToken = default);
         Task AddRangeAsync(IEnumerable<SensorReading> readings, CancellationToken cancellationToken = default);

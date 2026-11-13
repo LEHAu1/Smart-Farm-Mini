@@ -37,6 +37,26 @@ namespace SmartFarm.Infrastructure.Persistence.Repositories
                 .ToListAsync(cancellationToken);
         }
 
+        public async Task<IReadOnlyList<SensorReading>> GetLatestByDeviceIdsAsync(
+            IReadOnlyCollection<Guid> deviceIds,
+            int countPerDevice = 10,
+            CancellationToken cancellationToken = default)
+        {
+            if (deviceIds.Count == 0 || countPerDevice <= 0)
+            {
+                return Array.Empty<SensorReading>();
+            }
+
+            return await _context.SensorReadings
+                .AsNoTracking()
+                .Where(reading => deviceIds.Contains(reading.DeviceId))
+                .GroupBy(reading => reading.DeviceId)
+                .SelectMany(group => group
+                    .OrderByDescending(reading => reading.RecordedAtUtc)
+                    .Take(countPerDevice))
+                .ToListAsync(cancellationToken);
+        }
+
         public async Task<IReadOnlyList<SensorReading>> GetByDeviceIdAndRangeAsync(
             Guid deviceId,
             SensorType? sensorType,
