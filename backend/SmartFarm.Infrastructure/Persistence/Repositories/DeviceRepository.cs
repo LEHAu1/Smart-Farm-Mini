@@ -29,6 +29,46 @@ namespace SmartFarm.Infrastructure.Persistence.Repositories
                 .FirstOrDefaultAsync(d => d.DeviceCode == deviceCode.Trim().ToUpperInvariant(), cancellationToken);
         }
 
+        public async Task<IReadOnlyList<Device>> GetOnlineDevicesLastSeenBeforeAsync(
+            DateTimeOffset cutoffUtc,
+            CancellationToken cancellationToken = default)
+        {
+            return await _context.Devices
+                .AsNoTracking()
+                .Where(d => d.IsOnline && d.LastSeenAtUtc.HasValue && d.LastSeenAtUtc.Value < cutoffUtc)
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<int> MarkOnlineDevicesOfflineBeforeAsync(
+            DateTimeOffset cutoffUtc,
+            DateTimeOffset updatedAtUtc,
+            CancellationToken cancellationToken = default)
+        {
+            return await _context.Devices
+                .Where(d => d.IsOnline && d.LastSeenAtUtc.HasValue && d.LastSeenAtUtc.Value < cutoffUtc)
+                .ExecuteUpdateAsync(update => update
+                    .SetProperty(device => device.IsOnline, false)
+                    .SetProperty(device => device.UpdatedAtUtc, updatedAtUtc), cancellationToken);
+        }
+
+        public async Task<IReadOnlyList<Device>> GetByIdsAsync(
+            IReadOnlyCollection<Guid> deviceIds,
+            CancellationToken cancellationToken = default)
+        {
+            if (deviceIds.Count == 0)
+                return Array.Empty<Device>();
+
+            var results = new List<Device>(deviceIds.Count);
+            foreach (var batch in deviceIds.Chunk(1000))
+            {
+                results.AddRange(await _context.Devices.AsNoTracking()
+                    .Where(device => batch.Contains(device.Id))
+                    .ToListAsync(cancellationToken));
+            }
+
+            return results;
+        }
+
         public async Task<IReadOnlyList<Device>> GetAllAsync(CancellationToken cancellationToken = default)
         {
             return await _context.Devices

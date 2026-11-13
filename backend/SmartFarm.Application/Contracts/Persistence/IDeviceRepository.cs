@@ -9,6 +9,9 @@ namespace SmartFarm.Application.Contracts.Persistence
     {
         Task<Device?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
         Task<Device?> GetByCodeAsync(string deviceCode, CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<Device>> GetOnlineDevicesLastSeenBeforeAsync(DateTimeOffset cutoffUtc, CancellationToken cancellationToken = default);
+        Task<int> MarkOnlineDevicesOfflineBeforeAsync(DateTimeOffset cutoffUtc, DateTimeOffset updatedAtUtc, CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<Device>> GetByIdsAsync(IReadOnlyCollection<Guid> deviceIds, CancellationToken cancellationToken = default);
         Task<IReadOnlyList<Device>> GetAllAsync(CancellationToken cancellationToken = default);
         Task<IReadOnlyList<Device>> GetByOwnerIdAsync(Guid ownerId, CancellationToken cancellationToken = default);
         Task<(IReadOnlyList<Device> Items, int TotalCount)> GetPagedAsync(

@@ -9,6 +9,8 @@ using SmartFarm.Infrastructure.Identity;
 using SmartFarm.Infrastructure.Persistence.Data;
 using SmartFarm.Infrastructure.Persistence.Repositories;
 using SmartFarm.Infrastructure.Services;
+using SmartFarm.Infrastructure.Mqtt;
+using SmartFarm.Infrastructure.Realtime;
 
 namespace SmartFarm.Infrastructure
 {
@@ -25,6 +27,11 @@ namespace SmartFarm.Infrastructure
 
             services.AddDbContext<SmartFarmDbContext>(options =>
                 options.UseSqlServer(connectionString));
+
+            services.Configure<MqttBrokerSettings>(configuration.GetSection(MqttBrokerSettings.SectionName));
+            services.AddSingleton<MqttClientService>();
+            services.AddSingleton<IMqttPublisher, MqttPublisher>();
+            services.AddSingleton<DeviceStatusSynchronization>();
 
             // ── 2. Cấu hình JWT Settings ───────────────────────────────────────
             services.Configure<JwtSettings>(options =>
