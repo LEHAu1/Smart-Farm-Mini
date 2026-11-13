@@ -13,6 +13,8 @@ namespace SmartFarm.Application.Services
     /// </summary>
     public class SensorService : ISensorService
     {
+        public static readonly TimeSpan MaximumRawHistoryRange = TimeSpan.FromDays(7);
+
         private readonly ISensorReadingRepository _sensorReadingRepository;
         private readonly ISensorReadingAggregateRepository _aggregateRepository;
         private readonly IDeviceRepository _deviceRepository;
@@ -153,6 +155,18 @@ namespace SmartFarm.Application.Services
             DateTimeOffset toUtc,
             CancellationToken cancellationToken = default)
         {
+            if (fromUtc > toUtc)
+            {
+                throw new ArgumentException("fromUtc cannot be greater than toUtc.", nameof(fromUtc));
+            }
+
+            if (toUtc - fromUtc > MaximumRawHistoryRange)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(toUtc),
+                    $"Raw sensor history range cannot exceed {MaximumRawHistoryRange.TotalDays:0} days. Use hourly aggregates for longer periods.");
+            }
+
             var readings = await _sensorReadingRepository.GetByDeviceIdAndRangeAsync(deviceId, sensorType, fromUtc, toUtc, cancellationToken);
 
             var unit = readings.FirstOrDefault()?.Unit ?? GetDefaultUnit(sensorType);
