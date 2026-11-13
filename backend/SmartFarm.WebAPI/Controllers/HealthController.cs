@@ -70,9 +70,14 @@ namespace SmartFarm.WebAPI.Controllers
                     isHealthy = false;
                 }
             }
-            catch (Exception ex)
+            catch (OperationCanceledException) when (IsClientRequestAborted(cancellationToken))
             {
-                checks["database"] = $"Error: {ex.Message}";
+                throw;
+            }
+            catch (Exception)
+            {
+                // Readiness is unauthenticated; keep connection details out of the response.
+                checks["database"] = "Unhealthy";
                 isHealthy = false;
             }
 
@@ -86,6 +91,12 @@ namespace SmartFarm.WebAPI.Controllers
             return isHealthy
                 ? Ok(response)
                 : StatusCode(StatusCodes.Status503ServiceUnavailable, response);
+        }
+
+        private bool IsClientRequestAborted(CancellationToken cancellationToken)
+        {
+            return cancellationToken.IsCancellationRequested
+                && ControllerContext?.HttpContext?.RequestAborted.IsCancellationRequested == true;
         }
     }
 }
