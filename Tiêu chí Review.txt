@@ -1,0 +1,264 @@
+# PROMPT: XÂY DỰNG BỘ TIÊU CHÍ CODE REVIEW CHO DỰ ÁN WEB API IoT
+
+Bạn là **Senior Software Architect, Senior Backend Engineer và Technical Lead**, có kinh nghiệm thiết kế, phát triển và kiểm thử các hệ thống Web API tích hợp IoT.
+
+## 1. Bối cảnh dự án
+
+Tôi đang phát triển một hệ thống Web API phục vụ quản lý, điều khiển và giám sát thiết bị IoT.
+
+Công nghệ dự kiến:
+- Backend: ASP.NET Core Web API (.NET/C#).
+- Database: SQL Server.
+- ORM: Entity Framework Core.
+- IoT Hardware: ESP32 và các cảm biến.
+- Communication: HTTP REST API và/hoặc MQTT.
+- Architecture: Clean Architecture hoặc N-Layer Architecture.
+- Authentication: JWT nếu dự án sử dụng.
+- Realtime: SignalR nếu dự án sử dụng.
+
+Hệ thống có thể hỗ trợ:
+- Quản lý thiết bị IoT.
+- Nhận dữ liệu cảm biến.
+- Giám sát trạng thái thiết bị.
+- Điều khiển thiết bị từ xa.
+- Lưu trữ lịch sử đo đạc.
+- Cảnh báo khi vượt ngưỡng.
+- Quản lý người dùng và phân quyền.
+
+Chỉ đánh giá những tính năng, công nghệ thực sự có trong source code. Không mặc định rằng hệ thống đã triển khai tất cả các thành phần trên.
+
+## 2. Nhiệm vụ
+
+Hãy xây dựng **bộ tiêu chí Code Review toàn diện, có thể đo lường và áp dụng thực tế** cho dự án này.
+
+Phân chia thành 12 nhóm:
+
+### A. Project Structure & Architecture
+- Cấu trúc solution và project.
+- Separation of Concerns.
+- Dependency Injection.
+- SOLID Principles.
+- Phân chia Controller, Service, Repository, Data Access.
+- Dependency direction.
+- Tránh circular dependency.
+- Khả năng bảo trì và mở rộng.
+
+### B. Code Quality & Clean Code
+- Naming convention.
+- Coding convention C#.
+- DRY, KISS, YAGNI.
+- Tránh duplicate code.
+- Magic numbers và hardcoded values.
+- Nullable reference types.
+- Exception handling.
+- Async/Await và CancellationToken.
+- Khả năng đọc hiểu và bảo trì.
+
+### C. RESTful API Design
+- Endpoint naming.
+- HTTP methods.
+- HTTP status codes.
+- Request/Response DTO.
+- Model validation.
+- API versioning khi cần thiết.
+- Pagination, filtering, sorting.
+- Swagger/OpenAPI.
+- Response consistency.
+- Idempotency.
+
+### D. Database & Entity Framework Core
+- Entity design.
+- Database relationships.
+- Primary Key, Foreign Key.
+- Constraints và indexes.
+- EF Core migrations.
+- Tracking và AsNoTracking.
+- N+1 query problem.
+- Transactions.
+- Query optimization.
+- Concurrency handling.
+- Data retention cho dữ liệu cảm biến.
+
+### E. Security
+- Authentication.
+- Authorization.
+- Role-based và resource-based permissions.
+- JWT configuration.
+- Quản lý secrets.
+- Input validation.
+- SQL Injection.
+- Broken Object Level Authorization (BOLA).
+- HTTPS.
+- CORS.
+- Rate limiting.
+- Device authentication.
+- Bảo vệ API điều khiển thiết bị.
+
+### F. IoT Communication & Device Management
+- ESP32 gửi và nhận dữ liệu.
+- HTTP/MQTT communication.
+- Device identification.
+- Device registration.
+- Device authentication.
+- Device heartbeat.
+- Online/Offline detection.
+- Reconnection.
+- Duplicate telemetry.
+- Timestamp handling.
+- QoS khi sử dụng MQTT.
+- Retry mechanism.
+- Xử lý thiết bị mất kết nối.
+
+### G. Realtime & Device Control
+- SignalR hoặc cơ chế realtime đang sử dụng.
+- Đồng bộ trạng thái thiết bị.
+- Command acknowledgment.
+- Command timeout.
+- Idempotent command handling.
+- Race conditions.
+- Trạng thái mong muốn và trạng thái thực tế.
+- Xử lý lệnh điều khiển thất bại.
+- Giới hạn an toàn khi điều khiển thiết bị.
+
+### H. Performance & Scalability
+- API response time.
+- Database performance.
+- Async I/O.
+- Caching.
+- Concurrent requests.
+- Telemetry ingestion throughput.
+- Memory usage.
+- Connection management.
+- Background processing.
+- Khả năng mở rộng khi số thiết bị tăng.
+
+### I. Error Handling & Logging
+- Global exception handling.
+- Structured logging.
+- Log levels.
+- Correlation ID.
+- Không làm lộ thông tin nhạy cảm.
+- Audit logs.
+- Device failure logs.
+- Khả năng theo dõi lỗi end-to-end.
+
+### J. Testing
+- Unit testing.
+- Integration testing.
+- API testing.
+- Authentication/Authorization testing.
+- IoT simulation testing.
+- Offline device scenarios.
+- Duplicate/out-of-order telemetry.
+- Database integration tests.
+- Load testing.
+- Test coverage và chất lượng test.
+
+### K. Configuration & Deployment
+- appsettings.json.
+- Environment configuration.
+- Secret management.
+- Docker nếu có.
+- CI/CD nếu có.
+- Health checks.
+- Database migrations khi triển khai.
+- Production readiness.
+- Monitoring.
+- Backup và recovery.
+
+### L. Maintainability & Documentation
+- README.
+- Architecture documentation.
+- API documentation.
+- Device communication protocol.
+- Database documentation.
+- Coding standards.
+- Onboarding developers.
+- Technical debt.
+
+## 3. Yêu cầu về bộ tiêu chí
+
+Với mỗi tiêu chí, hãy cung cấp:
+
+1. **Criterion ID:** Mã tiêu chí, ví dụ ARCH-01.
+2. **Criterion Name:** Tên tiêu chí.
+3. **Description:** Mô tả yêu cầu kỹ thuật.
+4. **Review Method:** Cách kiểm tra source code.
+5. **Pass Condition:** Điều kiện đạt.
+6. **Fail Example:** Ví dụ trường hợp không đạt.
+7. **Severity:** Critical / High / Medium / Low.
+8. **Weight:** Trọng số đánh giá.
+9. **Score:** Thang điểm từ 0 đến 5.
+10. **Recommendation:** Hướng cải thiện khi không đạt.
+
+Các tiêu chí phải cụ thể, có khả năng kiểm chứng và tránh nhận xét chung chung.
+
+## 4. Quy tắc chấm điểm
+
+Sử dụng thang điểm:
+
+- 0: Không đáp ứng.
+- 1: Đáp ứng rất kém.
+- 2: Đáp ứng một phần, còn nhiều lỗi.
+- 3: Đạt yêu cầu cơ bản.
+- 4: Tốt, chỉ còn một số điểm cần cải thiện.
+- 5: Rất tốt, đáp ứng đầy đủ tiêu chí.
+
+Xây dựng hệ thống trọng số theo mức độ quan trọng và tính điểm tổng trên thang 100.
+
+Phân biệt:
+- PASS: Đạt yêu cầu.
+- PARTIAL: Đạt một phần.
+- FAIL: Không đạt.
+- N/A: Không áp dụng.
+- NOT VERIFIED: Chưa đủ bằng chứng để đánh giá.
+
+Không tính N/A vào mẫu số. Không được tự động coi NOT VERIFIED là PASS.
+
+## 5. Định dạng kết quả
+
+### Phần 1 — Code Review Checklist
+Trình bày bảng:
+
+| ID | Category | Criterion | Review Method | Pass Condition | Severity | Weight |
+|---|---|---|---|---|---|---|
+
+### Phần 2 — Detailed Review Guidelines
+Giải thích từng nhóm tiêu chí, kèm ví dụ C# hoặc cấu hình thực tế khi cần thiết.
+
+### Phần 3 — Scoring Rubric
+Đề xuất công thức tính điểm, cách phân bổ trọng số và cách xử lý N/A, NOT VERIFIED.
+
+### Phần 4 — Common IoT API Anti-patterns
+Liệt kê các anti-pattern thường gặp, giải thích tác động và phương án khắc phục.
+
+### Phần 5 — Automated Review
+Đề xuất công cụ kiểm tra tự động và những lỗi vẫn cần review thủ công.
+
+### Phần 6 — Code Review Report Template
+Tạo mẫu báo cáo để sử dụng khi review một repository thực tế.
+
+Mỗi finding cần có:
+- Finding ID.
+- Severity.
+- File path.
+- Class/Method.
+- Line number nếu xác định được.
+- Evidence.
+- Root cause.
+- Impact.
+- Suggested fix.
+- Verification steps.
+
+## 6. Nguyên tắc quan trọng
+
+- Tuân thủ các thực hành tốt của ASP.NET Core, EF Core, REST API và IoT.
+- Ưu tiên lỗi bảo mật, sai logic nghiệp vụ, mất dữ liệu và lỗi điều khiển thiết bị.
+- Phân biệt yêu cầu bắt buộc và khuyến nghị nâng cao.
+- Không áp dụng máy móc các design pattern.
+- Không đánh giá công nghệ không tồn tại trong dự án.
+- Không tự tạo tên file, số dòng hoặc bằng chứng.
+- Khi chưa được cung cấp source code, chỉ xây dựng bộ tiêu chí, không đưa ra kết luận về chất lượng dự án.
+- Khi có source code, mọi phát hiện phải dựa trên bằng chứng cụ thể.
+
+**Hãy bắt đầu bằng việc xây dựng bộ Code Review Checklist chuyên nghiệp, có thể dùng để đánh giá một dự án Web API IoT trong môi trường thực tế.**
