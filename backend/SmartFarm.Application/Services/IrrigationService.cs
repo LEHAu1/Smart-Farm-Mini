@@ -225,6 +225,14 @@ namespace SmartFarm.Application.Services
             return MapLogToDto(log);
         }
 
+        public async Task<IrrigationLogDto?> GetLogByIdAsync(
+            Guid logId,
+            CancellationToken cancellationToken = default)
+        {
+            var log = await _logRepository.GetByIdAsync(logId, cancellationToken);
+            return log != null ? MapLogToDto(log) : null;
+        }
+
         public async Task<IReadOnlyList<IrrigationLogDto>> GetLogsByDeviceIdAsync(
             Guid deviceId,
             int limit = 20,

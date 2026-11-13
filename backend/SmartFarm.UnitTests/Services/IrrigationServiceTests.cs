@@ -394,5 +394,33 @@ namespace SmartFarm.UnitTests.Services
             Assert.Single(result.Items);
             Assert.Equal(IrrigationMode.Automatic, result.Items[0].Mode);
         }
+
+        [Fact]
+        public async Task GetLogByIdAsync_ExistingLog_ReturnsDto()
+        {
+            var log = CreateLog(completed: true);
+            _logRepoMock
+                .Setup(r => r.GetByIdAsync(log.Id, default))
+                .ReturnsAsync(log);
+
+            var result = await _service.GetLogByIdAsync(log.Id);
+
+            Assert.NotNull(result);
+            Assert.Equal(log.Id, result.Id);
+            Assert.Equal(DeviceId, result.DeviceId);
+        }
+
+        [Fact]
+        public async Task GetLogByIdAsync_NonExistingLog_ReturnsNull()
+        {
+            var logId = Guid.NewGuid();
+            _logRepoMock
+                .Setup(r => r.GetByIdAsync(logId, default))
+                .ReturnsAsync((IrrigationLog?)null);
+
+            var result = await _service.GetLogByIdAsync(logId);
+
+            Assert.Null(result);
+        }
     }
 }

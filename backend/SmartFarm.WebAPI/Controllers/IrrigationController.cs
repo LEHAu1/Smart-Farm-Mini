@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using SmartFarm.Application.Contracts.Services;
@@ -215,6 +215,27 @@ namespace SmartFarm.WebAPI.Controllers
                 filterOwnerId, deviceId, mode, pageNumber, pageSize, cancellationToken);
 
             return Ok(result);
+        }
+
+        /// <summary>
+        /// Lấy thông tin chi tiết một phiên tưới nước theo ID
+        /// </summary>
+        [HttpGet("irrigation-logs/{logId:guid}")]
+        [ProducesResponseType(typeof(IrrigationLogDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetLogById(Guid logId, CancellationToken cancellationToken)
+        {
+            var log = await _irrigationService.GetLogByIdAsync(logId, cancellationToken);
+            if (log is null)
+                return NotFound(new { message = $"Không tìm thấy nhật ký tưới với ID '{logId}'." });
+
+            var accessError = await this.EnsureDeviceAccessAsync(_deviceService, log.DeviceId, cancellationToken);
+            if (accessError is not null)
+                return accessError;
+
+            return Ok(log);
         }
     }
 }
