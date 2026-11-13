@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Moq;
 using SmartFarm.Application.Contracts.Services;
 using SmartFarm.Application.DTOs.Alert;
@@ -10,6 +11,7 @@ using SmartFarm.Application.DTOs.Device;
 using SmartFarm.Application.DTOs.DeviceCommand;
 using SmartFarm.Application.DTOs.Irrigation;
 using SmartFarm.Domain.Enums;
+using SmartFarm.Infrastructure.Persistence.Data;
 using SmartFarm.WebAPI.Controllers;
 
 namespace SmartFarm.UnitTests.Controllers;
@@ -179,7 +181,7 @@ public class BackendEndpointsTests
         var change = await controller.ChangePassword(new ChangePasswordRequest(), CancellationToken.None);
 
         Assert.IsType<UnauthorizedResult>(update);
-        Assert.IsType<UnauthorizedResult>(change);z
+        Assert.IsType<UnauthorizedResult>(change);
         _auth.VerifyNoOtherCalls();
     }
 
@@ -281,6 +283,93 @@ public class BackendEndpointsTests
         var forbiddenResult = await controller.GetLogById(logId, CancellationToken.None);
         var forbiddenObj = Assert.IsType<ObjectResult>(forbiddenResult);
         Assert.Equal(StatusCodes.Status403Forbidden, forbiddenObj.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetDeviceConnectionStatus_ForOwner_ReturnsConnectionStatusDto()
+    {
+        var device = new DeviceDto
+        {
+            Id = _deviceId,
+            OwnerId = _userId,
+            DeviceCode = "SF-001",
+            Name = "Vườn Cà Chua",
+            IsOnline = true,
+            LastSeenAtUtc = DateTimeOffset.UtcNow
+        };
+        _devices.Setup(s => s.GetByIdAsync(_deviceId, CancellationToken.None)).ReturnsAsync(device);
+        var controller = WithUser(new DevicesController(_devices.Object));
+
+        var result = await controller.GetConnectionStatus(_deviceId, CancellationToken.None);
+
+        var ok = Assert.IsType<OkObjectResult>(result);
+        var dto = Assert.IsType<DeviceConnectionStatusDto>(ok.Value);
+        Assert.Equal(_deviceId, dto.DeviceId);
+        Assert.Equal("SF-001", dto.DeviceCode);
+        Assert.Equal("Vườn Cà Chua", dto.Name);
+        Assert.True(dto.IsOnline);
+        Assert.Equal("Online", dto.ConnectionStatus);
+    }
+
+    [Fact]
+    public async Task GetDeviceConnectionStatus_WhenMissingOrForbidden_ReturnsCorrectStatusCode()
+    {
+        _devices.Setup(s => s.GetByIdAsync(_deviceId, CancellationToken.None)).ReturnsAsync((DeviceDto?)null);
+        var controller = WithUser(new DevicesController(_devices.Object));
+
+        var missing = await controller.GetConnectionStatus(_deviceId, CancellationToken.None);
+        Assert.IsType<NotFoundObjectResult>(missing);
+
+        SetDeviceOwner(Guid.NewGuid());
+        var forbidden = await controller.GetConnectionStatus(_deviceId, CancellationToken.None);
+        var forbiddenObj = Assert.IsType<ObjectResult>(forbidden);
+        Assert.Equal(StatusCodes.Status403Forbidden, forbiddenObj.StatusCode);
+    }
+
+    [Fact]
+    public void Health_Live_ReturnsAliveStatus()
+    {
+        var options = new DbContextOptionsBuilder<SmartFarmDbContext>()
+            .UseSqlServer("Server=dummy;Database=dummy;Connect Timeout=1;")
+            .Options;
+        var db = new SmartFarmDbContext(options);
+        var controller = new HealthController(db);
+
+        var result = controller.Live();
+
+        var ok = Assert.IsType<OkObjectResult>(result);
+        Assert.NotNull(ok.Value);
+    }
+
+    [Fact]
+    public void Health_CheckHealth_ReturnsHealthyStatus()
+    {
+        var options = new DbContextOptionsBuilder<SmartFarmDbContext>()
+            .UseSqlServer("Server=dummy;Database=dummy;Connect Timeout=1;")
+            .Options;
+        var db = new SmartFarmDbContext(options);
+        var controller = new HealthController(db);
+
+        var result = controller.CheckHealth();
+
+        var ok = Assert.IsType<OkObjectResult>(result);
+        Assert.NotNull(ok.Value);
+    }
+
+    [Fact]
+    public async Task Health_Ready_WhenDbUnavailable_ReturnsServiceUnavailable()
+    {
+        var options = new DbContextOptionsBuilder<SmartFarmDbContext>()
+            .UseSqlServer("Server=dummy;Database=dummy;Connect Timeout=1;")
+            .Options;
+        var db = new SmartFarmDbContext(options);
+        var controller = new HealthController(db);
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+        var result = await controller.Ready(cts.Token);
+
+        var statusResult = Assert.IsType<ObjectResult>(result);
+        Assert.Equal(StatusCodes.Status503ServiceUnavailable, statusResult.StatusCode);
     }
 
     private void SetDeviceOwner(Guid ownerId)
