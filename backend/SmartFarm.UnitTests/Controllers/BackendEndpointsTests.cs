@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Moq;
 using SmartFarm.Application.Contracts.Services;
 using SmartFarm.Application.DTOs.Alert;
@@ -8,7 +9,9 @@ using SmartFarm.Application.DTOs.Auth;
 using SmartFarm.Application.DTOs.Common;
 using SmartFarm.Application.DTOs.Device;
 using SmartFarm.Application.DTOs.DeviceCommand;
+using SmartFarm.Application.DTOs.Irrigation;
 using SmartFarm.Domain.Enums;
+using SmartFarm.Infrastructure.Persistence.Data;
 using SmartFarm.WebAPI.Controllers;
 
 namespace SmartFarm.UnitTests.Controllers;
@@ -21,6 +24,7 @@ public class BackendEndpointsTests
     private readonly Mock<IDeviceService> _devices = new(MockBehavior.Strict);
     private readonly Mock<IDeviceCommandService> _commands = new(MockBehavior.Strict);
     private readonly Mock<IAuthService> _auth = new(MockBehavior.Strict);
+    private readonly Mock<IIrrigationService> _irrigation = new(MockBehavior.Strict);
 
     [Fact]
     public async Task GetAlerts_ForwardsOwnerFiltersAndPagination()
@@ -179,6 +183,193 @@ public class BackendEndpointsTests
         Assert.IsType<UnauthorizedResult>(update);
         Assert.IsType<UnauthorizedResult>(change);
         _auth.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task GetAlertById_ForOwner_ReturnsAlertDto()
+    {
+        var alertId = Guid.NewGuid();
+        var alert = new AlertDto { Id = alertId, DeviceId = _deviceId, Title = "High Temperature" };
+        _alerts.Setup(service => service.GetByIdAsync(alertId, CancellationToken.None)).ReturnsAsync(alert);
+        SetDeviceOwner(_userId);
+        var controller = WithUser(new AlertsController(_alerts.Object, _devices.Object));
+
+        var result = await controller.GetById(alertId, CancellationToken.None);
+
+        var ok = Assert.IsType<OkObjectResult>(result.Result);
+        Assert.Same(alert, ok.Value);
+    }
+
+    [Fact]
+    public async Task GetAlertById_WhenMissingOrDifferentOwner_ReturnsNotFound()
+    {
+        var alertId = Guid.NewGuid();
+        _alerts.Setup(service => service.GetByIdAsync(alertId, CancellationToken.None)).ReturnsAsync((AlertDto?)null);
+        var controller = WithUser(new AlertsController(_alerts.Object, _devices.Object));
+
+        var missing = await controller.GetById(alertId, CancellationToken.None);
+        Assert.IsType<NotFoundObjectResult>(missing.Result);
+
+        var alert = new AlertDto { Id = alertId, DeviceId = _deviceId };
+        _alerts.Setup(service => service.GetByIdAsync(alertId, CancellationToken.None)).ReturnsAsync(alert);
+        SetDeviceOwner(Guid.NewGuid());
+
+        var forbiddenOwner = await controller.GetById(alertId, CancellationToken.None);
+        Assert.IsType<NotFoundObjectResult>(forbiddenOwner.Result);
+    }
+
+    [Fact]
+    public async Task GetCommandById_ForOwner_ReturnsCommandDto()
+    {
+        var commandId = Guid.NewGuid();
+        var command = new DeviceCommandDto { Id = commandId, DeviceId = _deviceId, Action = "START_PUMP" };
+        _commands.Setup(service => service.GetByIdAsync(commandId, CancellationToken.None)).ReturnsAsync(command);
+        SetDeviceOwner(_userId);
+        var controller = WithUser(new DeviceCommandsController(_commands.Object, _devices.Object));
+
+        var result = await controller.GetById(commandId, CancellationToken.None);
+
+        var ok = Assert.IsType<OkObjectResult>(result.Result);
+        Assert.Same(command, ok.Value);
+    }
+
+    [Fact]
+    public async Task GetCommandById_WhenMissingOrDifferentOwner_ReturnsNotFound()
+    {
+        var commandId = Guid.NewGuid();
+        _commands.Setup(service => service.GetByIdAsync(commandId, CancellationToken.None)).ReturnsAsync((DeviceCommandDto?)null);
+        var controller = WithUser(new DeviceCommandsController(_commands.Object, _devices.Object));
+
+        var missing = await controller.GetById(commandId, CancellationToken.None);
+        Assert.IsType<NotFoundObjectResult>(missing.Result);
+
+        var command = new DeviceCommandDto { Id = commandId, DeviceId = _deviceId };
+        _commands.Setup(service => service.GetByIdAsync(commandId, CancellationToken.None)).ReturnsAsync(command);
+        SetDeviceOwner(Guid.NewGuid());
+
+        var forbiddenOwner = await controller.GetById(commandId, CancellationToken.None);
+        Assert.IsType<NotFoundObjectResult>(forbiddenOwner.Result);
+    }
+
+    [Fact]
+    public async Task GetIrrigationLogById_ForOwner_ReturnsLogDto()
+    {
+        var logId = Guid.NewGuid();
+        var log = new IrrigationLogDto { Id = logId, DeviceId = _deviceId, Mode = IrrigationMode.Automatic };
+        _irrigation.Setup(service => service.GetLogByIdAsync(logId, CancellationToken.None)).ReturnsAsync(log);
+        SetDeviceOwner(_userId);
+        var controller = WithUser(new IrrigationController(_irrigation.Object, _devices.Object));
+
+        var result = await controller.GetLogById(logId, CancellationToken.None);
+
+        var ok = Assert.IsType<OkObjectResult>(result);
+        Assert.Same(log, ok.Value);
+    }
+
+    [Fact]
+    public async Task GetIrrigationLogById_WhenMissingOrForbidden_ReturnsCorrectStatusCode()
+    {
+        var logId = Guid.NewGuid();
+        _irrigation.Setup(service => service.GetLogByIdAsync(logId, CancellationToken.None)).ReturnsAsync((IrrigationLogDto?)null);
+        var controller = WithUser(new IrrigationController(_irrigation.Object, _devices.Object));
+
+        var missing = await controller.GetLogById(logId, CancellationToken.None);
+        Assert.IsType<NotFoundObjectResult>(missing);
+
+        var log = new IrrigationLogDto { Id = logId, DeviceId = _deviceId };
+        _irrigation.Setup(service => service.GetLogByIdAsync(logId, CancellationToken.None)).ReturnsAsync(log);
+        SetDeviceOwner(Guid.NewGuid());
+
+        var forbiddenResult = await controller.GetLogById(logId, CancellationToken.None);
+        var forbiddenObj = Assert.IsType<ObjectResult>(forbiddenResult);
+        Assert.Equal(StatusCodes.Status403Forbidden, forbiddenObj.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetDeviceConnectionStatus_ForOwner_ReturnsConnectionStatusDto()
+    {
+        var device = new DeviceDto
+        {
+            Id = _deviceId,
+            OwnerId = _userId,
+            DeviceCode = "SF-001",
+            Name = "Vườn Cà Chua",
+            IsOnline = true,
+            LastSeenAtUtc = DateTimeOffset.UtcNow
+        };
+        _devices.Setup(s => s.GetByIdAsync(_deviceId, CancellationToken.None)).ReturnsAsync(device);
+        var controller = WithUser(new DevicesController(_devices.Object));
+
+        var result = await controller.GetConnectionStatus(_deviceId, CancellationToken.None);
+
+        var ok = Assert.IsType<OkObjectResult>(result);
+        var dto = Assert.IsType<DeviceConnectionStatusDto>(ok.Value);
+        Assert.Equal(_deviceId, dto.DeviceId);
+        Assert.Equal("SF-001", dto.DeviceCode);
+        Assert.Equal("Vườn Cà Chua", dto.Name);
+        Assert.True(dto.IsOnline);
+        Assert.Equal("Online", dto.ConnectionStatus);
+    }
+
+    [Fact]
+    public async Task GetDeviceConnectionStatus_WhenMissingOrForbidden_ReturnsCorrectStatusCode()
+    {
+        _devices.Setup(s => s.GetByIdAsync(_deviceId, CancellationToken.None)).ReturnsAsync((DeviceDto?)null);
+        var controller = WithUser(new DevicesController(_devices.Object));
+
+        var missing = await controller.GetConnectionStatus(_deviceId, CancellationToken.None);
+        Assert.IsType<NotFoundObjectResult>(missing);
+
+        SetDeviceOwner(Guid.NewGuid());
+        var forbidden = await controller.GetConnectionStatus(_deviceId, CancellationToken.None);
+        var forbiddenObj = Assert.IsType<ObjectResult>(forbidden);
+        Assert.Equal(StatusCodes.Status403Forbidden, forbiddenObj.StatusCode);
+    }
+
+    [Fact]
+    public void Health_Live_ReturnsAliveStatus()
+    {
+        var options = new DbContextOptionsBuilder<SmartFarmDbContext>()
+            .UseSqlServer("Server=dummy;Database=dummy;Connect Timeout=1;")
+            .Options;
+        var db = new SmartFarmDbContext(options);
+        var controller = new HealthController(db);
+
+        var result = controller.Live();
+
+        var ok = Assert.IsType<OkObjectResult>(result);
+        Assert.NotNull(ok.Value);
+    }
+
+    [Fact]
+    public void Health_CheckHealth_ReturnsHealthyStatus()
+    {
+        var options = new DbContextOptionsBuilder<SmartFarmDbContext>()
+            .UseSqlServer("Server=dummy;Database=dummy;Connect Timeout=1;")
+            .Options;
+        var db = new SmartFarmDbContext(options);
+        var controller = new HealthController(db);
+
+        var result = controller.CheckHealth();
+
+        var ok = Assert.IsType<OkObjectResult>(result);
+        Assert.NotNull(ok.Value);
+    }
+
+    [Fact]
+    public async Task Health_Ready_WhenDbUnavailable_ReturnsServiceUnavailable()
+    {
+        var options = new DbContextOptionsBuilder<SmartFarmDbContext>()
+            .UseSqlServer("Server=dummy;Database=dummy;Connect Timeout=1;")
+            .Options;
+        var db = new SmartFarmDbContext(options);
+        var controller = new HealthController(db);
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+        var result = await controller.Ready(cts.Token);
+
+        var statusResult = Assert.IsType<ObjectResult>(result);
+        Assert.Equal(StatusCodes.Status503ServiceUnavailable, statusResult.StatusCode);
     }
 
     private void SetDeviceOwner(Guid ownerId)

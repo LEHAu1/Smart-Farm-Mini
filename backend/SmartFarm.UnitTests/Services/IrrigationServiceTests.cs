@@ -348,5 +348,79 @@ namespace SmartFarm.UnitTests.Services
             Assert.True(status.IsPumpRunning);
             Assert.Equal(DeviceId, status.DeviceId);
         }
+
+        [Fact]
+        public async Task CreateRuleAsync_WhenActiveRuleExists_ThrowsInvalidOperationException()
+        {
+            // Arrange
+            var device = CreateActiveDevice();
+            var existingRule = CreateRule();
+            _deviceRepoMock
+                .Setup(r => r.GetByIdAsync(DeviceId, default))
+                .ReturnsAsync(device);
+            _ruleRepoMock
+                .Setup(r => r.GetActiveRuleByDeviceIdAsync(DeviceId, default))
+                .ReturnsAsync(existingRule);
+
+            var request = new CreateIrrigationRuleRequest
+            {
+                DeviceId = DeviceId,
+                Name = "Duplicate Active Rule",
+                MoistureThreshold = 30.0m,
+                TargetMoisture = 60.0m,
+                MinIntervalMinutes = 15,
+                MaxDurationSeconds = 120
+            };
+
+            // Act & Assert
+            await Assert.ThrowsAsync<InvalidOperationException>(
+                () => _service.CreateRuleAsync(request));
+        }
+
+        [Fact]
+        public async Task GetLogsPagedAsync_ReturnsPageResultWithFilteredItems()
+        {
+            // Arrange
+            var logs = new List<IrrigationLog> { CreateLog(completed: true) };
+            _logRepoMock
+                .Setup(r => r.GetPagedAsync(null, DeviceId, IrrigationMode.Automatic, 1, 20, default))
+                .ReturnsAsync((logs, 1));
+
+            // Act
+            var result = await _service.GetLogsPagedAsync(null, DeviceId, IrrigationMode.Automatic, 1, 20);
+
+            // Assert
+            Assert.Equal(1, result.TotalCount);
+            Assert.Single(result.Items);
+            Assert.Equal(IrrigationMode.Automatic, result.Items[0].Mode);
+        }
+
+        [Fact]
+        public async Task GetLogByIdAsync_ExistingLog_ReturnsDto()
+        {
+            var log = CreateLog(completed: true);
+            _logRepoMock
+                .Setup(r => r.GetByIdAsync(log.Id, default))
+                .ReturnsAsync(log);
+
+            var result = await _service.GetLogByIdAsync(log.Id);
+
+            Assert.NotNull(result);
+            Assert.Equal(log.Id, result.Id);
+            Assert.Equal(DeviceId, result.DeviceId);
+        }
+
+        [Fact]
+        public async Task GetLogByIdAsync_NonExistingLog_ReturnsNull()
+        {
+            var logId = Guid.NewGuid();
+            _logRepoMock
+                .Setup(r => r.GetByIdAsync(logId, default))
+                .ReturnsAsync((IrrigationLog?)null);
+
+            var result = await _service.GetLogByIdAsync(logId);
+
+            Assert.Null(result);
+        }
     }
 }

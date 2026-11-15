@@ -72,6 +72,37 @@ namespace SmartFarm.WebAPI.Controllers
         }
 
         /// <summary>
+        /// Lấy trạng thái kết nối của thiết bị IoT (Online/Offline, LastSeenAtUtc)
+        /// </summary>
+        [HttpGet("{id:guid}/connection")]
+        [ProducesResponseType(typeof(DeviceConnectionStatusDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetConnectionStatus(Guid id, CancellationToken cancellationToken)
+        {
+            var (userId, isAdmin) = GetCurrentUserContext();
+
+            var device = await _deviceService.GetByIdAsync(id, cancellationToken);
+            if (device is null)
+                return NotFound(new { message = $"Không tìm thấy thiết bị với ID '{id}'." });
+
+            if (!isAdmin && device.OwnerId != userId)
+                return StatusCode(StatusCodes.Status403Forbidden, new { message = "Bạn không có quyền truy cập thiết bị này." });
+
+            var status = new DeviceConnectionStatusDto
+            {
+                DeviceId = device.Id,
+                DeviceCode = device.DeviceCode,
+                Name = device.Name,
+                IsOnline = device.IsOnline,
+                LastSeenAtUtc = device.LastSeenAtUtc
+            };
+
+            return Ok(status);
+        }
+
+        /// <summary>
         /// Đăng ký mới một thiết bị IoT vào hệ thống
         /// </summary>
         [HttpPost]

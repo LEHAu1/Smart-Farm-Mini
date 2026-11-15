@@ -1,4 +1,6 @@
+using SmartFarm.Application.DTOs.Common;
 using SmartFarm.Application.DTOs.Irrigation;
+using SmartFarm.Domain.Enums;
 
 namespace SmartFarm.Application.Contracts.Services
 {
@@ -18,7 +20,15 @@ namespace SmartFarm.Application.Contracts.Services
         // ── Quản lý nhật ký và trạng thái tưới (Irrigation Logs) ─────
         Task<IrrigationLogDto> StartIrrigationAsync(CreateIrrigationLogRequest request, CancellationToken cancellationToken = default);
         Task<IrrigationLogDto> CompleteIrrigationAsync(Guid logId, CompleteIrrigationLogRequest request, CancellationToken cancellationToken = default);
+        Task<IrrigationLogDto?> GetLogByIdAsync(Guid logId, CancellationToken cancellationToken = default);
         Task<IReadOnlyList<IrrigationLogDto>> GetLogsByDeviceIdAsync(Guid deviceId, int limit = 20, CancellationToken cancellationToken = default);
+        Task<PageResult<IrrigationLogDto>> GetLogsPagedAsync(
+            Guid? ownerId,
+            Guid? deviceId,
+            IrrigationMode? mode,
+            int pageNumber,
+            int pageSize,
+            CancellationToken cancellationToken = default);
         Task<IrrigationStatusDto> GetCurrentStatusAsync(Guid deviceId, CancellationToken cancellationToken = default);
     }
 }

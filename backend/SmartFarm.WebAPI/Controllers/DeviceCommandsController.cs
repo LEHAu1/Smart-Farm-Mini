@@ -65,6 +65,28 @@ namespace SmartFarm.WebAPI.Controllers
             return await GetPageAsync(userId, null, status, pageIndex, pageSize, cancellationToken);
         }
 
+        [HttpGet("api/commands/{commandId:guid}")]
+        [ProducesResponseType(typeof(DeviceCommandDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<DeviceCommandDto>> GetById(
+            Guid commandId,
+            CancellationToken cancellationToken = default)
+        {
+            if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
+                return Unauthorized();
+
+            var command = await commands.GetByIdAsync(commandId, cancellationToken);
+            if (command is null)
+                return NotFound(new { message = $"Không tìm thấy lệnh điều khiển với ID '{commandId}'." });
+
+            var device = await devices.GetByIdAsync(command.DeviceId, cancellationToken);
+            if (device is null || (!User.IsInRole("Admin") && device.OwnerId != userId))
+                return NotFound(new { message = $"Không tìm thấy lệnh điều khiển với ID '{commandId}'." });
+
+            return Ok(command);
+        }
+
         private async Task<ActionResult<PageResult<DeviceCommandDto>>> GetPageAsync(
             Guid userId, Guid? deviceId, CommandStatus? status, int pageIndex, int pageSize, CancellationToken cancellationToken)
         {

@@ -1,4 +1,5 @@
 using SmartFarm.Domain.Entities;
+using SmartFarm.Domain.Enums;
 
 namespace SmartFarm.Application.Contracts.Persistence
 {
@@ -9,6 +10,13 @@ namespace SmartFarm.Application.Contracts.Persistence
     {
         Task<IrrigationLog?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
         Task<IReadOnlyList<IrrigationLog>> GetByDeviceIdAsync(Guid deviceId, int limit = 20, CancellationToken cancellationToken = default);
+        Task<(IReadOnlyList<IrrigationLog> Items, int TotalCount)> GetPagedAsync(
+            Guid? ownerId,
+            Guid? deviceId,
+            IrrigationMode? mode,
+            int pageNumber,
+            int pageSize,
+            CancellationToken cancellationToken = default);
         Task<IrrigationLog?> GetLatestByDeviceIdAsync(Guid deviceId, CancellationToken cancellationToken = default);
         Task<IrrigationLog?> GetCurrentInProgressByDeviceIdAsync(Guid deviceId, CancellationToken cancellationToken = default);
         Task AddAsync(IrrigationLog log, CancellationToken cancellationToken = default);

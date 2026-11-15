@@ -12,6 +12,7 @@ namespace SmartFarm.UnitTests.Services
     public class SensorServiceTests
     {
         private readonly Mock<ISensorReadingRepository> _sensorRepoMock;
+        private readonly Mock<ISensorReadingAggregateRepository> _aggregateRepoMock;
         private readonly Mock<IDeviceRepository> _deviceRepoMock;
         private readonly Mock<ILogger<SensorService>> _loggerMock;
         private readonly SensorService _service;
@@ -23,11 +24,13 @@ namespace SmartFarm.UnitTests.Services
         public SensorServiceTests()
         {
             _sensorRepoMock = new Mock<ISensorReadingRepository>();
+            _aggregateRepoMock = new Mock<ISensorReadingAggregateRepository>();
             _deviceRepoMock = new Mock<IDeviceRepository>();
             _loggerMock = new Mock<ILogger<SensorService>>();
 
             _service = new SensorService(
                 _sensorRepoMock.Object,
+                _aggregateRepoMock.Object,
                 _deviceRepoMock.Object,
                 _loggerMock.Object);
         }
@@ -231,6 +234,52 @@ namespace SmartFarm.UnitTests.Services
             Assert.Equal(DeviceId, history.DeviceId);
             Assert.Equal(SensorType.SoilMoisture, history.SensorType);
             Assert.Equal(2, history.DataPoints.Count);
+        }
+
+        // ── GetAggregatesAsync ────────────────────────────────────────
+
+        [Fact]
+        public async Task GetAggregatesAsync_ReturnsMappedAggregateDtos()
+        {
+            // Arrange
+            var from = NowUtc.AddDays(-7);
+            var aggregates = new List<SensorReadingAggregate>
+            {
+                new SensorReadingAggregate
+                {
+                    Id = Guid.NewGuid(),
+                    DeviceId = DeviceId,
+                    SensorType = SensorType.AirTemperature,
+                    HourBucket = NowUtc.AddHours(-2),
+                    MinValue = 22.5m,
+                    AvgValue = 25.0m,
+                    MaxValue = 27.5m,
+                    SampleCount = 12,
+                    Unit = "°C",
+                    AggregatedAtUtc = NowUtc
+                }
+            };
+
+            _aggregateRepoMock
+                .Setup(r => r.GetAggregatesAsync(DeviceId, SensorType.AirTemperature, from, NowUtc, default))
+                .ReturnsAsync(aggregates);
+
+            // Act
+            var result = await _service.GetAggregatesAsync(DeviceId, SensorType.AirTemperature, from, NowUtc);
+
+            // Assert
+            Assert.Single(result);
+            Assert.Equal(22.5m, result[0].MinValue);
+            Assert.Equal(25.0m, result[0].AvgValue);
+            Assert.Equal(27.5m, result[0].MaxValue);
+            Assert.Equal(12, result[0].SampleCount);
+        }
+
+        [Fact]
+        public async Task GetAggregatesAsync_FromGreaterThanTo_ThrowsArgumentException()
+        {
+            await Assert.ThrowsAsync<ArgumentException>(
+                () => _service.GetAggregatesAsync(DeviceId, null, NowUtc, NowUtc.AddHours(-1)));
         }
     }
 }

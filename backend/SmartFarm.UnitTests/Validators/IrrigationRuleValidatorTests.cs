@@ -108,5 +108,44 @@ namespace SmartFarm.UnitTests.Validators
             Assert.False(isValid);
             Assert.Equal("MaxDurationSeconds must be between 1 and 300 seconds.", errorMessage);
         }
+
+        [Theory]
+        [InlineData(-1, 50)]
+        [InlineData(30, 101)]
+        public void ValidateCreate_MoistureOutOfRange_ReturnsFalse(decimal threshold, decimal target)
+        {
+            var request = new CreateIrrigationRuleRequest
+            {
+                DeviceId = Guid.NewGuid(),
+                Name = "Quy tắc độ ẩm lỗi",
+                MoistureThreshold = threshold,
+                TargetMoisture = target,
+                MinIntervalMinutes = 30,
+                MaxDurationSeconds = 120
+            };
+
+            var (isValid, _) = IrrigationRuleValidator.ValidateCreate(request);
+
+            Assert.False(isValid);
+        }
+
+        [Fact]
+        public void ValidateCreate_DurationExceeds300_ReturnsFalse()
+        {
+            var request = new CreateIrrigationRuleRequest
+            {
+                DeviceId = Guid.NewGuid(),
+                Name = "Quy tắc quá 300s",
+                MoistureThreshold = 30.0m,
+                TargetMoisture = 60.0m,
+                MinIntervalMinutes = 30,
+                MaxDurationSeconds = 301
+            };
+
+            var (isValid, errorMessage) = IrrigationRuleValidator.ValidateCreate(request);
+
+            Assert.False(isValid);
+            Assert.Equal("MaxDurationSeconds must be between 1 and 300 seconds.", errorMessage);
+        }
     }
 }
