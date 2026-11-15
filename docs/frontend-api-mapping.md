@@ -1,16 +1,31 @@
 # TÀI LIỆU ÁNH XẠ API BACKEND VỚI FRONTEND (API CONTRACT MAPPING)
 Dự án: **Smart Farm Mini - IoT Smart Agriculture**  
-Phiên bản: **1.0.0 (Stage 0 Discovery)**  
+Phiên bản: **1.1.0 (Stage 0 Audit Fixed)**  
 Nguồn tham chiếu: **ASP.NET Core WebAPI Controllers, Domain Entities & Application DTOs**
 
 ---
 
 ## 1. TỔNG QUAN HỆ THỐNG API
 
+- **Tổng số endpoint đã kiểm tra và chuẩn hóa**: **37 endpoints** chia thành 8 nhóm:
+  - Auth: **7**
+  - Dashboard: **1**
+  - Devices: **7**
+  - Sensors: **3**
+  - Irrigation: **8**
+  - Alerts: **4**
+  - DeviceCommands: **4**
+  - Health: **3**  
+  $\Rightarrow 7 + 1 + 7 + 3 + 8 + 4 + 4 + 3 = 37$ endpoints.
 - **Base URL mặc định**: `http://localhost:5205` (cấu hình qua biến môi trường `VITE_API_BASE_URL`).
 - **Giao thức**: RESTful JSON API trên nền tảng .NET 10.
 - **Cơ chế xác thực**: JWT Bearer Token (Access Token sống 15 phút, Refresh Token sống 30 ngày, cơ chế Token Rotation).
-- **Phân quyền người dùng**: Hệ thống dành cho người dùng cá nhân (User) quản lý thiết bị của mình; hỗ trợ phân quyền Admin xem toàn bộ dữ liệu. Mọi API nghiệp vụ đều có kiểm tra quyền sở hữu (`OwnerId == currentUserId`).
+- **Phân quyền người dùng & Nguyên tắc bảo mật**:
+  - Hệ thống thiết kế cho người dùng cá nhân (User) quản lý các thiết bị IoT của mình.
+  - Giao diện đăng ký (`Register`) **KHÔNG hiển thị lựa chọn Role**; Backend tự động gán mặc định `Role = "User"`.
+  - Khi thêm thiết bị (`CreateDeviceRequest`), Frontend **KHÔNG cần gửi `ownerId`** (Backend tự động lấy ID từ JWT Claims của tài khoản đang đăng nhập).
+  - Mọi API nghiệp vụ nhạy cảm đều có kiểm tra quyền sở hữu (`OwnerId == currentUserId`).
+  - **Quy ước điều khiển máy bơm**: Gửi lệnh `START_PUMP` (`payload: "{\"duration\": 60}"`) hoặc `STOP_PUMP`. Frontend KHÔNG tự ý hiển thị máy bơm đang chạy ngay khi bấm nút (optimistic update) mà phải căn cứ vào phản hồi lệnh và trạng thái `isPumpRunning` từ API `/irrigation/status` hoặc luồng dữ liệu cảm biến.
 - **Xử lý mã lỗi chuẩn**:
   - `200 OK`: Truy vấn / cập nhật thành công.
   - `201 Created`: Tạo mới thành công (trả về DTO kèm `Location` header).
@@ -85,12 +100,13 @@ export enum IrrigationStatus {
 - **Endpoint**: `POST /api/Auth/register`
 - **Xác thực**: Public
 - **Trang sử dụng**: `02. Register`
+- **Lưu ý**: Frontend KHÔNG cần truyền `role`. Backend tự động gán `Role = "User"`.
 - **Request Body (`RegisterRequest`)**:
   ```json
   {
     "email": "user@example.com",
     "password": "Password123@",
-    "role": "User"
+    "displayName": "Nguyễn Văn A"
   }
   ```
 - **Response (`200 OK - AuthResponseDto`)**:
@@ -291,10 +307,10 @@ export enum IrrigationStatus {
 - **Endpoint**: `POST /api/Devices`
 - **Xác thực**: Bearer Token
 - **Trang sử dụng**: `04. Devices` (Modal / Trang thêm thiết bị)
+- **Lưu ý**: Frontend KHÔNG cần truyền `ownerId`. Backend tự động lấy ID người dùng từ JWT claims.
 - **Request Body (`CreateDeviceRequest`)**:
   ```json
   {
-    "ownerId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
     "deviceCode": "ESP32-FARM-02",
     "name": "Khu Dâu Tây",
     "description": "Chậu treo thông minh"
@@ -712,3 +728,4 @@ export enum IrrigationStatus {
 - **Response**:
   - `200 OK` (Sẵn sàng): `{ "status": "Ready", "checks": { "database": "Ready" } }`
   - `503 Service Unavailable` (Mất kết nối DB): `{ "status": "Degraded", "checks": { "database": "Error: ..." } }`
+

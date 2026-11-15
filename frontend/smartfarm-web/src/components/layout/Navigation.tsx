@@ -4,7 +4,7 @@ import type { NavigationItem } from '../../types/navigation'
 export const navigation: NavigationItem[] = [
   { path: '/dashboard', label: 'Tổng quan', iconName: 'dashboard' },
   { path: '/devices', label: 'Thiết bị', iconName: 'devices' },
-  { path: '/irrigation-logs', label: 'Lịch sử tưới', iconName: 'irrigation' },
+  { path: '/irrigation-history', label: 'Lịch sử tưới', iconName: 'irrigation' },
   { path: '/alerts', label: 'Cảnh báo', iconName: 'alerts' },
   { path: '/commands', label: 'Lệnh điều khiển', iconName: 'commands' },
   { path: '/profile', label: 'Tài khoản', iconName: 'profile' },

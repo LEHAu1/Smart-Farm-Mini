@@ -67,6 +67,12 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     min-height: 100vh;
+    caret-color: var(--color-primary);
+  }
+
+  ::selection {
+    background-color: #bbf7d0;
+    color: #14532d;
   }
 
   /* Accessible focus indicators */

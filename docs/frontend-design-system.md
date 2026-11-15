@@ -111,3 +111,4 @@ Mọi component đều bắt buộc phải có đầy đủ 7 trạng thái tư�
   - Bắt buộc hỗ trợ đầy đủ bàn phím (`Tab`, `Enter`, `Escape`).
   - Đường viền focus luôn rõ ràng (`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary`).
   - Hỗ trợ `prefers-reduced-motion` cho người dùng nhạy cảm với chuyển động.
+

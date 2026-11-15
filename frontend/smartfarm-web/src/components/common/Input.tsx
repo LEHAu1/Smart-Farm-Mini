@@ -71,7 +71,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             aria-describedby={
               error ? errorId : helperText ? helperId : undefined
             }
-            className={`w-full rounded-lg border bg-white px-3.5 py-2.5 text-sm text-[#17251d] placeholder:text-[#8a968d] transition-colors duration-150 outline-none
+            className={`w-full rounded-lg border bg-white px-3.5 py-2.5 text-sm text-[#17251d] placeholder:text-[#647067] transition-colors duration-150 outline-none
               ${leftIcon ? 'pl-10' : ''}
               ${rightIcon || showPasswordToggle ? 'pr-10' : ''}
               ${

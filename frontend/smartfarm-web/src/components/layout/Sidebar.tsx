@@ -17,7 +17,7 @@ import type { NavigationItem } from '../../types/navigation'
 export const NAVIGATION_ITEMS: NavigationItem[] = [
   { path: '/dashboard', label: 'Tổng quan', iconName: 'dashboard' },
   { path: '/devices', label: 'Thiết bị', iconName: 'devices' },
-  { path: '/irrigation-logs', label: 'Lịch sử tưới', iconName: 'irrigation' },
+  { path: '/irrigation-history', label: 'Lịch sử tưới', iconName: 'irrigation' },
   { path: '/alerts', label: 'Cảnh báo', iconName: 'alerts' },
   { path: '/commands', label: 'Lệnh điều khiển', iconName: 'commands' },
   { path: '/profile', label: 'Tài khoản', iconName: 'profile' },
@@ -112,9 +112,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
             onClick={onCloseMobile}
             title={isCollapsed && !isMobileOpen ? item.label : undefined}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                 isActive
-                  ? 'bg-[#f0fdf4] text-[#15803d] font-semibold border-l-2 border-[#15803d]'
+                  ? 'bg-[#f0fdf4] text-[#15803d] font-semibold shadow-2xs'
                   : 'text-[#647067] hover:bg-[#f8faf7] hover:text-[#17251d]'
               } ${isCollapsed && !isMobileOpen ? 'justify-center px-2' : ''}`
             }

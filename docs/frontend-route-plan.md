@@ -96,3 +96,4 @@ Giao diện vận hành tác vụ (Operate Mode):
   - Dropdown người dùng: Tên hiển thị, Email, link đến Profile, nút Đăng xuất.
 - **Mobile Drawer**:
   - Tự động chuyển đổi thành Drawer vuốt mở trên màn hình nhỏ (< 1024px) để đảm bảo diện tích hiển thị biểu đồ và bảng dữ liệu.
+
