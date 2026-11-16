@@ -1,4 +1,4 @@
-﻿namespace SmartFarm.WebAPI.Hubs
+namespace SmartFarm.WebAPI.Hubs
 {
     public class SensorHub
     {

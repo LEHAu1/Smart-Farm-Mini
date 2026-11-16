@@ -1,30 +1,84 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
-import AppLayout from './layouts/AppLayout'
-import DashboardPage from './pages/Dashboard'
-import LoginPage from './pages/Login'
-import NotFoundPage from './pages/NotFound'
-import DevicesPage from './pages/Devices'
-import SensorsPage from './pages/Sensors'
-import IrrigationPage from './pages/Irrigation'
-import AlertsPage from './pages/Alerts'
-import HistoryPage from './pages/History'
-import SettingsPage from './pages/Settings'
+import { Navigate, Route, Routes } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import { ToastProvider } from './contexts/ToastContext';
+
+// Layouts & Route Guards
+import AppLayout from './layouts/AppLayout';
+import ProtectedRoute from './components/routing/ProtectedRoute';
+import PublicRoute from './components/routing/PublicRoute';
+
+// Pages
+import LoginPage from './pages/Login';
+import RegisterPage from './pages/Register';
+import DashboardPage from './pages/Dashboard';
+import DevicesPage from './pages/Devices';
+import DeviceDetailPlaceholder from './pages/Devices/DeviceDetailPlaceholder';
+import SensorsPage from './pages/Sensors';
+import IrrigationPage from './pages/Irrigation';
+import HistoryPage from './pages/History';
+import AlertsPage from './pages/Alerts';
+import CommandsPage from './pages/Commands';
+import ProfilePage from './pages/Profile';
+import SettingsPage from './pages/Settings';
+import NotFoundPage from './pages/NotFound';
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route element={<AppLayout />}>
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/devices" element={<DevicesPage />} />
-        <Route path="/sensors" element={<SensorsPage />} />
-        <Route path="/irrigation" element={<IrrigationPage />} />
-        <Route path="/alerts" element={<AlertsPage />} />
-        <Route path="/history" element={<HistoryPage />} />
-        <Route path="/settings" element={<SettingsPage />} />
-      </Route>
-      <Route path="*" element={<NotFoundPage />} />
-    </Routes>
-  )
+    <AuthProvider>
+      <ToastProvider>
+        <Routes>
+          {/* Root redirect */}
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
+          {/* Public Auth Routes */}
+          <Route
+            path="/login"
+            element={
+              <PublicRoute>
+                <LoginPage />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <PublicRoute>
+                <RegisterPage />
+              </PublicRoute>
+            }
+          />
+
+          {/* Protected Main App Shell Routes */}
+          <Route
+            element={
+              <ProtectedRoute>
+                <AppLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="/dashboard" element={<DashboardPage />} />
+            
+            {/* Devices & Device-scoped routes */}
+            <Route path="/devices" element={<DevicesPage />} />
+            <Route path="/devices/:deviceId" element={<DeviceDetailPlaceholder />} />
+            <Route path="/devices/:deviceId/sensors" element={<DeviceDetailPlaceholder />} />
+            <Route path="/devices/:deviceId/irrigation" element={<DeviceDetailPlaceholder />} />
+
+            {/* Global telemetry & management views */}
+            <Route path="/sensors" element={<SensorsPage />} />
+            <Route path="/irrigation" element={<IrrigationPage />} />
+            <Route path="/irrigation-history" element={<HistoryPage />} />
+            <Route path="/history" element={<Navigate to="/irrigation-history" replace />} />
+            <Route path="/alerts" element={<AlertsPage />} />
+            <Route path="/commands" element={<CommandsPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+          </Route>
+
+          {/* 404 Catch-all */}
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </ToastProvider>
+    </AuthProvider>
+  );
 }
