@@ -1,5 +1,6 @@
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Migrations.Operations;
 using SmartFarm.Domain.Entities;
@@ -18,7 +19,7 @@ public class DatabaseRemediationTests
             .Options;
         using var context = new SmartFarmDbContext(options);
 
-        var entity = context.Model.FindEntityType(typeof(SensorReading));
+        var entity = context.GetService<IDesignTimeModel>().Model.FindEntityType(typeof(SensorReading));
         Assert.NotNull(entity);
         Assert.NotNull(entity.FindProperty(nameof(SensorReading.MessageId)));
 
