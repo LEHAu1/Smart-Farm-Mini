@@ -36,39 +36,29 @@ namespace SmartFarm.Application.Services
             var onlineDevices = devices.Count(d => d.IsOnline);
             var offlineDevices = totalDevices - onlineDevices;
 
-            var deviceIds = devices.Select(d => d.Id).ToHashSet();
+            var deviceIds = devices.Select(d => d.Id).ToArray();
 
             // 1. Kiểm tra thiết bị đang tưới
-            var activeIrrigatingCount = 0;
-            var recentLogs = new List<IrrigationLogDto>();
-
-            foreach (var device in devices)
-            {
-                var activeLog = await _irrigationLogRepository.GetCurrentInProgressByDeviceIdAsync(device.Id, cancellationToken);
-                if (activeLog != null)
+            var activeLogs = await _irrigationLogRepository
+                .GetCurrentInProgressByDeviceIdsAsync(deviceIds, cancellationToken);
+            var activeIrrigatingCount = activeLogs.Select(log => log.DeviceId).Distinct().Count();
+            var recentLogs = (await _irrigationLogRepository
+                    .GetRecentByDeviceIdsAsync(deviceIds, 5, cancellationToken))
+                .Select(l => new IrrigationLogDto
                 {
-                    activeIrrigatingCount++;
-                }
-
-                var logs = await _irrigationLogRepository.GetByDeviceIdAsync(device.Id, 5, cancellationToken);
-                if (logs != null)
-                {
-                    recentLogs.AddRange(logs.Select(l => new IrrigationLogDto
-                    {
-                        Id = l.Id,
-                        DeviceId = l.DeviceId,
-                        Mode = l.Mode,
-                        Status = l.Status,
-                        SoilMoistureBefore = l.SoilMoistureBefore,
-                        SoilMoistureAfter = l.SoilMoistureAfter,
-                        WaterAmountMl = l.WaterAmountMl,
-                        StartedAtUtc = l.StartedAtUtc,
-                        CompletedAtUtc = l.CompletedAtUtc,
-                        DurationSeconds = l.DurationSeconds,
-                        Note = l.Note
-                    }));
-                }
-            }
+                    Id = l.Id,
+                    DeviceId = l.DeviceId,
+                    Mode = l.Mode,
+                    Status = l.Status,
+                    SoilMoistureBefore = l.SoilMoistureBefore,
+                    SoilMoistureAfter = l.SoilMoistureAfter,
+                    WaterAmountMl = l.WaterAmountMl,
+                    StartedAtUtc = l.StartedAtUtc,
+                    CompletedAtUtc = l.CompletedAtUtc,
+                    DurationSeconds = l.DurationSeconds,
+                    Note = l.Note
+                })
+                .ToList();
 
             // Top 5 phiên tưới mới nhất
             var topRecentLogs = recentLogs
@@ -83,23 +73,22 @@ namespace SmartFarm.Application.Services
             var waterTempList = new List<decimal>();
             var waterLevelList = new List<decimal>();
 
-            foreach (var device in devices)
-            {
-                var latest = await _sensorReadingRepository.GetLatestByDeviceIdAsync(device.Id, 10, cancellationToken);
-                if (latest != null)
-                {
-                    var latestSoil = latest.FirstOrDefault(r => r.SensorType == SensorType.SoilMoisture);
-                    var latestAirTemp = latest.FirstOrDefault(r => r.SensorType == SensorType.AirTemperature);
-                    var latestAirHum = latest.FirstOrDefault(r => r.SensorType == SensorType.AirHumidity);
-                    var latestWaterTemp = latest.FirstOrDefault(r => r.SensorType == SensorType.WaterTemperature);
-                    var latestWaterLevel = latest.FirstOrDefault(r => r.SensorType == SensorType.WaterLevel);
+            var latestReadings = await _sensorReadingRepository
+                .GetLatestByDeviceIdsAsync(deviceIds, 10, cancellationToken);
 
-                    if (latestSoil != null) soilMoistureList.Add(latestSoil.Value);
-                    if (latestAirTemp != null) airTempList.Add(latestAirTemp.Value);
-                    if (latestAirHum != null) airHumList.Add(latestAirHum.Value);
-                    if (latestWaterTemp != null) waterTempList.Add(latestWaterTemp.Value);
-                    if (latestWaterLevel != null) waterLevelList.Add(latestWaterLevel.Value);
-                }
+            foreach (var deviceReadings in latestReadings.GroupBy(reading => reading.DeviceId))
+            {
+                var latestSoil = deviceReadings.FirstOrDefault(r => r.SensorType == SensorType.SoilMoisture);
+                var latestAirTemp = deviceReadings.FirstOrDefault(r => r.SensorType == SensorType.AirTemperature);
+                var latestAirHum = deviceReadings.FirstOrDefault(r => r.SensorType == SensorType.AirHumidity);
+                var latestWaterTemp = deviceReadings.FirstOrDefault(r => r.SensorType == SensorType.WaterTemperature);
+                var latestWaterLevel = deviceReadings.FirstOrDefault(r => r.SensorType == SensorType.WaterLevel);
+
+                if (latestSoil != null) soilMoistureList.Add(latestSoil.Value);
+                if (latestAirTemp != null) airTempList.Add(latestAirTemp.Value);
+                if (latestAirHum != null) airHumList.Add(latestAirHum.Value);
+                if (latestWaterTemp != null) waterTempList.Add(latestWaterTemp.Value);
+                if (latestWaterLevel != null) waterLevelList.Add(latestWaterLevel.Value);
             }
 
             var sensorsOverview = new SensorOverviewDto

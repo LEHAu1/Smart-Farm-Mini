@@ -409,6 +409,9 @@ namespace SmartFarm.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("DeviceId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("MessageId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTimeOffset>("ReceivedAtUtc")
                         .HasColumnType("datetimeoffset");
 
@@ -429,13 +432,21 @@ namespace SmartFarm.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("MessageId", "SensorType")
+                        .IsUnique()
+                        .HasDatabaseName("IX_SensorReadings_MessageId_SensorType")
+                        .HasFilter("[MessageId] IS NOT NULL");
+
                     b.HasIndex("DeviceId", "RecordedAtUtc")
                         .HasDatabaseName("IX_SensorReadings_DeviceId_RecordedAt");
 
                     b.HasIndex("SensorType", "RecordedAtUtc")
                         .HasDatabaseName("IX_SensorReadings_SensorType_RecordedAt");
 
-                    b.ToTable("SensorReadings", (string)null);
+                    b.ToTable("SensorReadings", (string)null, t =>
+                        {
+                            t.HasCheckConstraint("CK_SensorReadings_ReceivedAfterRecorded", "[ReceivedAtUtc] >= [RecordedAtUtc]");
+                        });
                 });
 
             modelBuilder.Entity("SmartFarm.Domain.Entities.SensorReadingAggregate", b =>
@@ -686,7 +697,7 @@ namespace SmartFarm.Infrastructure.Persistence.Migrations
                     b.HasOne("SmartFarm.Domain.Entities.Device", null)
                         .WithMany()
                         .HasForeignKey("DeviceId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 

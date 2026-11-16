@@ -50,13 +50,16 @@ namespace SmartFarm.UnitTests.Services
             _mockDeviceRepo.Setup(r => r.GetByOwnerIdAsync(_testOwnerId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(devices);
 
-            _mockIrrigationRepo.Setup(r => r.GetCurrentInProgressByDeviceIdAsync(device1.Id, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new IrrigationLog(device1.Id, IrrigationMode.Automatic, now, 40));
+            _mockIrrigationRepo.Setup(r => r.GetCurrentInProgressByDeviceIdsAsync(
+                    It.Is<IReadOnlyCollection<Guid>>(ids => ids.Count == 2), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new List<IrrigationLog> { new(device1.Id, IrrigationMode.Automatic, now, 40) });
 
-            _mockIrrigationRepo.Setup(r => r.GetByDeviceIdAsync(It.IsAny<Guid>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            _mockIrrigationRepo.Setup(r => r.GetRecentByDeviceIdsAsync(
+                    It.Is<IReadOnlyCollection<Guid>>(ids => ids.Count == 2), 5, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new List<IrrigationLog>());
 
-            _mockSensorRepo.Setup(r => r.GetLatestByDeviceIdAsync(device1.Id, It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            _mockSensorRepo.Setup(r => r.GetLatestByDeviceIdsAsync(
+                    It.Is<IReadOnlyCollection<Guid>>(ids => ids.Count == 2), 10, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new List<SensorReading>
                 {
                     new SensorReading(device1.Id, SensorType.SoilMoisture, 65.5m, "%", now, now),
@@ -90,6 +93,13 @@ namespace SmartFarm.UnitTests.Services
 
             Assert.Single(result.RecentAlerts);
             Assert.Equal("Độ ẩm thấp", result.RecentAlerts[0].Message);
+
+            _mockIrrigationRepo.Verify(r => r.GetCurrentInProgressByDeviceIdsAsync(
+                It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<CancellationToken>()), Times.Once);
+            _mockIrrigationRepo.Verify(r => r.GetRecentByDeviceIdsAsync(
+                It.IsAny<IReadOnlyCollection<Guid>>(), 5, It.IsAny<CancellationToken>()), Times.Once);
+            _mockSensorRepo.Verify(r => r.GetLatestByDeviceIdsAsync(
+                It.IsAny<IReadOnlyCollection<Guid>>(), 10, It.IsAny<CancellationToken>()), Times.Once);
         }
     }
 }

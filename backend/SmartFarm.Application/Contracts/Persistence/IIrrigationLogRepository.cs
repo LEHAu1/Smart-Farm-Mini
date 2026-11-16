@@ -19,6 +19,8 @@ namespace SmartFarm.Application.Contracts.Persistence
             CancellationToken cancellationToken = default);
         Task<IrrigationLog?> GetLatestByDeviceIdAsync(Guid deviceId, CancellationToken cancellationToken = default);
         Task<IrrigationLog?> GetCurrentInProgressByDeviceIdAsync(Guid deviceId, CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<IrrigationLog>> GetCurrentInProgressByDeviceIdsAsync(IReadOnlyCollection<Guid> deviceIds, CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<IrrigationLog>> GetRecentByDeviceIdsAsync(IReadOnlyCollection<Guid> deviceIds, int limitPerDevice, CancellationToken cancellationToken = default);
         Task AddAsync(IrrigationLog log, CancellationToken cancellationToken = default);
         Task UpdateAsync(IrrigationLog log, CancellationToken cancellationToken = default);
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);

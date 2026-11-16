@@ -92,6 +92,41 @@ namespace SmartFarm.Infrastructure.Persistence.Repositories
                 .FirstOrDefaultAsync(l => l.DeviceId == deviceId && l.Status == IrrigationStatus.InProgress, cancellationToken);
         }
 
+        public async Task<IReadOnlyList<IrrigationLog>> GetCurrentInProgressByDeviceIdsAsync(
+            IReadOnlyCollection<Guid> deviceIds,
+            CancellationToken cancellationToken = default)
+        {
+            if (deviceIds.Count == 0)
+            {
+                return Array.Empty<IrrigationLog>();
+            }
+
+            return await _context.IrrigationLogs
+                .AsNoTracking()
+                .Where(log => deviceIds.Contains(log.DeviceId) && log.Status == IrrigationStatus.InProgress)
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<IReadOnlyList<IrrigationLog>> GetRecentByDeviceIdsAsync(
+            IReadOnlyCollection<Guid> deviceIds,
+            int limitPerDevice,
+            CancellationToken cancellationToken = default)
+        {
+            if (deviceIds.Count == 0 || limitPerDevice <= 0)
+            {
+                return Array.Empty<IrrigationLog>();
+            }
+
+            return await _context.IrrigationLogs
+                .AsNoTracking()
+                .Where(log => deviceIds.Contains(log.DeviceId))
+                .GroupBy(log => log.DeviceId)
+                .SelectMany(group => group
+                    .OrderByDescending(log => log.StartedAtUtc)
+                    .Take(limitPerDevice))
+                .ToListAsync(cancellationToken);
+        }
+
         public async Task AddAsync(IrrigationLog log, CancellationToken cancellationToken = default)
         {
             await _context.IrrigationLogs.AddAsync(log, cancellationToken);
