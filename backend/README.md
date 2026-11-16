@@ -20,3 +20,14 @@ dotnet restore Smart_Farm_Mini.slnx
 dotnet build Smart_Farm_Mini.slnx
 ```
 
+## 3. Cấu hình bí mật local
+Backend không tự nạp file `.env`. Dùng .NET User Secrets từ thư mục gốc repository:
+```powershell
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=localhost;Database=SmartFarmMiniDb;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True" --project backend/SmartFarm.WebAPI/SmartFarm.WebAPI.csproj
+$secretBytes = New-Object byte[] 32
+[System.Security.Cryptography.RandomNumberGenerator]::Fill($secretBytes)
+$jwtKey = [Convert]::ToBase64String($secretBytes)
+dotnet user-secrets set "JwtSettings:SecretKey" "$jwtKey" --project backend/SmartFarm.WebAPI/SmartFarm.WebAPI.csproj
+```
+Production phải cấp `ConnectionStrings__DefaultConnection` và `JwtSettings__SecretKey` từ secret store/environment; không ghi secret vào `appsettings*.json`.
+

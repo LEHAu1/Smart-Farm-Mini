@@ -53,8 +53,8 @@ namespace SmartFarm.Infrastructure.Services
             if (existingEmail != null)
                 throw new InvalidOperationException($"Email '{request.Email}' đã được đăng ký.");
 
-            // Chuẩn hóa Role (mặc định là User, cho phép Admin)
-            var role = string.Equals(request.Role, "Admin", StringComparison.OrdinalIgnoreCase) ? "Admin" : "User";
+            // Public registration must never grant administrative privileges.
+            const string role = "User";
 
             var now = DateTimeOffset.UtcNow;
             var user = new AppUser
@@ -115,7 +115,7 @@ namespace SmartFarm.Infrastructure.Services
             var user = await _userManager.FindByNameAsync(request.UserNameOrEmail)
                        ?? await _userManager.FindByEmailAsync(request.UserNameOrEmail);
 
-            if (user == null || !await _userManager.CheckPasswordAsync(user, request.Password))
+            if (user is null)
             {
                 throw new UnauthorizedAccessException("Tài khoản hoặc mật khẩu không chính xác.");
             }
@@ -124,6 +124,14 @@ namespace SmartFarm.Infrastructure.Services
             {
                 throw new UnauthorizedAccessException("Tài khoản đã bị tạm khóa do nhiều lần đăng nhập sai. Vui lòng thử lại sau.");
             }
+
+            if (!await _userManager.CheckPasswordAsync(user, request.Password))
+            {
+                await _userManager.AccessFailedAsync(user);
+                throw new UnauthorizedAccessException("Tài khoản hoặc mật khẩu không chính xác.");
+            }
+
+            await _userManager.ResetAccessFailedCountAsync(user);
 
             var claims = await _userManager.GetClaimsAsync(user);
             var role = claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value ?? "User";

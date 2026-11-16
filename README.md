@@ -165,23 +165,19 @@ git checkout develop
 
 ## 9. Hướng dẫn cấu hình môi trường (Environment Setup)
 
-1. Tạo file cấu hình môi trường từ mẫu:
+1. `.env.example` chỉ là mẫu tham khảo; ASP.NET Core không tự đọc file `.env`. Không lưu connection string hoặc JWT key thật trong `appsettings*.json`.
+2. Đặt cấu hình local bằng .NET User Secrets (chạy từ thư mục gốc repository):
    ```bash
-   cp .env.example .env
+   dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=localhost;Database=SmartFarmMiniDb;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True" --project backend/SmartFarm.WebAPI/SmartFarm.WebAPI.csproj
    ```
-2. Cấu hình chuỗi kết nối cơ sở dữ liệu trong `backend/SmartFarm.WebAPI/appsettings.Development.json` hoặc tạo file ghi đè cục bộ `backend/SmartFarm.WebAPI/appsettings.Local.json` (file này đã được bảo vệ bởi `.gitignore`):
-   ```json
-   {
-     "ConnectionStrings": {
-       "DefaultConnection": "Server=localhost;Database=SmartFarmMiniDb;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True"
-     },
-     "Jwt": {
-       "Key": "Your_Development_Secret_Key_At_Least_32_Characters_Long!",
-       "Issuer": "SmartFarm.API",
-       "Audience": "SmartFarm.Client"
-     }
-   }
+   Tạo JWT key ngẫu nhiên tối thiểu 32 byte bằng PowerShell:
+   ```powershell
+   $secretBytes = New-Object byte[] 32
+   [System.Security.Cryptography.RandomNumberGenerator]::Fill($secretBytes)
+   $jwtKey = [Convert]::ToBase64String($secretBytes)
+   dotnet user-secrets set "JwtSettings:SecretKey" "$jwtKey" --project backend/SmartFarm.WebAPI/SmartFarm.WebAPI.csproj
    ```
+   User Secrets được lưu ngoài repository và được ASP.NET Core nạp trong môi trường Development. Trong môi trường triển khai, đặt `ConnectionStrings__DefaultConnection` và `JwtSettings__SecretKey` qua secret store hoặc environment variables.
 > [!WARNING]
 > **Tuyệt đối không đưa chuỗi kết nối chứa mật khẩu thật hoặc khóa bí mật (Secret Key) vào các file được commit lên Git.**
 

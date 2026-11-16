@@ -19,7 +19,7 @@ namespace SmartFarm.WebAPI.Controllers
         }
 
         /// <summary>
-        /// Đăng ký tài khoản người dùng mới (Hỗ trợ phân quyền Admin hoặc User)
+        /// Đăng ký tài khoản người dùng mới với quyền User
         /// </summary>
         [HttpPost("register")]
         [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
