@@ -4,6 +4,7 @@ import {
   getStoredUser,
   isAuthenticated as checkAuth,
   login as apiLogin,
+  loginWithGoogle as apiGoogleLogin,
   logout as apiLogout,
   register as apiRegister,
   getCurrentUserProfile,
@@ -15,6 +16,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (request: LoginRequest) => Promise<void>;
+  loginWithGoogle: (idToken: string) => Promise<void>;
   register: (request: RegisterRequest) => Promise<void>;
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -38,6 +40,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             email: profile.email,
             displayName: profile.displayName,
             role: profile.role,
+            authProvider: profile.authProvider,
+            avatarUrl: profile.avatarUrl,
           });
           setIsAuthenticated(true);
         } catch {
@@ -58,36 +62,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     initAuth();
-
-    const handleUnauthorized = () => {
-      setUser(null);
-      setIsAuthenticated(false);
-    };
-
-    window.addEventListener('auth:unauthorized', handleUnauthorized);
-    return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
   }, []);
 
   const login = async (request: LoginRequest) => {
-    const response = await apiLogin(request);
-    setUser(response.user);
-    setIsAuthenticated(true);
+    setIsLoading(true);
+    try {
+      const result = await apiLogin(request);
+      setUser(result.user);
+      setIsAuthenticated(true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loginWithGoogle = async (idToken: string) => {
+    setIsLoading(true);
+    try {
+      const result = await apiGoogleLogin({ idToken });
+      setUser(result.user);
+      setIsAuthenticated(true);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const register = async (request: RegisterRequest) => {
-    const response = await apiRegister(request);
-    setUser(response.user);
-    setIsAuthenticated(true);
+    setIsLoading(true);
+    try {
+      const result = await apiRegister(request);
+      setUser(result.user);
+      setIsAuthenticated(true);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const logout = async () => {
-    await apiLogout();
-    setUser(null);
-    setIsAuthenticated(false);
+    setIsLoading(true);
+    try {
+      await apiLogout();
+      setUser(null);
+      setIsAuthenticated(false);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const refreshProfile = async () => {
-    if (!checkAuth()) return;
     try {
       const profile = await getCurrentUserProfile();
       setUser({
@@ -96,9 +117,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email: profile.email,
         displayName: profile.displayName,
         role: profile.role,
+        authProvider: profile.authProvider,
+        avatarUrl: profile.avatarUrl,
       });
     } catch {
-      // Ignored
+      // Ignored if unauthenticated
     }
   };
 
@@ -109,6 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated,
         isLoading,
         login,
+        loginWithGoogle,
         register,
         logout,
         refreshProfile,

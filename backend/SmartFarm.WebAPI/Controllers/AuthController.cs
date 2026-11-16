@@ -43,6 +43,19 @@ namespace SmartFarm.WebAPI.Controllers
         }
 
         /// <summary>
+        /// Đăng nhập bằng Google ID Token (OAuth 2.0 / OpenID Connect)
+        /// </summary>
+        [HttpPost("google")]
+        [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest request, CancellationToken cancellationToken)
+        {
+            var result = await _authService.GoogleLoginAsync(request, cancellationToken);
+            return Ok(result);
+        }
+
+        /// <summary>
         /// Cấp lại Access Token mới bằng Refresh Token (Token Rotation)
         /// </summary>
         [HttpPost("refresh-token")]

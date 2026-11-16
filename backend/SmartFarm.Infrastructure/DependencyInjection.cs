@@ -74,6 +74,12 @@ namespace SmartFarm.Infrastructure
             services.AddScoped<ISystemLogRepository, SystemLogRepository>();
 
             // ── 5. Services ───────────────────────────────────────────────────
+            services.Configure<GoogleAuthSettings>(options =>
+            {
+                var section = configuration.GetSection(GoogleAuthSettings.SectionName);
+                options.ClientId = section["ClientId"] ?? string.Empty;
+            });
+            services.AddScoped<IGoogleAuthService, GoogleAuthService>();
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IAuthService, AuthService>();
 

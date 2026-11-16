@@ -8,6 +8,8 @@ namespace SmartFarm.Application.DTOs.Auth
         public string? DisplayName { get; init; }
         public string? PhoneNumber { get; init; }
         public string Role { get; init; } = "User";
+        public string? AuthProvider { get; init; } = "Local";
+        public string? AvatarUrl { get; init; }
         public DateTimeOffset CreatedAtUtc { get; init; }
     }
 
@@ -24,4 +26,3 @@ namespace SmartFarm.Application.DTOs.Auth
         public string ConfirmNewPassword { get; set; } = string.Empty;
     }
 }
-

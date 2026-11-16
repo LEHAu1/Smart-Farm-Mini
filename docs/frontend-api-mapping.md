@@ -156,6 +156,21 @@ export enum CommandStatus {
   ```
 - **Response DTO (200 OK):** `AuthResponseDto` (như trên).
 
+#### 2.1 Đăng nhập bằng Google (`google`)
+- **Method:** `POST`
+- **Endpoint:** `/api/Auth/google`
+- **Authentication:** Không yêu cầu (`Anonymous`)
+- **Trang sử dụng:** `/login`
+- **Trạng thái:** ✅ **Đã triển khai hoàn thiện (Backend & Frontend)**
+- **Mô tả:** Nhận Google ID Token (OpenID Connect / Google Identity Services), xác minh chữ ký RSA qua Google Public Keys, trích xuất Subject ID (`sub`), Email, Họ tên và Avatar. Tự động liên kết tài khoản nếu email đã có sẵn hoặc đăng ký mới (mặc định gán Role "User").
+- **Request DTO (`GoogleLoginRequest`):**
+  ```typescript
+  interface GoogleLoginRequest {
+    idToken: string; // Google JWT ID Token từ Google Identity Services
+  }
+  ```
+- **Response DTO (200 OK):** `AuthResponseDto` (chứa Access Token 15 phút, Refresh Token 30 ngày và User info).
+
 #### 3. Làm mới Access Token (`refresh-token`)
 - **Method:** `POST`
 - **Endpoint:** `/api/Auth/refresh-token`

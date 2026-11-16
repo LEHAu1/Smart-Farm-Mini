@@ -4,6 +4,8 @@ export interface UserDto {
   email: string;
   displayName?: string | null;
   role: string;
+  authProvider?: string | null;
+  avatarUrl?: string | null;
 }
 
 export interface AuthResponseDto {
@@ -16,6 +18,10 @@ export interface AuthResponseDto {
 export interface LoginRequest {
   userNameOrEmail: string;
   password: string;
+}
+
+export interface GoogleLoginRequest {
+  idToken: string;
 }
 
 export interface RegisterRequest {
@@ -37,6 +43,8 @@ export interface UserProfileDto {
   displayName?: string | null;
   phoneNumber?: string | null;
   role: string;
+  authProvider?: string | null;
+  avatarUrl?: string | null;
   createdAtUtc: string;
 }
 

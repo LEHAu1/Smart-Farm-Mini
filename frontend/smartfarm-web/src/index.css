@@ -110,6 +110,23 @@
     @apply focus-visible:outline-2 focus-visible:outline-water focus-visible:outline-offset-2;
   }
 
+  /* Form & button utilities */
+  .button {
+    @apply inline-flex items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-xs transition-all hover:bg-primary-hover active:scale-[0.99] focus:outline-none focus:ring-4 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .login-label {
+    @apply mb-1.5 block text-xs font-semibold uppercase tracking-wider text-ink-secondary;
+  }
+  .login-input {
+    @apply min-h-12 w-full rounded-xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink shadow-xs transition-all placeholder:text-muted/60 focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/15 disabled:bg-canvas disabled:text-muted;
+  }
+  .login-input[aria-invalid='true'] {
+    @apply border-danger-border bg-danger-subtle/30 focus:border-danger focus:ring-danger/15;
+  }
+  .login-field-error {
+    @apply mt-1.5 text-xs font-medium text-danger flex items-center gap-1;
+  }
+
   /* Decorative garden art on login / auth */
   .garden-art { position: relative; width: 260px; height: 200px; margin: 40px auto 0; border-bottom: 1px solid #ffffff30; }
   .garden-stem { position: absolute; bottom: 55px; left: 128px; width: 4px; height: 115px; background: #b5ddab; border-radius: 4px; }
