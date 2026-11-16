@@ -1,3 +1,4 @@
+using System.Buffers;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SmartFarm.Application.Contracts.Services;
@@ -104,10 +105,7 @@ namespace SmartFarm.Infrastructure.Mqtt
             if (handler is null)
                 return;
 
-            var segment = eventArgs.ApplicationMessage.PayloadSegment;
-            var payload = segment.Array is null
-                ? ReadOnlyMemory<byte>.Empty
-                : new ReadOnlyMemory<byte>(segment.Array, segment.Offset, segment.Count);
+            var payload = new ReadOnlyMemory<byte>(eventArgs.ApplicationMessage.Payload.ToArray());
 
             await handler(eventArgs.ApplicationMessage.Topic, payload, _messageCancellationToken);
         }
