@@ -57,6 +57,7 @@ namespace SmartFarm.WebAPI.Middlewares
             {
                 DomainException => HttpStatusCode.BadRequest,
                 ArgumentException => HttpStatusCode.BadRequest,
+                // Existing application and infrastructure services use this type for business conflicts.
                 InvalidOperationException => HttpStatusCode.BadRequest,
                 KeyNotFoundException => HttpStatusCode.NotFound,
                 UnauthorizedAccessException => HttpStatusCode.Unauthorized,
