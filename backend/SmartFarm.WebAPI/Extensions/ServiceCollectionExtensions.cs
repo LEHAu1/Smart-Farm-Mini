@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using SmartFarm.WebAPI.Configurations;
+using SmartFarm.Application.Common.Configurations;
 using System.Text;
 
 namespace SmartFarm.WebAPI.Extensions

@@ -9,6 +9,8 @@ using SmartFarm.Infrastructure.Identity;
 using SmartFarm.Infrastructure.Persistence.Data;
 using SmartFarm.Infrastructure.Persistence.Repositories;
 using SmartFarm.Infrastructure.Services;
+using SmartFarm.Infrastructure.Mqtt;
+using SmartFarm.Infrastructure.Realtime;
 
 namespace SmartFarm.Infrastructure
 {
@@ -25,6 +27,27 @@ namespace SmartFarm.Infrastructure
 
             services.AddDbContext<SmartFarmDbContext>(options =>
                 options.UseSqlServer(connectionString));
+
+            services.Configure<MqttBrokerSettings>(options =>
+            {
+                var section = configuration.GetSection(MqttBrokerSettings.SectionName);
+                if (bool.TryParse(section["Enabled"], out var enabled)) options.Enabled = enabled;
+                options.Host = section["Host"] ?? options.Host;
+                if (int.TryParse(section["Port"], out var port)) options.Port = port;
+                options.Username = section["Username"] ?? options.Username;
+                options.Password = section["Password"] ?? options.Password;
+                options.ClientId = section["ClientId"] ?? options.ClientId;
+                if (bool.TryParse(section["UseTls"], out var useTls)) options.UseTls = useTls;
+                if (int.TryParse(section["ReconnectDelaySeconds"], out var reconnectDelaySeconds)) options.ReconnectDelaySeconds = reconnectDelaySeconds;
+                if (int.TryParse(section["DeviceOfflineAfterSeconds"], out var deviceOfflineAfterSeconds)) options.DeviceOfflineAfterSeconds = deviceOfflineAfterSeconds;
+                if (int.TryParse(section["HeartbeatIntervalSeconds"], out var heartbeatIntervalSeconds)) options.HeartbeatIntervalSeconds = heartbeatIntervalSeconds;
+                if (int.TryParse(section["PendingCommandRetrySeconds"], out var pendingCommandRetrySeconds)) options.PendingCommandRetrySeconds = pendingCommandRetrySeconds;
+                if (int.TryParse(section["MaxPendingCommandRetries"], out var maxPendingCommandRetries)) options.MaxPendingCommandRetries = maxPendingCommandRetries;
+                if (int.TryParse(section["PendingCommandExpiryMinutes"], out var pendingCommandExpiryMinutes)) options.PendingCommandExpiryMinutes = pendingCommandExpiryMinutes;
+            });
+            services.AddSingleton<MqttClientService>();
+            services.AddSingleton<IMqttPublisher, MqttPublisher>();
+            services.AddSingleton<DeviceStatusSynchronization>();
 
             // ── 2. Cấu hình JWT Settings ───────────────────────────────────────
             services.Configure<JwtSettings>(options =>

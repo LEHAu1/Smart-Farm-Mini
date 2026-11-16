@@ -1,10 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using SmartFarm.Application.DTOs.DeviceCommand;
 
 namespace SmartFarm.Application.Contracts.Services
 {
-    internal interface IMqttPublisher
+    public interface IMqttPublisher
     {
+        Task PublishCommandAsync(string deviceCode, DeviceCommandDto command, CancellationToken cancellationToken = default);
+    }
+
+    public sealed class MqttPublishNotStartedException : Exception
+    {
+        public MqttPublishNotStartedException(string message) : base(message)
+        {
+        }
     }
 }

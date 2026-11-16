@@ -14,17 +14,25 @@ namespace SmartFarm.Application.Services
     /// </summary>
     public class DeviceCommandService : IDeviceCommandService
     {
+        private static readonly HashSet<string> SupportedActions = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "START_PUMP", "STOP_PUMP", "PUMP_ON", "PUMP_OFF", "EMERGENCY_STOP", "RESET_SYSTEM"
+        };
+
         private readonly IDeviceCommandRepository _commandRepository;
         private readonly IDeviceRepository _deviceRepository;
+        private readonly IMqttPublisher _mqttPublisher;
         private readonly ILogger<DeviceCommandService> _logger;
 
         public DeviceCommandService(
             IDeviceCommandRepository commandRepository,
             IDeviceRepository deviceRepository,
+            IMqttPublisher mqttPublisher,
             ILogger<DeviceCommandService> logger)
         {
             _commandRepository = commandRepository ?? throw new ArgumentNullException(nameof(commandRepository));
             _deviceRepository = deviceRepository ?? throw new ArgumentNullException(nameof(deviceRepository));
+            _mqttPublisher = mqttPublisher ?? throw new ArgumentNullException(nameof(mqttPublisher));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
@@ -35,12 +43,21 @@ namespace SmartFarm.Application.Services
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
 
+            if (string.IsNullOrWhiteSpace(request.Action) || !SupportedActions.Contains(request.Action.Trim()))
+                throw new ArgumentException("Unsupported device command action.", nameof(request.Action));
+
             var device = await _deviceRepository.GetByIdAsync(request.DeviceId, cancellationToken);
             if (device == null)
             {
                 _logger.LogWarning("Không thể tạo lệnh: Thiết bị ID {DeviceId} không tồn tại.", request.DeviceId);
                 throw new DeviceNotFoundException(request.DeviceId);
             }
+
+            if (!device.IsActive)
+                throw new InvalidOperationException("Cannot send commands to an inactive device.");
+
+            if (!device.IsOnline)
+                throw new InvalidOperationException("Cannot send commands while the device is offline.");
 
             var commandCode = $"CMD-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}-{Guid.NewGuid().ToString("N")[..6]}";
 
@@ -56,6 +73,27 @@ namespace SmartFarm.Application.Services
 
             _logger.LogInformation("Đã tạo lệnh {Action} ({CommandCode}) cho thiết bị {DeviceId}",
                 command.Action, command.CommandCode, command.DeviceId);
+
+            try
+            {
+                await _mqttPublisher.PublishCommandAsync(device.DeviceCode, MapToDto(command), cancellationToken);
+            }
+            catch (MqttPublishNotStartedException exception)
+            {
+                command.Fail("Không thể gửi lệnh tới thiết bị qua MQTT.", DateTimeOffset.UtcNow);
+                await _commandRepository.UpdateAsync(command, CancellationToken.None);
+                await _commandRepository.SaveChangesAsync(CancellationToken.None);
+                _logger.LogError(exception,
+                    "MQTT publish chưa bắt đầu cho lệnh {CommandId} tới thiết bị {DeviceId}.", command.Id, device.Id);
+            }
+            catch (Exception exception)
+            {
+                // Once the MQTT client begins publishing, an exception may mean the
+                // broker accepted the QoS 1 packet but its PUBACK was lost. Keep the
+                // command Pending so the hosted retry loop can safely resend by ID.
+                _logger.LogError(exception,
+                    "Kết quả gửi MQTT của lệnh {CommandId} không xác định; giữ Pending để thử lại.", command.Id);
+            }
 
             return MapToDto(command);
         }
