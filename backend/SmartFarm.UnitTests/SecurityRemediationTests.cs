@@ -45,6 +45,7 @@ public class SecurityRemediationTests
             .Returns("access-token");
         tokenService.Setup(x => x.GenerateRefreshToken()).Returns(("refresh-token", "refresh-hash"));
         var service = new AuthService(userManager.Object, context.Object, tokenService.Object,
+            Mock.Of<IGoogleAuthService>(),
             Options.Create(new JwtSettings { SecretKey = "unit-test-key", RefreshTokenExpiryDays = 30, AccessTokenExpiryMinutes = 15 }));
 
         // Simulate a legacy/client JSON request that still sends the former Role field.
@@ -73,6 +74,7 @@ public class SecurityRemediationTests
         userManager.Setup(x => x.AccessFailedAsync(user)).ReturnsAsync(IdentityResult.Success);
 
         var service = new AuthService(userManager.Object, CreateContext().Object, Mock.Of<ITokenService>(),
+            Mock.Of<IGoogleAuthService>(),
             Options.Create(new JwtSettings()));
 
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => service.LoginAsync(
@@ -102,6 +104,7 @@ public class SecurityRemediationTests
         });
 
         var service = new AuthService(userManager.Object, CreateContext().Object, Mock.Of<ITokenService>(),
+            Mock.Of<IGoogleAuthService>(),
             Options.Create(new JwtSettings()));
         var request = new LoginRequest { UserNameOrEmail = "user", Password = "wrong-password" };
 
@@ -135,6 +138,7 @@ public class SecurityRemediationTests
             .Returns("access-token");
         tokenService.Setup(x => x.GenerateRefreshToken()).Returns(("refresh-token", "refresh-hash"));
         var service = new AuthService(userManager.Object, CreateContext().Object, tokenService.Object,
+            Mock.Of<IGoogleAuthService>(),
             Options.Create(new JwtSettings { RefreshTokenExpiryDays = 30, AccessTokenExpiryMinutes = 15 }));
 
         var response = await service.LoginAsync(new LoginRequest
