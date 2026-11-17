@@ -2,13 +2,12 @@ import { NavLink } from 'react-router-dom'
 import type { NavigationItem } from '../../types/navigation'
 
 export const navigation: NavigationItem[] = [
-  { path: '/dashboard', label: 'Tổng quan' },
-  { path: '/devices', label: 'Thiết bị' },
-  { path: '/sensors', label: 'Cảm biến' },
-  { path: '/irrigation', label: 'Tưới nước' },
-  { path: '/alerts', label: 'Cảnh báo' },
-  { path: '/history', label: 'Lịch sử' },
-  { path: '/settings', label: 'Cài đặt' },
+  { path: '/dashboard', label: 'Tổng quan', iconName: 'dashboard' },
+  { path: '/devices', label: 'Thiết bị', iconName: 'devices' },
+  { path: '/irrigation-history', label: 'Lịch sử tưới', iconName: 'irrigation' },
+  { path: '/alerts', label: 'Cảnh báo', iconName: 'alerts' },
+  { path: '/commands', label: 'Lệnh điều khiển', iconName: 'commands' },
+  { path: '/profile', label: 'Tài khoản', iconName: 'profile' },
 ]
 
 export default function Navigation() {
@@ -19,7 +18,6 @@ export default function Navigation() {
           {label}
         </NavLink>
       ))}
-      <NavLink to="/login" className="nav-link">Đăng nhập</NavLink>
     </nav>
   )
 }

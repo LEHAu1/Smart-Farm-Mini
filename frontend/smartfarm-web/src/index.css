@@ -5,42 +5,120 @@
 @import 'tailwindcss';
 
 @theme {
-  --font-sans: 'Be Vietnam Pro', sans-serif;
-  --color-primary: #216348;
-  --color-canvas: #f8f9ff;
-  --color-ink: #121c2a;
-  --color-muted: #52615b;
-  --color-line: #e0e7e3;
+  --font-sans: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  
+  /* Primary Farm Green Palette */
+  --color-primary: #15803d;
+  --color-primary-hover: #166534;
+  --color-primary-light: #f0fdf4;
+  --color-primary-border: #bbf7d0;
+
+  /* Secondary Deep Teal */
+  --color-secondary: #0f766e;
+  --color-secondary-hover: #115e59;
+
+  /* Surfaces & Backgrounds */
+  --color-canvas: #f8faf7;
+  --color-surface: #ffffff;
+  --color-surface-subtle: #f1f5f1;
+
+  /* Typography / Inks */
+  --color-text-main: #17251d;
+  --color-text-muted: #647067;
+  --color-text-subtle: #8a968d;
+
+  /* Borders & Dividers */
+  --color-border: #e5eae5;
+  --color-border-subtle: #f0f3f0;
+
+  /* Functional Status Colors */
+  --color-success: #16a34a;
+  --color-success-bg: #f0fdf4;
+  --color-success-border: #bbf7d0;
+
+  --color-warning: #d97706;
+  --color-warning-bg: #fffbeb;
+  --color-warning-border: #fde68a;
+
+  --color-danger: #dc2626;
+  --color-danger-bg: #fef2f2;
+  --color-danger-border: #fecaca;
+
+  --color-info: #0284c7;
+  --color-info-bg: #f0f9ff;
+  --color-info-border: #bae6fd;
 }
 
 @layer base {
-  body { @apply m-0 bg-canvas font-sans text-ink antialiased; }
-  a { @apply transition-colors; }
-  :focus-visible { outline: 3px solid #106493; outline-offset: 4px; }
+  *, ::after, ::before {
+    box-sizing: border-box;
+  }
+
+  html {
+    color-scheme: light;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--color-canvas);
+    color: var(--color-text-main);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+    caret-color: var(--color-primary);
+  }
+
+  ::selection {
+    background-color: #bbf7d0;
+    color: #14532d;
+  }
+
+  /* Accessible focus indicators */
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  /* Tabular numbers for all sensor readings & metric cards */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
 }
 
-@layer components {
-  .brand-icon { @apply inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary text-xl font-bold text-white; }
-  .nav-link { @apply rounded-lg px-4 py-3 text-sm font-medium text-muted hover:bg-canvas; }
-  .nav-active { @apply bg-primary/10 text-primary; }
-  .badge { @apply rounded-full bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-800; }
-  .panel { @apply rounded-2xl border border-line bg-white p-6; }
-  .eyebrow { @apply text-xs font-semibold tracking-widest text-primary; }
-  .button { @apply inline-flex items-center justify-center rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-white hover:bg-primary/90; }
-  .skip-link { @apply fixed top-3 left-3 z-50 -translate-y-24 rounded-lg bg-primary px-4 py-3 text-white focus:translate-y-0; }
-  .login-shell { @apply min-h-screen lg:grid lg:grid-cols-2; }
-  .login-story { @apply hidden flex-col justify-between overflow-hidden bg-primary p-10 text-white lg:flex xl:p-16; }
-  .login-mark { @apply flex size-10 items-center justify-center rounded-xl border border-white/30 text-xl; }
-  .login-form-side { @apply flex min-h-screen items-center justify-center bg-white px-6 py-12 sm:px-12; }
-  .login-label { @apply mb-2 block text-sm font-medium text-ink; }
-  .login-input { @apply min-h-12 w-full rounded-xl border border-line bg-white px-4 py-3 text-sm text-ink transition-colors placeholder:text-muted/70 focus:border-primary disabled:bg-canvas disabled:text-muted; }
-  .login-input[aria-invalid='true'] { @apply border-red-500 bg-red-50/30; }
-  .login-field-error { @apply mt-2 text-xs leading-5 text-red-700; }
+/* Custom Scrollbar for sleek UI */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
-.garden-art { position: relative; width: 260px; height: 200px; margin: 40px auto 0; border-bottom: 1px solid #ffffff30; }
-.garden-stem { position: absolute; bottom: 55px; left: 128px; width: 4px; height: 115px; background: #b5ddab; border-radius: 4px; }
-.garden-leaf { position: absolute; width: 78px; height: 44px; background: #93d4b3; }
-.garden-leaf-left { top: 49px; left: 51px; border-radius: 0 70px 0 70px; transform: rotate(20deg); }
-.garden-leaf-right { top: 22px; left: 131px; border-radius: 70px 0 70px 0; transform: rotate(-20deg); background: #b5ddab; }
-.garden-pot { position: absolute; bottom: 0; left: 82px; width: 96px; height: 70px; background: #d8b296; clip-path: polygon(0 0, 100% 0, 85% 100%, 15% 100%); }
+/* Accessible Skip Link */
+.skip-link {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 100;
+  transform: translateY(-200%);
+  transition: transform 0.2s ease-out;
+  padding: 0.75rem 1.25rem;
+  background-color: var(--color-primary);
+  color: #ffffff;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+.skip-link:focus {
+  transform: translateY(0);
+}
