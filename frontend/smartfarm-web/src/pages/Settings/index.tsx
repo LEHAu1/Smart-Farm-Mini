@@ -1,5 +1,12 @@
-import PagePlaceholder from '../../components/common/PagePlaceholder'
+import PagePlaceholder from '../../components/common/PagePlaceholder';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 export default function SettingsPage() {
-  return <PagePlaceholder title="Cài đặt" description="Cấu hình ứng dụng và các tùy chọn khu vườn." />
+  const { t } = useLanguage();
+  return (
+    <PagePlaceholder
+      title={t('nav_settings', 'Cài đặt')}
+      description={t('placeholder_settings_desc', 'Cấu hình thông số hệ thống, MQTT Broker và các chính sách vận hành.')}
+    />
+  );
 }

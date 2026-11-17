@@ -4,6 +4,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { GoogleOAuthProvider, GoogleLogin, type CredentialResponse } from '@react-oauth/google';
 import AuthLayout from '../../layouts/AuthLayout';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { loginDemo, loginWithGoogle } from '../../services/auth-service';
 import { validateLogin } from '../../utils/validate-login';
 import type { LoginCredentials, LoginErrors } from '../../types/auth';
@@ -26,6 +27,14 @@ export default function LoginPage() {
   } catch {
     // Safe fallback for unit tests running outside AuthProvider
   }
+
+  let langContext: ReturnType<typeof useLanguage> | null = null;
+  try {
+    langContext = useLanguage();
+  } catch {
+    // Safe fallback for unit tests running outside LanguageProvider
+  }
+  const t = langContext?.t || ((key: string, def?: string) => def ?? key);
 
   const [credentials, setCredentials] = useState<LoginCredentials>({ email: '', password: '' });
   const [errors, setErrors] = useState<LoginErrors>({});
@@ -115,18 +124,18 @@ export default function LoginPage() {
   return (
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <AuthLayout
-        title="Đăng nhập"
-        subtitle="Khu vườn của bạn đang chờ được chăm sóc."
-        eyebrow="CHÀO MỪNG BẠN TRỞ LẠI"
+        title={t('auth_login_title', 'Đăng nhập')}
+        subtitle={t('auth_login_subtitle', 'Khu vườn của bạn đang chờ được chăm sóc.')}
+        eyebrow={t('auth_login_eyebrow', 'CHÀO MỪNG BẠN TRỞ LẠI')}
       >
         <div className="space-y-4">
           {/* Submit Error Alert */}
           {submitError && (
             <div
               role="alert"
-              className="flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50/90 p-3.5 text-xs font-medium text-rose-800 animate-in fade-in duration-200"
+              className="flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50/90 dark:bg-rose-950/40 dark:border-rose-900 p-3.5 text-xs font-medium text-rose-800 dark:text-rose-200 animate-in fade-in duration-200"
             >
-              <AlertCircle className="size-4 shrink-0 text-rose-600 mt-0.5" />
+              <AlertCircle className="size-4 shrink-0 text-rose-600 dark:text-rose-400 mt-0.5" />
               <span>{submitError}</span>
             </div>
           )}
@@ -157,7 +166,7 @@ export default function LoginPage() {
                 type="button"
                 disabled={isSubmitting || isGoogleSubmitting}
                 onClick={handleGoogleCustomClick}
-                className="w-full min-h-[48px] rounded-xl border border-slate-300 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-700 font-semibold text-sm shadow-xs transition-all flex items-center justify-center gap-3 focus:outline-none focus:ring-4 focus:ring-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                className="w-full min-h-[48px] rounded-xl border border-line bg-surface hover:bg-surface-hover text-ink font-semibold text-sm shadow-xs transition-all flex items-center justify-center gap-3 focus:outline-none focus:ring-4 focus:ring-slate-100 dark:focus:ring-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {/* Official Google G Logo SVG */}
                 <svg className="size-5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
@@ -178,7 +187,7 @@ export default function LoginPage() {
                     d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
                   />
                 </svg>
-                <span>{isGoogleSubmitting ? 'Đang xác thực Google…' : 'Đăng nhập bằng Google'}</span>
+                <span>{isGoogleSubmitting ? 'Đang xác thực Google…' : t('auth_google_login', 'Đăng nhập bằng Google')}</span>
               </button>
             )}
           </div>
@@ -186,11 +195,11 @@ export default function LoginPage() {
           {/* Divider */}
           <div className="relative my-4">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-200" />
+              <div className="w-full border-t border-line" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-3 text-slate-400 font-semibold tracking-wider">
-                HOẶC TIẾP TỤC VỚI EMAIL
+              <span className="bg-surface px-3 text-muted font-semibold tracking-wider">
+                {t('auth_or_divider', 'HOẶC TIẾP TỤC VỚI EMAIL')}
               </span>
             </div>
           </div>
@@ -199,11 +208,11 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} noValidate aria-busy={isSubmitting} className="space-y-4">
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                Email
+              <label htmlFor="email" className="block text-xs font-bold uppercase tracking-wider text-ink mb-1.5">
+                {t('auth_email_label', 'Email')}
               </label>
               <div className="relative">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-muted">
                   <Mail className="size-4" />
                 </div>
                 <input
@@ -219,15 +228,15 @@ export default function LoginPage() {
                   onChange={(event) => updateField('email', event.target.value)}
                   aria-invalid={Boolean(errors.email)}
                   aria-describedby={errors.email ? 'email-error' : undefined}
-                  className={`w-full rounded-xl border bg-white pl-10 pr-4 py-3 text-sm font-medium text-slate-900 shadow-xs transition-all placeholder:text-slate-400 focus:outline-none focus:ring-4 disabled:bg-slate-50 disabled:text-slate-400 ${
+                  className={`w-full rounded-xl border bg-surface pl-10 pr-4 py-3 text-sm font-medium text-ink shadow-xs transition-all placeholder:text-muted/60 focus:outline-none focus:ring-4 disabled:bg-canvas disabled:text-muted ${
                     errors.email
-                      ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/10'
-                      : 'border-slate-300 focus:border-emerald-600 focus:ring-emerald-500/15'
+                      ? 'border-danger focus:border-danger focus:ring-danger/10'
+                      : 'border-line focus:border-primary focus:ring-primary/15'
                   }`}
                 />
               </div>
               {errors.email && (
-                <p id="email-error" role="alert" className="mt-1.5 text-xs font-medium text-rose-600 flex items-center gap-1">
+                <p id="email-error" role="alert" className="mt-1.5 text-xs font-medium text-danger flex items-center gap-1">
                   {errors.email}
                 </p>
               )}
@@ -236,12 +245,12 @@ export default function LoginPage() {
             {/* Password Field */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label htmlFor="password" className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                  Mật khẩu
+                <label htmlFor="password" className="block text-xs font-bold uppercase tracking-wider text-ink">
+                  {t('auth_password_label', 'Mật khẩu')}
                 </label>
               </div>
               <div className="relative">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-muted">
                   <Lock className="size-4" />
                 </div>
                 <input
@@ -257,26 +266,26 @@ export default function LoginPage() {
                   onChange={(event) => updateField('password', event.target.value)}
                   aria-invalid={Boolean(errors.password)}
                   aria-describedby={errors.password ? 'password-error' : undefined}
-                  className={`w-full rounded-xl border bg-white pl-10 pr-20 py-3 text-sm font-medium text-slate-900 shadow-xs transition-all placeholder:text-slate-400 focus:outline-none focus:ring-4 disabled:bg-slate-50 disabled:text-slate-400 ${
+                  className={`w-full rounded-xl border bg-surface pl-10 pr-20 py-3 text-sm font-medium text-ink shadow-xs transition-all placeholder:text-muted/60 focus:outline-none focus:ring-4 disabled:bg-canvas disabled:text-muted ${
                     errors.password
-                      ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/10'
-                      : 'border-slate-300 focus:border-emerald-600 focus:ring-emerald-500/15'
+                      ? 'border-danger focus:border-danger focus:ring-danger/10'
+                      : 'border-line focus:border-primary focus:ring-primary/15'
                   }`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((shown) => !shown)}
-                  aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                  aria-label={showPassword ? (langContext?.language === 'en' ? 'Hide password' : 'Ẩn mật khẩu') : (langContext?.language === 'en' ? 'Show password' : 'Hiện mật khẩu')}
                   aria-pressed={showPassword}
                   disabled={isSubmitting || isGoogleSubmitting}
-                  className="absolute inset-y-0 right-2 flex items-center gap-1 px-2.5 text-xs font-semibold text-emerald-700 hover:text-emerald-800 focus:outline-none disabled:opacity-50"
+                  className="absolute inset-y-0 right-2 flex items-center gap-1 px-2.5 text-xs font-semibold text-primary hover:text-primary-hover focus:outline-none disabled:opacity-50"
                 >
                   {showPassword ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-                  <span>{showPassword ? 'Ẩn' : 'Hiện'}</span>
+                  <span>{showPassword ? t('auth_hide_password', 'Ẩn') : t('auth_show_password', 'Hiện')}</span>
                 </button>
               </div>
               {errors.password && (
-                <p id="password-error" role="alert" className="mt-1.5 text-xs font-medium text-rose-600 flex items-center gap-1">
+                <p id="password-error" role="alert" className="mt-1.5 text-xs font-medium text-danger flex items-center gap-1">
                   {errors.password}
                 </p>
               )}
@@ -286,16 +295,16 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isSubmitting || isGoogleSubmitting}
-              className="w-full min-h-[48px] rounded-xl bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white font-semibold text-sm shadow-md shadow-emerald-800/20 transition-all flex items-center justify-center gap-2 focus:outline-none focus:ring-4 focus:ring-emerald-600/20 disabled:cursor-wait disabled:opacity-70 mt-2"
+              className="w-full min-h-[48px] rounded-xl bg-primary hover:bg-primary-hover active:bg-primary-active text-white font-semibold text-sm shadow-md shadow-primary/20 transition-all flex items-center justify-center gap-2 focus:outline-none focus:ring-4 focus:ring-primary/20 disabled:cursor-wait disabled:opacity-70 mt-2"
             >
               {isSubmitting ? (
                 <>
                   <span className="size-4 animate-spin rounded-full border-2 border-white/40 border-t-white" aria-hidden="true" />
-                  <span>Đang đăng nhập…</span>
+                  <span>{t('auth_submitting_login', 'Đang đăng nhập…')}</span>
                 </>
               ) : (
                 <>
-                  <span>Đăng nhập</span>
+                  <span>{t('auth_submit_login', 'Đăng nhập')}</span>
                   <ArrowRight className="size-4" />
                 </>
               )}
@@ -303,10 +312,10 @@ export default function LoginPage() {
           </form>
 
           {/* Switch to Register */}
-          <div className="mt-5 text-center text-xs text-slate-500">
-            Chưa có tài khoản?{' '}
-            <Link to="/register" className="font-semibold text-emerald-700 hover:text-emerald-800 hover:underline">
-              Đăng ký ngay
+          <div className="mt-5 text-center text-xs text-muted">
+            {t('auth_no_account', 'Chưa có tài khoản?')}{' '}
+            <Link to="/register" className="font-semibold text-primary hover:text-primary-hover hover:underline">
+              {t('auth_register_now', 'Đăng ký ngay')}
             </Link>
           </div>
         </div>

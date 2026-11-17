@@ -1,5 +1,12 @@
-import PagePlaceholder from '../../components/common/PagePlaceholder'
+import PagePlaceholder from '../../components/common/PagePlaceholder';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 export default function AlertsPage() {
-  return <PagePlaceholder title="Cảnh báo" description="Theo dõi cảnh báo và sự cố trong khu vườn." />
+  const { t } = useLanguage();
+  return (
+    <PagePlaceholder
+      title={t('nav_alerts', 'Cảnh báo')}
+      description={t('placeholder_alerts_desc', 'Danh sách cảnh báo cảm biến vượt ngưỡng và lỗi thiết bị.')}
+    />
+  );
 }

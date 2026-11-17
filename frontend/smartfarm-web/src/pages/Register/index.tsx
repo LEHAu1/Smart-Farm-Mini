@@ -6,11 +6,13 @@ import { register } from '../../services/auth-service';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { useToast } from '../../contexts/ToastContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { UserPlus } from 'lucide-react';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
   const { success, error: toastError } = useToast();
+  const { t, language } = useLanguage();
 
   const [formData, setFormData] = useState({
     userName: '',
@@ -77,9 +79,9 @@ export default function RegisterPage() {
 
   return (
     <AuthLayout
-      title="Đăng ký tài khoản"
-      subtitle="Bắt đầu kết nối các thiết bị IoT và tự động hóa vườn cây của bạn."
-      eyebrow="THAM GIA SMART FARM MINI"
+      title={t('auth_register_title', 'Đăng ký tài khoản')}
+      subtitle={t('auth_register_subtitle', 'Bắt đầu kết nối các thiết bị IoT và tự động hóa vườn cây của bạn.')}
+      eyebrow={t('auth_register_eyebrow', 'THAM GIA SMART FARM MINI')}
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {submitError && (
@@ -89,7 +91,7 @@ export default function RegisterPage() {
         )}
 
         <Input
-          label="Tên đăng nhập (Username)"
+          label={language === 'en' ? 'Username' : 'Tên đăng nhập (Username)'}
           placeholder="vd: nguyenvana"
           value={formData.userName}
           onChange={(e) => handleChange('userName', e.target.value)}
@@ -99,7 +101,7 @@ export default function RegisterPage() {
         />
 
         <Input
-          label="Email"
+          label={t('auth_email_label', 'Email')}
           type="email"
           placeholder="ban@example.com"
           value={formData.email}
@@ -110,7 +112,7 @@ export default function RegisterPage() {
         />
 
         <Input
-          label="Tên hiển thị (Tùy chọn)"
+          label={language === 'en' ? 'Display Name (Optional)' : 'Tên hiển thị (Tùy chọn)'}
           placeholder="vd: Nguyễn Văn A"
           value={formData.displayName}
           onChange={(e) => handleChange('displayName', e.target.value)}
@@ -118,9 +120,9 @@ export default function RegisterPage() {
         />
 
         <Input
-          label="Mật khẩu"
+          label={t('auth_password_label', 'Mật khẩu')}
           type="password"
-          placeholder="Tối thiểu 8 ký tự, có chữ và số"
+          placeholder={language === 'en' ? 'Minimum 8 characters' : 'Tối thiểu 8 ký tự, có chữ và số'}
           value={formData.password}
           onChange={(e) => handleChange('password', e.target.value)}
           error={errors.password}
@@ -137,14 +139,14 @@ export default function RegisterPage() {
             isLoading={isSubmitting}
             leftIcon={<UserPlus className="size-4" />}
           >
-            Đăng ký tài khoản
+            {isSubmitting ? t('auth_submitting_register', 'Đang đăng ký…') : t('auth_submit_register', 'Đăng ký tài khoản')}
           </Button>
         </div>
 
         <p className="pt-2 text-center text-xs text-muted">
-          Đã có tài khoản?{' '}
+          {t('auth_already_have_account', 'Đã có tài khoản?')}{' '}
           <Link to="/login" className="font-semibold text-primary hover:underline">
-            Đăng nhập ngay
+            {t('auth_login_now', 'Đăng nhập ngay')}
           </Link>
         </p>
       </form>
