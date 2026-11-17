@@ -6,6 +6,7 @@ namespace SmartFarm.Application.Contracts.Services
     {
         Task<AuthResponseDto> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default);
         Task<AuthResponseDto> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default);
+        Task<AuthResponseDto> GoogleLoginAsync(GoogleLoginRequest request, CancellationToken cancellationToken = default);
         Task<AuthResponseDto> RefreshTokenAsync(RefreshTokenRequest request, CancellationToken cancellationToken = default);
         Task RevokeTokenAsync(RefreshTokenRequest request, CancellationToken cancellationToken = default);
         Task<UserProfileDto> GetProfileAsync(Guid userId, CancellationToken cancellationToken = default);

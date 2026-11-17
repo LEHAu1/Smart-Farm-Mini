@@ -1,114 +1,150 @@
-# HỆ THỐNG THIẾT KẾ GIAO DIỆN FRONTEND (DESIGN SYSTEM & TOKENS)
-Dự án: **Smart Farm Mini - IoT Smart Agriculture**  
-Quy chuẩn: **Impeccable Design Standards (Operate Mode)**  
-Phiên bản: **1.0.0 (Stage 0 Discovery)**
+# Smart Farm Mini — Frontend Design System Specification
+
+> **Đặc tả hệ thống thiết kế (Design System & UI Tokens) dành cho Frontend React 19 + Tailwind CSS v4**  
+> **Phong cách:** Eco-Minimalism kết hợp Modern Technical Dashboard  
+> **Mục tiêu:** Giao diện điều hành IoT nông nghiệp chính xác, thoáng đãng, dễ theo dõi, không lạm dụng hiệu ứng hay gradient rườm rà.
 
 ---
 
-## 1. ĐỊNH HƯỚNG THẨM MỸ (VISUAL DIRECTION)
+## 1. Triết Lý Thiết Kế & Định Hướng Thị Giác
 
-Smart Farm Mini là nền tảng SaaS IoT phục vụ việc giám sát nông nghiệp thông minh và điều khiển tự động hóa.
-- **Phong cách chủ đạo**: **Premium Smart Agriculture IoT SaaS** — Chuyên nghiệp, hiện đại, chính xác và đáng tin cậy.
-- **Nguyên lý Operate Mode (Impeccable)**:
-  - **Công cụ phục vụ tác vụ**: Giao diện tập trung tối đa vào khả năng quét thông tin (scanability), tốc độ thao tác và sự rõ ràng của số liệu cảm biến.
-  - **Không lạm dụng hiệu ứng**: Tuyệt đối không dùng gradient màu mè, không dùng hiệu ứng kính mờ (glassmorphism) gây giảm độ tương phản, không dùng shadow quá gắt hoặc hoạt ảnh thừa thãi làm gián đoạn người dùng.
-  - **Không dùng emoji làm icon chính**: Sử dụng đồng nhất bộ icon SVG nét mảnh chuẩn mực từ thư viện `lucide-react`.
-  - **Độ chính xác số liệu**: Các chỉ số cảm biến (Nhiệt độ, Độ ẩm đất, Mực nước) luôn được định dạng với phông chữ dạng số cố định (tabular figures), đi kèm đơn vị rõ ràng (`%`, `°C`, `ml`, `giây`).
-
----
-
-## 2. BẢNG MÀU THỐNG NHẤT (COLOR PALETTE & DESIGN TOKENS)
-
-Màu sắc tuân thủ bảng mã semantic chặt chẽ, tối ưu độ tương phản chuẩn WCAG AA:
-
-| Vai trò Token | Mã Hex | Tên biến CSS / Tailwind | Mục đích sử dụng |
-|:---|:---|:---|:---|
-| **Primary** | `#15803D` | `--color-primary` / `bg-primary` | Màu nhận diện nông nghiệp thông minh: Nút bấm chính, tab đang chọn, chỉ số quan trọng |
-| **Primary Hover** | `#166534` | `--color-primary-hover` | Trạng thái hover của nút bấm và liên kết chính |
-| **Primary Light** | `#DCFCE7` | `--color-primary-light` | Màu nền badge thành công, nền highlight thông tin |
-| **Secondary** | `#0F766E` | `--color-secondary` | Màu điểm nhấn thứ cấp: Biểu đồ phụ, phân vùng cảm biến nước |
-| **Main Background** | `#F8FAF7` | `--color-bg-main` | Màu nền toàn ứng dụng (nền sáng dịu mắt, pha chút ánh xanh thảo mộc nhẹ) |
-| **Surface / Card** | `#FFFFFF` | `--color-surface` | Màu nền các thẻ card, sidebar, header, modal, bảng dữ liệu |
-| **Main Text** | `#17251D` | `--color-text-main` | Màu chữ chính, tiêu đề (độ tương phản 12.8:1 trên nền trắng) |
-| **Muted Text** | `#647067` | `--color-text-muted` | Màu chữ phụ, nhãn mô tả, timestamp (độ tương phản 5.2:1) |
-| **Border** | `#E5EAE5` | `--color-border` | Màu đường viền thẻ card, bảng dữ liệu, phân cách |
-| **Border Strong**| `#D0D9D1` | `--color-border-strong` | Màu viền input khi ở trạng thái bình thường |
-| **Success** | `#16A34A` | `--color-success` | Trạng thái Online, tưới thành công, quy tắc đang bật |
-| **Warning** | `#D97706` | `--color-warning` | Cảnh báo mức Warning, mực nước bồn tưới sắp cạn |
-| **Danger** | `#DC2626` | `--color-danger` | Cảnh báo Critical, thiết bị Offline sự cố, nút xóa |
-| **Info** | `#0284C7` | `--color-info` | Chỉ số độ ẩm, thông báo hệ thống, chế độ tưới Auto |
+1. **Chuẩn xác kỹ thuật & Đậm chất sinh thái (Eco-Minimalism):**
+   - Sự kết hợp giữa sắc xanh lá nông nghiệp công nghệ (`#216348`) với sắc xanh dịu của nước (`#106493`) trên nền trắng ngà nhẹ (`#F8F9FF` / `#F7F9F5`).
+   - Giảm thiểu tối đa mỏi mắt cho người dùng khi theo dõi telemetry liên tục hoặc sử dụng ngoài trời.
+2. **Loại bỏ nhiễu hình ảnh:**
+   - Không sử dụng gradient đa sắc, không dùng bóng đổ nặng nề (heavy drop-shadows).
+   - Phân định các khối dữ liệu bằng đường viền mảnh 1px (`#E0E7E3` / `#E5E7EB`) và bóng vi sai siêu nhẹ (subtle ambient shadow).
+3. **Ưu tiên dữ liệu thời gian thực (Telemetry-First):**
+   - Các chỉ số đo độ ẩm đất, nhiệt độ, mực nước, trạng thái máy bơm phải được hiển thị to rõ, đi kèm đơn vị đo và trạng thái tươi mới (freshness).
 
 ---
 
-## 3. NGHỆ THUẬT CHỮ & TYPOGRAPHY
+## 2. Hệ Thống Màu Sắc (Color Tokens)
 
-- **Phông chữ chính**: **Be Vietnam Pro** (được nhúng qua `@fontsource/be-vietnam-pro`). Đây là font sans-serif hình học hiện đại, hiển thị dấu tiếng Việt hoàn hảo, cân bằng tốt giữa chữ cái và chữ số.
-- **Tỉ lệ bước phông (Scale Ratio)**: Tỉ lệ bước nhảy chặt chẽ (1.125 – 1.25) phù hợp đặc thù phần mềm vận hành:
-  - `Display / Large Metric`: `32px` / `2rem`, `font-bold`, `tracking-tight` (dùng cho giá trị cảm biến lớn trên Dashboard).
-  - `Heading 1`: `24px` / `1.5rem`, `font-semibold` (tiêu đề trang).
-  - `Heading 2`: `18px` / `1.125rem`, `font-semibold` (tiêu đề nhóm thẻ card).
-  - `Heading 3`: `16px` / `1rem`, `font-medium` (tiêu đề card nhỏ).
-  - `Body Regular`: `14px` / `0.875rem`, `font-normal` (nội dung bảng, form nhãn).
-  - `Caption / Subtext`: `12px` / `0.75rem`, `font-normal`, `text-muted` (ghi chú thời gian, timestamp).
+### 2.1 Bảng màu Semantic Tokens
 
----
+```css
+:root {
+  /* ── 1. Brand & Primary (Nông nghiệp công nghệ) ── */
+  --color-primary: #216348;            /* Màu chủ đạo: Nút chính, thương hiệu, trạng thái kích hoạt */
+  --color-primary-hover: #1b523c;      /* Hover trạng thái chính */
+  --color-primary-active: #154130;     /* Active/pressed */
+  --color-primary-subtle: #e7f1e9;     /* Nền nhạt cho tag, pill, sidebar active item */
+  --color-primary-border: #9addba;     /* Viền điểm nhấn cho thẻ active */
 
-## 4. KHOẢNG CÁCH (SPACING) & BÁN KÍNH BO GÓC (RADIUS)
+  /* ── 2. Water & Moisture Accent (Tài nguyên nước & Tưới tiêu) ── */
+  --color-water: #106493;              /* Xanh nước: Độ ẩm đất, lưu lượng nước, máy bơm */
+  --color-water-hover: #0c4d72;
+  --color-water-subtle: #eff4ff;       /* Nền thẻ cảm biến nước */
+  --color-water-border: #8acaff;
 
-### 4.1. Hệ thống Spacing (Base 4px)
-- `gap-1` / `p-1`: `4px` — Khoảng cách icon và text trong badge.
-- `gap-2` / `p-2`: `8px` — Khoảng cách padding nhỏ, nút phụ.
-- `gap-3` / `p-3`: `12px` — Khoảng cách trường nhập liệu input.
-- `gap-4` / `p-4`: `16px` — Padding tiêu chuẩn của Card, Metric Card.
-- `gap-6` / `p-6`: `24px` — Khoảng cách giữa các cột trong Grid Layout.
-- `gap-8` / `p-8`: `32px` — Khoảng cách giữa các khối chức năng lớn trên trang.
+  /* ── 3. Warning & Alerts (Cảnh báo ngưỡng kỹ thuật) ── */
+  --color-warning: #d97706;            /* Vàng hổ phách: Độ ẩm thấp, bồn nước sắp cạn, pin yếu */
+  --color-warning-subtle: #fef3c7;
+  --color-warning-border: #fcd34d;
 
-### 4.2. Bo góc (Border Radius)
-- `rounded-sm`: `4px` — Tag nhỏ, checkbox.
-- `rounded-md`: `6px` — Input form, select, button nhỏ.
-- `rounded-lg`: `8px` — Button chuẩn, dialog nhỏ.
-- `rounded-xl`: `12px` — Card container, modal, popover.
-- `rounded-full`: `9999px` — Badge trạng thái, avatar tròn.
+  /* ── 4. Danger & Emergency (Sự cố & Dừng khẩn cấp E-Stop) ── */
+  --color-danger: #dc2626;             /* Đỏ: Ngắt bơm khẩn cấp, thiết bị Offline, sự cố rò rỉ */
+  --color-danger-hover: #b91c1c;
+  --color-danger-subtle: #fee2e2;
+  --color-danger-border: #fca5a5;
 
----
-
-## 5. THƯ VIỆN COMPONENT TIÊU CHUẨN (CORE COMPONENTS)
-
-Mọi component đều bắt buộc phải có đầy đủ 7 trạng thái tương tác:
-`Default` | `Hover` | `Focus-Visible` | `Active` | `Disabled` | `Loading (Skeleton)` | `Error`
-
-1. **Button**:
-   - `Primary`: Nền `#15803D`, chữ trắng.
-   - `Secondary`: Nền trắng, viền `#E5EAE5`, chữ `#17251D`.
-   - `Danger`: Nền `#DC2626`, chữ trắng (dùng cho nút dừng bơm khẩn cấp, xóa thiết bị).
-   - `Ghost`: Nền trong suốt, hover nền xám nhạt (nút điều hướng phụ).
-   - Hỗ trợ cờ `isLoading` hiển thị spinner tích hợp và chặn click lặp.
-2. **MetricCard**:
-   - Thể hiện một chỉ số đo lường (Độ ẩm đất, Nhiệt độ, Mực nước).
-   - Gồm: Icon chủ đề, nhãn thông số, giá trị lớn (kèm đơn vị), xu hướng biến thiên hoặc trạng thái an toàn/nguy hiểm.
-   - Tích hợp sẵn `LoadingSkeleton` dạng khối nhấp nháy êm dịu khi đang tải API.
-3. **StatusIndicator & Badge**:
-   - Chấm tròn trạng thái (Status Dot) có hiệu ứng pulse nhẹ khi thiết bị đang Online hoặc máy bơm đang chạy.
-   - Badge ngữ nghĩa màu sắc: Xanh (Online/Normal), Vàng (Warning/Pending), Đỏ (Critical/Offline).
-4. **Input & Select**:
-   - Viền xám trung tính, khi focus hiển thị vòng sáng xanh tinh tế (`ring-2 ring-primary/20 border-primary`).
-   - Có vị trí hiển thị lỗi validation tiếng Việt bên dưới rõ ràng.
-5. **EmptyState**:
-   - Hiển thị khi danh sách trống (chưa có thiết bị, chưa có lịch sử tưới).
-   - Minh họa đơn giản, thông điệp hướng dẫn cụ thể và nút kêu gọi hành động (Call to Action) để người dùng tạo mới.
-6. **Toast Notification**:
-   - Thông báo kết quả thao tác tức thì góc trên bên phải (Thành công, Thất bại, Cảnh báo mới) với thời gian tự biến mất 4 giây.
-7. **Confirmation Dialog**:
-   - Xác nhận trước các hành động quan trọng (Bật bơm thủ công, Xóa quy tắc tưới, Vô hiệu hóa thiết bị) để ngăn chặn thao tác nhầm lẫn.
+  /* ── 5. Neutral & Surfaces (Bề mặt & Chữ - WCAG AAA) ── */
+  --color-canvas: #f8f9ff;             /* Nền ứng dụng chính */
+  --color-surface: #ffffff;            /* Nền Card, Panel, Modal, Dropdown */
+  --color-surface-hover: #f3f6fc;      /* Hover trên bảng hoặc danh sách */
+  --color-ink: #121c2a;                /* Màu chữ tiêu đề & số đo chính */
+  --color-ink-secondary: #27313f;      /* Chữ nội dung thường */
+  --color-muted: #52615b;              /* Nhãn metadata, gợi ý, ghi chú */
+  --color-line: #e0e7e3;               /* Đường kẻ viền phân cách kỹ thuật */
+  --color-line-focus: #106493;         /* Vòng focus trợ năng cho bàn phím */
+}
+```
 
 ---
 
-## 6. QUY TẮC HIỆU ỨNG CHUYỂN ĐỘNG (MOTION & ACCESSIBILITY)
+## 3. Typography & Quy Tắc Tabular Numbers
 
-- **Thời lượng chuyển cảnh**: 150ms – 250ms với đường cong gia tốc tự nhiên (`ease-in-out`).
-- Không tạo các hiệu ứng trễ (staggered animation) hay hiệu ứng lật trang rườm rà.
-- **Tiêu chuẩn trợ năng (Accessibility)**:
-  - Bắt buộc hỗ trợ đầy đủ bàn phím (`Tab`, `Enter`, `Escape`).
-  - Đường viền focus luôn rõ ràng (`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary`).
-  - Hỗ trợ `prefers-reduced-motion` cho người dùng nhạy cảm với chuyển động.
+### 3.1 Cấu hình Font Family
+Hệ thống sử dụng **Be Vietnam Pro** làm họ font duy nhất:
+- `@fontsource/be-vietnam-pro` nạp các weights: `400` (Regular), `500` (Medium), `600` (SemiBold), `700` (Bold).
+
+### 3.2 Quy tắc Bắt buộc: Tabular Numbers (`tabular-nums`)
+Mọi thẻ hiển thị chỉ số đo thời gian thực từ ESP32 (độ ẩm đất %, nhiệt độ °C, mực nước %, thời gian đếm ngược bơm) **bắt buộc áp dụng thuộc tính `font-variant-numeric: tabular-nums` (class `tabular-nums`)**.
+> **Lý do kỹ thuật:** Tabular Numbers cố định chiều rộng của từng chữ số từ 0 đến 9, triệt tiêu hoàn toàn hiện tượng rung giật giao diện (layout shifting / jitter) khi dữ liệu MQTT / SignalR nhảy số liên tục.
+
+### 3.3 Thang đo Typography
+| Token | Font Size / Line Height | Weight | Sử dụng cho |
+|---|---|---|---|
+| `display-lg` | 32px / 40px | 700 (Bold) | Tiêu đề trang Welcome, số liệu nổi bật trang chủ |
+| `headline-md` | 20px / 28px | 600 (SemiBold) | Tiêu đề Section, Card Header |
+| `metric-xl` | 28px / 32px | 700 (Bold, `tabular-nums`) | Chỉ số đo lớn trong thẻ cảm biến |
+| `metric-md` | 20px / 24px | 700 (Bold, `tabular-nums`) | Chỉ số phụ trong danh sách |
+| `body-md` | 14px / 20px | 400 (Regular) | Nội dung văn bản thông thường, form input |
+| `label-md` | 13px / 18px | 500 (Medium) | Nhãn trường nhập, nút bấm, menu item |
+| `label-sm` | 11px / 16px | 600 (SemiBold, uppercase) | Eyebrow text, metadata, badge trạng thái |
+
+---
+
+## 4. Bán Kính Góc Bo (Border Radius) & Độ Nổi (Elevation & Depth)
+
+### 4.1 Quy chuẩn Bo Góc
+- **Cards & Panels chính:** `rounded-xl` (14px ~ `0.875rem`) — Tạo cảm giác hiện đại, gọn gàng.
+- **Buttons, Inputs, Selects:** `rounded-lg` (8px ~ `0.5rem`) — Chắc chắn, phản hồi xúc giác dứt khoát.
+- **Badges, Status Pills:** `rounded-full` (`9999px`) — Nhấn mạnh trạng thái tức thời.
+- **Indicator Dots:** `rounded-full` hình tròn tuyệt đối (`aspect-square`).
+
+### 4.2 Đổ bóng & Đường viền (Subtle Ambient Elevation)
+- **Flat (Nền):** Không đổ bóng.
+- **Card Mặc định:** Viền `1px solid var(--color-line)`, bóng siêu nhẹ `box-shadow: 0 1px 3px 0 rgba(31, 41, 55, 0.05)`.
+- **Card Hover / Active:** Viền đổi sang `rgba(33, 99, 72, 0.3)`, bóng tăng nhẹ `box-shadow: 0 4px 6px -1px rgba(33, 99, 72, 0.08)`.
+- **Modal / Dialog / Popover:** Viền `1px solid var(--color-line)`, bóng sâu `box-shadow: 0 10px 15px -3px rgba(18, 28, 42, 0.1)`.
+
+---
+
+## 5. Chuẩn Hóa Trạng Thái Tương Tác (Component States)
+
+Mọi thành phần tương tác trong Design System phải hỗ trợ đầy đủ 6 trạng thái:
+1. **Idle (Mặc định):** Rõ ràng, dễ nhận biết.
+2. **Hover:** Tăng độ tương phản nhẹ, con trỏ `cursor-pointer`.
+3. **Focus-visible:** Vòng viền trợ năng `outline: 3px solid #106493; outline-offset: 2px;` khi duyệt bằng phím Tab.
+4. **Active (Pressed):** Thu nhỏ nhẹ `transform: scale(0.98)` hoặc sậm màu nền.
+5. **Disabled:** Độ mờ `opacity: 0.5`, con trỏ `cursor-not-allowed`, vô hiệu hóa sự kiện click.
+6. **Loading:** Spinner tròn hiển thị ngay trên nút hoặc Card chuyển sang trạng thái Skeleton shimmer.
+
+---
+
+## 6. Bộ Thành Phần Tái Sử Dụng Chuẩn (Core Reusable Components)
+
+1. **Button:**
+   - `primary`: Nền xanh đậm `#216348`, chữ trắng.
+   - `secondary`: Nền xanh nhạt `#E7F1E9`, chữ xanh đậm.
+   - `danger` (E-Stop): Nền đỏ `#DC2626`, chữ trắng.
+   - `outline` / `ghost`: Viền mỏng hoặc trong suốt dùng cho hành động phụ.
+2. **Input & Select:**
+   - Chiều cao chuẩn 40px (Desktop) hoặc 44px (Mobile chạm ngón tay).
+   - Có trạng thái hiển thị Icon đầu/cuối, nhãn Label bên trên, tin nhắn lỗi màu đỏ (`text-danger`) kèm `aria-invalid`.
+3. **Badge & Status Pill:**
+   - Kèm Icon hoặc Chấm tròn Indicator (`online`, `watering`, `warning`, `offline`).
+4. **Card & Panel:**
+   - Hỗ trợ slot `header`, `children`, `footer`.
+5. **Modal & Dialog:**
+   - Backdrop làm mờ `backdrop-blur-sm bg-ink/40`.
+   - Phím `Esc` để đóng, focus trap an toàn.
+6. **Skeleton Shimmer:**
+   - Dùng hiệu ứng tải nhẹ cho thẻ cảm biến và bảng khi đang đợi phản hồi API.
+7. **EmptyState:**
+   - Khối thông báo sạch sẽ khi không có dữ liệu (kèm Icon, mô tả và nút thêm mới).
+
+---
+
+## 7. Responsive Breakpoints & Accessibility (A11y)
+
+- **Mobile (`< 768px`):** Bố cục 1 cột, Header có hamburger mở Mobile Drawer, thanh điều hướng dưới hoặc drawer toàn màn hình.
+- **Tablet (`768px – 1023px`):** Bố cục 2 cột, Sidebar dạng rút gọn hoặc Drawer.
+- **Desktop (`>= 1024px`):** Sidebar 240px cố định (hỗ trợ thu gọn thành 72px icon-only), lưới 12 cột thông thoáng.
+- **Tiếp cận WCAG 2.1 AA:**
+  - Tỷ lệ tương phản màu chữ/nền $\ge 4.5:1$.
+  - Hỗ trợ thẻ nhảy nhanh `.skip-link` ở đầu trang.
+  - Đầy đủ nhãn `aria-label`, `role="alert"` cho thông báo lỗi.
 

@@ -1,731 +1,649 @@
-# TÀI LIỆU ÁNH XẠ API BACKEND VỚI FRONTEND (API CONTRACT MAPPING)
-Dự án: **Smart Farm Mini - IoT Smart Agriculture**  
-Phiên bản: **1.1.0 (Stage 0 Audit Fixed)**  
-Nguồn tham chiếu: **ASP.NET Core WebAPI Controllers, Domain Entities & Application DTOs**
+# Smart Farm Mini — Frontend API Contract Mapping (OpenAPI / REST)
+
+> **Tài liệu kiểm toán API Contract dành cho đội ngũ phát triển Frontend (Stage 0).**  
+> Nguồn sự thật: Backend ASP.NET Core WebAPI (`SmartFarm.WebAPI`), Application DTOs (`SmartFarm.Application`), Domain Enums (`SmartFarm.Domain.Enums`).  
+> Base URL (Local Development): `http://localhost:5205` (theo `launchSettings.json` profile `http`).
 
 ---
 
-## 1. TỔNG QUAN HỆ THỐNG API
+## 1. Quy chuẩn chung (Global Conventions)
 
-- **Tổng số endpoint đã kiểm tra và chuẩn hóa**: **37 endpoints** chia thành 8 nhóm:
-  - Auth: **7**
-  - Dashboard: **1**
-  - Devices: **7**
-  - Sensors: **3**
-  - Irrigation: **8**
-  - Alerts: **4**
-  - DeviceCommands: **4**
-  - Health: **3**  
-  $\Rightarrow 7 + 1 + 7 + 3 + 8 + 4 + 4 + 3 = 37$ endpoints.
-- **Base URL mặc định**: `http://localhost:5205` (cấu hình qua biến môi trường `VITE_API_BASE_URL`).
-- **Giao thức**: RESTful JSON API trên nền tảng .NET 10.
-- **Cơ chế xác thực**: JWT Bearer Token (Access Token sống 15 phút, Refresh Token sống 30 ngày, cơ chế Token Rotation).
-- **Phân quyền người dùng & Nguyên tắc bảo mật**:
-  - Hệ thống thiết kế cho người dùng cá nhân (User) quản lý các thiết bị IoT của mình.
-  - Giao diện đăng ký (`Register`) **KHÔNG hiển thị lựa chọn Role**; Backend tự động gán mặc định `Role = "User"`.
-  - Khi thêm thiết bị (`CreateDeviceRequest`), Frontend **KHÔNG cần gửi `ownerId`** (Backend tự động lấy ID từ JWT Claims của tài khoản đang đăng nhập).
-  - Mọi API nghiệp vụ nhạy cảm đều có kiểm tra quyền sở hữu (`OwnerId == currentUserId`).
-  - **Quy ước điều khiển máy bơm**: Gửi lệnh `START_PUMP` (`payload: "{\"duration\": 60}"`) hoặc `STOP_PUMP`. Frontend KHÔNG tự ý hiển thị máy bơm đang chạy ngay khi bấm nút (optimistic update) mà phải căn cứ vào phản hồi lệnh và trạng thái `isPumpRunning` từ API `/irrigation/status` hoặc luồng dữ liệu cảm biến.
-- **Xử lý mã lỗi chuẩn**:
-  - `200 OK`: Truy vấn / cập nhật thành công.
-  - `201 Created`: Tạo mới thành công (trả về DTO kèm `Location` header).
-  - `204 NoContent`: Xóa hoặc thực thi hành động không cần trả về body.
-  - `400 BadRequest`: Dữ liệu đầu vào sai validation, sai logic nghiệp vụ.
-  - `401 Unauthorized`: Chưa truyền token JWT hoặc token đã hết hạn / không hợp lệ.
-  - `403 Forbidden`: Người dùng không có quyền truy cập vào thiết bị của người khác.
-  - `404 NotFound`: Không tìm thấy tài nguyên (ID thiết bị, ID lệnh, ID cảnh báo không tồn tại).
-  - `503 Service Unavailable`: Hệ thống chưa sẵn sàng hoặc mất kết nối DB (Health Readiness).
+### 1.1 Xác thực & Header
+- **Authentication Scheme:** `Bearer <JWT_ACCESS_TOKEN>`
+- **Token Storage:** Quản lý Access Token (15 phút) trong bộ nhớ / Secure Storage và Refresh Token (30 ngày) cho cơ chế Token Rotation.
+- **Default Headers:**
+  ```http
+  Accept: application/json
+  Content-Type: application/json
+  Authorization: Bearer <token> (đối với các endpoint yêu cầu xác thực)
+  ```
+
+### 1.2 Cấu trúc lỗi chuẩn (`GlobalExceptionMiddleware`)
+Mọi phản hồi lỗi (4xx, 5xx) từ Backend đều tuân theo schema:
+```json
+{
+  "status": 400,
+  "error": "Thông báo lỗi chi tiết dành cho người dùng",
+  "details": "Chi tiết stack trace (chỉ hiển thị trong môi trường Development khi lỗi 500)",
+  "timestampUtc": "2026-11-16T13:50:00.0000000Z"
+}
+```
+
+| HTTP Status | Trường hợp phát sinh |
+|---|---|
+| **`400 Bad Request`** | Dữ liệu đầu vào không hợp lệ (Validation fail, Domain rule violation). |
+| **`401 Unauthorized`** | Thiếu token, token hết hạn hoặc thông tin đăng nhập sai. |
+| **`403 Forbidden`** | Người dùng thường cố gắng truy cập thiết bị/dữ liệu của người dùng khác (không phải Admin). |
+| **`404 Not Found`** | Không tìm thấy tài nguyên theo ID (`deviceId`, `ruleId`, v.v.). |
+| **`500 Internal Server Error`** | Lỗi hệ thống chưa được kiểm soát. |
+
+### 1.3 Cấu trúc phân trang chung (`PageResult<T>`)
+Áp dụng cho các API danh sách có phân trang (`/api/devices`, `/api/irrigation-logs`):
+```json
+{
+  "items": [],
+  "totalCount": 42,
+  "pageIndex": 1,
+  "pageSize": 20,
+  "totalPages": 3,
+  "hasPreviousPage": false,
+  "hasNextPage": true
+}
+```
 
 ---
 
-## 2. BẢNG MÃ ENUM DÙNG CHUNG (DOMAIN ENUMS)
+## 2. Danh mục Enums hệ thống
 
-Frontend TypeScript PHẢI định nghĩa chính xác theo giá trị số và tên enum Backend:
-
-### 2.1. SensorType
+### 2.1 `SensorType` (Kiểu cảm biến)
 ```typescript
 export enum SensorType {
-  SoilMoisture = 1,       // Độ ẩm đất (%)
-  AirTemperature = 2,     // Nhiệt độ không khí (°C)
-  AirHumidity = 3,        // Độ ẩm không khí (%)
-  WaterTemperature = 4,   // Nhiệt độ nước (°C)
-  WaterLevel = 5          // Mực nước trong bồn (%)
+  SoilMoisture = 1,     // Độ ẩm đất (%)
+  AirTemperature = 2,   // Nhiệt độ không khí (°C)
+  AirHumidity = 3,      // Độ ẩm không khí (%)
+  WaterTemperature = 4, // Nhiệt độ nước bồn (°C)
+  WaterLevel = 5        // Mực nước bồn chứa (%)
 }
 ```
 
-### 2.2. CommandStatus
-```typescript
-export enum CommandStatus {
-  Pending = 1,       // Đang chờ thiết bị nhận
-  Acknowledged = 2,  // Thiết bị đã tiếp nhận
-  Completed = 3,     // Lệnh thực hiện thành công
-  Failed = 4         // Lệnh thất bại
-}
-```
-
-### 2.3. AlertSeverity
-```typescript
-export enum AlertSeverity {
-  Info = 1,      // Thông tin
-  Warning = 2,   // Cảnh báo
-  Critical = 3   // Nghiêm trọng
-}
-```
-
-### 2.4. IrrigationMode
+### 2.2 `IrrigationMode` (Chế độ tưới)
 ```typescript
 export enum IrrigationMode {
-  Manual = 1,     // Tưới thủ công
-  Automatic = 2   // Tưới tự động theo ngưỡng độ ẩm
+  Manual = 1,    // Tưới thủ công (người dùng bấm nút)
+  Automatic = 2  // Tưới tự động (hệ thống kích hoạt theo quy tắc ngưỡng)
 }
 ```
 
-### 2.5. IrrigationStatus
+### 2.3 `IrrigationStatus` (Trạng thái phiên tưới)
 ```typescript
 export enum IrrigationStatus {
-  InProgress = 1, // Đang tưới
-  Completed = 2,  // Đã hoàn thành
-  Stopped = 3,    // Bị dừng giữa chừng
-  Failed = 4      // Sự cố / thất bại
+  InProgress = 1, // Đang bơm nước
+  Completed = 2,  // Hoàn thành bình thường
+  Stopped = 3,    // Bị dừng giữa chừng (người dùng ngắt hoặc hết nước)
+  Failed = 4      // Sự cố lỗi (quá thời gian, bơm không chạy)
+}
+```
+
+### 2.4 `AlertSeverity` (Mức độ nghiêm trọng cảnh báo)
+```typescript
+export enum AlertSeverity {
+  Info = 1,     // Thông tin
+  Warning = 2,  // Cảnh báo (nhiệt độ cao, độ ẩm thấp)
+  Critical = 3  // Sự cố nghiêm trọng (mất nước, rò rỉ, thiết bị mất tín hiệu)
+}
+```
+
+### 2.5 `CommandStatus` (Trạng thái lệnh điều khiển)
+```typescript
+export enum CommandStatus {
+  Pending = 1,      // Chờ ESP32 nhận lệnh
+  Acknowledged = 2, // ESP32 đã xác nhận nhận lệnh
+  Completed = 3,    // Đã thực thi xong
+  Failed = 4        // Lệnh bị lỗi / timeout
 }
 ```
 
 ---
 
-## 3. CHI TIẾT DANH SÁCH API THEO TỪNG MODULE & TRANG SỬ DỤNG
+## 3. Bảng Mapping Chi Tiết Tất Cả API
 
-### 3.1. Nhóm Auth – Xác thực & Tài khoản
+### 3.1 Nhóm 1: Xác thực & Quản lý Tài khoản (`AuthController`)
 
-#### 3.1.1. Đăng ký tài khoản
-- **Endpoint**: `POST /api/Auth/register`
-- **Xác thực**: Public
-- **Trang sử dụng**: `02. Register`
-- **Lưu ý**: Frontend KHÔNG cần truyền `role`. Backend tự động gán `Role = "User"`.
-- **Request Body (`RegisterRequest`)**:
-  ```json
-  {
-    "email": "user@example.com",
-    "password": "Password123@",
-    "displayName": "Nguyễn Văn A"
+#### 1. Đăng ký tài khoản (`register`)
+- **Method:** `POST`
+- **Endpoint:** `/api/Auth/register`
+- **Authentication:** Không yêu cầu (`Anonymous`)
+- **Trang sử dụng:** `/register`
+- **Trạng thái:** ✅ **Đã triển khai hoàn thiện (Backend)**
+- **Request DTO (`RegisterRequest`):**
+  ```typescript
+  interface RegisterRequest {
+    userName: string;     // Bắt buộc, không trùng
+    email: string;        // Bắt buộc, định dạng email, không trùng
+    password: string;     // Bắt buộc, tối thiểu 8 ký tự, có chữ và số
+    displayName?: string; // Tùy chọn (mặc định lấy theo userName)
+    role?: string;        // "User" | "Admin" (mặc định: "User")
   }
   ```
-- **Response (`200 OK - AuthResponseDto`)**:
-  ```json
-  {
-    "accessToken": "eyJhbGciOi...",
-    "refreshToken": "guid-token",
-    "expiresAtUtc": "2026-11-15T15:00:00Z",
-    "user": {
-      "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-      "email": "user@example.com",
-      "displayName": "user@example.com",
-      "role": "User"
-    }
-  }
-  ```
-
-#### 3.1.2. Đăng nhập
-- **Endpoint**: `POST /api/Auth/login`
-- **Xác thực**: Public
-- **Trang sử dụng**: `01. Login`
-- **Request Body (`LoginRequest`)**:
-  ```json
-  {
-    "email": "user@example.com",
-    "password": "Password123@"
-  }
-  ```
-- **Response (`200 OK - AuthResponseDto`)**: Cùng cấu trúc như Register.
-
-#### 3.1.3. Cấp lại Token (Refresh Token)
-- **Endpoint**: `POST /api/Auth/refresh-token`
-- **Xác thực**: Public
-- **Trang sử dụng**: Axios Interceptor tự động làm mới token ngầm
-- **Request Body (`RefreshTokenRequest`)**:
-  ```json
-  {
-    "refreshToken": "guid-token"
-  }
-  ```
-- **Response (`200 OK - AuthResponseDto`)**: Token mới.
-
-#### 3.1.4. Đăng xuất
-- **Endpoint**: `POST /api/Auth/logout`
-- **Xác thực**: Public / Bearer
-- **Trang sử dụng**: Header User Dropdown / Sidebar Logout Action
-- **Request Body (`RefreshTokenRequest`)**:
-  ```json
-  {
-    "refreshToken": "guid-token"
-  }
-  ```
-- **Response (`204 NoContent`)**.
-
-#### 3.1.5. Lấy thông tin cá nhân hiện tại
-- **Endpoint**: `GET /api/Auth/me`
-- **Xác thực**: Bearer Token
-- **Trang sử dụng**: Header, `11. Profile & Settings`
-- **Response (`200 OK - UserProfileDto`)**:
-  ```json
-  {
-    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-    "email": "user@example.com",
-    "displayName": "Nguyễn Văn A",
-    "phoneNumber": "0912345678",
-    "role": "User",
-    "createdAtUtc": "2026-11-01T08:00:00Z"
+- **Response DTO (200 OK — `AuthResponseDto`):**
+  ```typescript
+  interface AuthResponseDto {
+    accessToken: string;
+    refreshToken: string;
+    expiresAtUtc: string; // ISO 8601
+    user: {
+      id: string;         // UUID
+      userName: string;
+      email: string;
+      displayName?: string;
+      role: string;       // "User" | "Admin"
+    };
   }
   ```
 
-#### 3.1.6. Cập nhật hồ sơ cá nhân
-- **Endpoint**: `PUT /api/Auth/profile`
-- **Xác thực**: Bearer Token
-- **Trang sử dụng**: `11. Profile & Settings`
-- **Request Body (`UpdateProfileRequest`)**:
-  ```json
-  {
-    "displayName": "Nguyễn Văn A",
-    "phoneNumber": "0912345678"
+#### 2. Đăng nhập tài khoản (`login`)
+- **Method:** `POST`
+- **Endpoint:** `/api/Auth/login`
+- **Authentication:** Không yêu cầu (`Anonymous`)
+- **Trang sử dụng:** `/login`
+- **Trạng thái:** ✅ **Đã triển khai hoàn thiện (Backend)**
+- **Request DTO (`LoginRequest`):**
+  ```typescript
+  interface LoginRequest {
+    userNameOrEmail: string; // Username hoặc Email
+    password: string;        // Mật khẩu
   }
   ```
-- **Response (`200 OK - UserProfileDto`)**.
+- **Response DTO (200 OK):** `AuthResponseDto` (như trên).
 
-#### 3.1.7. Đổi mật khẩu
-- **Endpoint**: `POST /api/Auth/change-password`
-- **Xác thực**: Bearer Token
-- **Trang sử dụng**: `11. Profile & Settings`
-- **Request Body (`ChangePasswordRequest`)**:
-  ```json
-  {
-    "currentPassword": "OldPassword123@",
-    "newPassword": "NewPassword123@",
-    "confirmNewPassword": "NewPassword123@"
+#### 2.1 Đăng nhập bằng Google (`google`)
+- **Method:** `POST`
+- **Endpoint:** `/api/Auth/google`
+- **Authentication:** Không yêu cầu (`Anonymous`)
+- **Trang sử dụng:** `/login`
+- **Trạng thái:** ✅ **Đã triển khai hoàn thiện (Backend & Frontend)**
+- **Mô tả:** Nhận Google ID Token (OpenID Connect / Google Identity Services), xác minh chữ ký RSA qua Google Public Keys, trích xuất Subject ID (`sub`), Email, Họ tên và Avatar. Tự động liên kết tài khoản nếu email đã có sẵn hoặc đăng ký mới (mặc định gán Role "User").
+- **Request DTO (`GoogleLoginRequest`):**
+  ```typescript
+  interface GoogleLoginRequest {
+    idToken: string; // Google JWT ID Token từ Google Identity Services
   }
   ```
-- **Response (`204 NoContent`)**.
+- **Response DTO (200 OK):** `AuthResponseDto` (chứa Access Token 15 phút, Refresh Token 30 ngày và User info).
+
+#### 3. Làm mới Access Token (`refresh-token`)
+- **Method:** `POST`
+- **Endpoint:** `/api/Auth/refresh-token`
+- **Authentication:** Không yêu cầu (`Anonymous` kèm refresh token trong body)
+- **Trang sử dụng:** `api-client` interceptor (tự động làm mới khi gặp 401)
+- **Trạng thái:** ✅ **Đã triển khai hoàn thiện (Backend)**
+- **Request DTO (`RefreshTokenRequest`):**
+  ```typescript
+  interface RefreshTokenRequest {
+    refreshToken: string;
+  }
+  ```
+- **Response DTO (200 OK):** `AuthResponseDto` (nhận cặp Access + Refresh Token mới).
+
+#### 4. Đăng xuất (`logout`)
+- **Method:** `POST`
+- **Endpoint:** `/api/Auth/logout`
+- **Authentication:** Không yêu cầu (`Anonymous`)
+- **Trang sử dụng:** Header / Menu người dùng
+- **Trạng thái:** ✅ **Đã triển khai hoàn thiện (Backend)**
+- **Request DTO (`RefreshTokenRequest`):** `{ refreshToken: string }`
+- **Response DTO (204 No Content):** Không có body.
+
+#### 5. Lấy hồ sơ người dùng (`me`)
+- **Method:** `GET`
+- **Endpoint:** `/api/Auth/me`
+- **Authentication:** `Bearer JWT`
+- **Trang sử dụng:** `/profile`, Header thông tin người dùng
+- **Trạng thái:** ✅ **Đã triển khai hoàn thiện (Backend)**
+- **Request DTO:** Không có
+- **Response DTO (200 OK — `UserProfileDto`):**
+  ```typescript
+  interface UserProfileDto {
+    id: string;
+    userName: string;
+    email: string;
+    displayName?: string;
+    phoneNumber?: string;
+    role: string;
+    createdAtUtc: string;
+  }
+  ```
+
+#### 6. Cập nhật hồ sơ (`profile`)
+- **Method:** `PUT`
+- **Endpoint:** `/api/Auth/profile`
+- **Authentication:** `Bearer JWT`
+- **Trang sử dụng:** `/profile`
+- **Trạng thái:** ✅ **Đã triển khai hoàn thiện (Backend)**
+- **Request DTO (`UpdateProfileRequest`):**
+  ```typescript
+  interface UpdateProfileRequest {
+    displayName?: string;
+    phoneNumber?: string;
+  }
+  ```
+- **Response DTO (200 OK):** `UserProfileDto` đã cập nhật.
+
+#### 7. Đổi mật khẩu (`change-password`)
+- **Method:** `POST`
+- **Endpoint:** `/api/Auth/change-password`
+- **Authentication:** `Bearer JWT`
+- **Trang sử dụng:** `/profile` / Cài đặt bảo mật
+- **Trạng thái:** ✅ **Đã triển khai hoàn thiện (Backend)**
+- **Request DTO (`ChangePasswordRequest`):**
+  ```typescript
+  interface ChangePasswordRequest {
+    currentPassword: string;
+    newPassword: string;
+    confirmNewPassword: string;
+  }
+  ```
+- **Response DTO (204 No Content):** Không có body.
 
 ---
 
-### 3.2. Nhóm Dashboard – Tổng quan hệ thống
+### 3.2 Nhóm 2: Dashboard Tổng Quan (`DashboardController`)
 
-#### 3.2.1. Lấy dữ liệu tổng hợp Dashboard
-- **Endpoint**: `GET /api/Dashboard/summary`
-- **Xác thực**: Bearer Token (lọc theo OwnerId của tài khoản hiện tại)
-- **Trang sử dụng**: `03. Dashboard`
-- **Response (`200 OK - DashboardSummaryDto`)**:
-  ```json
-  {
-    "devices": {
-      "totalDevices": 3,
-      "onlineDevices": 2,
-      "offlineDevices": 1,
-      "activeIrrigatingDevices": 1
-    },
-    "sensors": {
-      "averageSoilMoisture": 58.5,
-      "averageAirTemperature": 29.2,
-      "averageAirHumidity": 72.0,
-      "averageWaterTemperature": 26.1,
-      "averageWaterLevel": 85.0
-    },
-    "isAnyPumpRunning": true,
-    "recentAlerts": [
-      {
-        "id": "11111111-1111-1111-1111-111111111111",
-        "deviceId": "22222222-2222-2222-2222-222222222222",
-        "alertCode": "ALERT-001",
-        "title": "Mực nước thấp",
-        "message": "Mực nước bình chứa dưới 20%",
-        "severity": 2,
-        "severityName": "Warning",
-        "isResolved": false,
-        "createdAtUtc": "2026-11-15T07:00:00Z",
-        "resolvedAtUtc": null
-      }
-    ],
-    "recentIrrigationLogs": [
-      {
-        "id": "33333333-3333-3333-3333-333333333333",
-        "deviceId": "22222222-2222-2222-2222-222222222222",
-        "mode": 2,
-        "modeName": "Automatic",
-        "status": 2,
-        "statusName": "Completed",
-        "soilMoistureBefore": 38.0,
-        "soilMoistureAfter": 65.0,
-        "waterAmountMl": 450.0,
-        "startedAtUtc": "2026-11-15T06:00:00Z",
-        "completedAtUtc": "2026-11-15T06:02:00Z",
-        "durationSeconds": 120,
-        "note": null
-      }
-    ]
+#### 8. Lấy số liệu tổng hợp khu vườn (`summary`)
+- **Method:** `GET`
+- **Endpoint:** `/api/Dashboard/summary`
+- **Authentication:** `Bearer JWT`
+- **Trang sử dụng:** `/dashboard`
+- **Trạng thái:** ✅ **Đã triển khai hoàn thiện (Backend)**
+- **Request DTO:** Không có
+- **Response DTO (200 OK — `DashboardSummaryDto`):**
+  ```typescript
+  interface DashboardSummaryDto {
+    devices: {
+      totalDevices: number;
+      onlineDevices: number;
+      offlineDevices: number;
+      activeIrrigatingDevices: number;
+    };
+    sensors: {
+      averageSoilMoisture?: number | null;     // %
+      averageAirTemperature?: number | null;   // °C
+      averageAirHumidity?: number | null;      // %
+      averageWaterTemperature?: number | null; // °C
+      averageWaterLevel?: number | null;       // %
+    };
+    isAnyPumpRunning: boolean;
+    recentAlerts: AlertDto[];
+    recentIrrigationLogs: IrrigationLogDto[];
   }
-  ```
-
----
-
-### 3.3. Nhóm Devices – Quản lý thiết bị IoT
-
-#### 3.3.1. Danh sách thiết bị (Phân trang, tìm kiếm, lọc trạng thái)
-- **Endpoint**: `GET /api/Devices`
-- **Xác thực**: Bearer Token
-- **Trang sử dụng**: `04. Devices`, Quick Switcher trong Navbar/Sidebar
-- **Query Parameters**:
-  - `keyword` (string, optional): Tìm theo tên hoặc DeviceCode.
-  - `isOnline` (boolean, optional): Lọc theo Online/Offline.
-  - `isActive` (boolean, optional): Lọc theo trạng thái hoạt động/vô hiệu hóa.
-  - `pageNumber` (int, default: 1): Số trang.
-  - `pageSize` (int, default: 20): Số bản ghi trên trang.
-- **Response (`200 OK - PageResult<DeviceDto>`)**:
-  ```json
-  {
-    "items": [
-      {
-        "id": "22222222-2222-2222-2222-222222222222",
-        "ownerId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-        "deviceCode": "ESP32-FARM-01",
-        "name": "Vườn Cà Chua A1",
-        "description": "Khu nhà màng phía Tây",
-        "isOnline": true,
-        "isActive": true,
-        "createdAtUtc": "2026-11-01T08:00:00Z",
-        "updatedAtUtc": "2026-11-15T07:15:00Z",
-        "lastSeenAtUtc": "2026-11-15T07:24:00Z"
-      }
-    ],
-    "totalCount": 1,
-    "pageIndex": 1,
-    "pageSize": 20,
-    "totalPages": 1,
-    "hasPreviousPage": false,
-    "hasNextPage": false
-  }
-  ```
-
-#### 3.3.2. Thêm thiết bị mới
-- **Endpoint**: `POST /api/Devices`
-- **Xác thực**: Bearer Token
-- **Trang sử dụng**: `04. Devices` (Modal / Trang thêm thiết bị)
-- **Lưu ý**: Frontend KHÔNG cần truyền `ownerId`. Backend tự động lấy ID người dùng từ JWT claims.
-- **Request Body (`CreateDeviceRequest`)**:
-  ```json
-  {
-    "deviceCode": "ESP32-FARM-02",
-    "name": "Khu Dâu Tây",
-    "description": "Chậu treo thông minh"
-  }
-  ```
-- **Response (`201 Created - DeviceDto`)**.
-
-#### 3.3.3. Chi tiết thiết bị
-- **Endpoint**: `GET /api/Devices/{id}`
-- **Xác thực**: Bearer Token (Kiểm tra quyền sở hữu)
-- **Trang sử dụng**: `05. Device Detail`
-- **Response (`200 OK - DeviceDto`)**.
-
-#### 3.3.4. Trạng thái kết nối thiết bị
-- **Endpoint**: `GET /api/Devices/{id}/connection`
-- **Xác thực**: Bearer Token (Kiểm tra quyền sở hữu)
-- **Trang sử dụng**: `05. Device Detail`, Header Status Badge
-- **Response (`200 OK - DeviceConnectionStatusDto`)**:
-  ```json
-  {
-    "deviceId": "22222222-2222-2222-2222-222222222222",
-    "deviceCode": "ESP32-FARM-01",
-    "name": "Vườn Cà Chua A1",
-    "isOnline": true,
-    "lastSeenAtUtc": "2026-11-15T07:24:00Z",
-    "connectionStatus": "Online"
-  }
-  ```
-
-#### 3.3.5. Cập nhật thông tin thiết bị
-- **Endpoint**: `PUT /api/Devices/{id}`
-- **Xác thực**: Bearer Token (Kiểm tra quyền sở hữu)
-- **Trang sử dụng**: `04. Devices`, `05. Device Detail`
-- **Request Body (`UpdateDeviceRequest`)**:
-  ```json
-  {
-    "name": "Vườn Cà Chua A1 (Đã đổi tên)",
-    "description": "Khu nhà màng mới cải tạo"
-  }
-  ```
-- **Response (`200 OK - DeviceDto`)**.
-
-#### 3.3.6. Vô hiệu hóa thiết bị (Soft Deactivate)
-- **Endpoint**: `PUT /api/Devices/{id}/deactivate`
-- **Xác thực**: Bearer Token
-- **Trang sử dụng**: `04. Devices`, `05. Device Detail`
-- **Response (`204 NoContent`)**.
-
-#### 3.3.7. Kích hoạt lại thiết bị (Re-activate)
-- **Endpoint**: `PUT /api/Devices/{id}/activate`
-- **Xác thực**: Bearer Token
-- **Trang sử dụng**: `04. Devices`, `05. Device Detail`
-- **Response (`204 NoContent`)**.
-
----
-
-### 3.4. Nhóm Sensors – Giám sát chỉ số cảm biến
-
-#### 3.4.1. Chỉ số cảm biến mới nhất của thiết bị
-- **Endpoint**: `GET /api/devices/{deviceId}/sensors/latest`
-- **Xác thực**: Bearer Token (Kiểm tra quyền sở hữu)
-- **Trang sử dụng**: `05. Device Detail`, `06. Sensor Monitoring`
-- **Response (`200 OK - SensorTelemetryDto`)**:
-  ```json
-  {
-    "deviceId": "22222222-2222-2222-2222-222222222222",
-    "soilMoisture": 54.2,
-    "airTemperature": 30.5,
-    "airHumidity": 68.0,
-    "waterTemperature": 25.4,
-    "waterLevel": 82.0,
-    "lastUpdatedAtUtc": "2026-11-15T07:20:00Z"
-  }
-  ```
-
-#### 3.4.2. Lịch sử cảm biến theo thời gian (Vẽ biểu đồ điểm chi tiết)
-- **Endpoint**: `GET /api/devices/{deviceId}/sensors/history`
-- **Xác thực**: Bearer Token (Kiểm tra quyền sở hữu)
-- **Trang sử dụng**: `06. Sensor Monitoring`
-- **Query Parameters**:
-  - `sensorType` (SensorType, default: `SoilMoisture` = 1)
-  - `fromUtc` (DateTimeOffset, default: 24h trước)
-  - `toUtc` (DateTimeOffset, default: hiện tại)
-- **Response (`200 OK - SensorHistoryDto`)**:
-  ```json
-  {
-    "deviceId": "22222222-2222-2222-2222-222222222222",
-    "sensorType": 1,
-    "sensorTypeName": "SoilMoisture",
-    "unit": "%",
-    "dataPoints": [
-      {
-        "value": 52.1,
-        "timestampUtc": "2026-11-15T00:00:00Z"
-      },
-      {
-        "value": 54.2,
-        "timestampUtc": "2026-11-15T01:00:00Z"
-      }
-    ]
-  }
-  ```
-
-#### 3.4.3. Thống kê dữ liệu cảm biến tổng hợp theo giờ (Min, Max, Avg)
-- **Endpoint**: `GET /api/devices/{deviceId}/sensors/aggregates`
-- **Xác thực**: Bearer Token (Kiểm tra quyền sở hữu)
-- **Trang sử dụng**: `06. Sensor Monitoring` (Biểu đồ dài ngày 7 ngày/30 ngày)
-- **Query Parameters**:
-  - `sensorType` (SensorType, optional)
-  - `fromUtc` (DateTimeOffset, default: 7 ngày trước)
-  - `toUtc` (DateTimeOffset, default: hiện tại)
-- **Response (`200 OK - IReadOnlyList<SensorAggregateDto>`)**:
-  ```json
-  [
-    {
-      "id": "44444444-4444-4444-4444-444444444444",
-      "deviceId": "22222222-2222-2222-2222-222222222222",
-      "sensorType": 1,
-      "sensorTypeName": "SoilMoisture",
-      "hourBucket": "2026-11-15T06:00:00Z",
-      "avgValue": 53.4,
-      "minValue": 49.0,
-      "maxValue": 58.2,
-      "sampleCount": 120,
-      "unit": "%",
-      "aggregatedAtUtc": "2026-11-15T07:00:00Z"
-    }
-  ]
   ```
 
 ---
 
-### 3.5. Nhóm Irrigation – Điều khiển & Quy tắc tưới nước
+### 3.3 Nhóm 3: Quản lý Thiết bị IoT (`DevicesController`)
 
-#### 3.5.1. Trạng thái máy bơm & phiên tưới hiện tại
-- **Endpoint**: `GET /api/devices/{deviceId}/irrigation/status`
-- **Xác thực**: Bearer Token (Kiểm tra quyền sở hữu)
-- **Trang sử dụng**: `05. Device Detail`, `07. Irrigation`
-- **Response (`200 OK - IrrigationStatusDto`)**:
-  ```json
-  {
-    "deviceId": "22222222-2222-2222-2222-222222222222",
-    "isPumpRunning": false,
-    "currentMode": 2,
-    "lastIrrigationStartedAtUtc": "2026-11-15T06:00:00Z",
-    "lastIrrigationDurationSeconds": 120,
-    "lastSoilMoisture": 65.0
+#### 9. Danh sách thiết bị có lọc & phân trang
+- **Method:** `GET`
+- **Endpoint:** `/api/Devices`
+- **Authentication:** `Bearer JWT` (User thấy thiết bị của mình; Admin thấy toàn bộ)
+- **Trang sử dụng:** `/devices`, `/dashboard` (dropdown chọn thiết bị active)
+- **Trạng thái:** ✅ **Đã triển khai hoàn thiện (Backend)**
+- **Query Parameters:**
+  - `keyword?: string` — Tìm theo tên hoặc mã thiết bị
+  - `isOnline?: boolean` — Lọc theo trạng thái kết nối
+  - `isActive?: boolean` — Lọc theo cờ kích hoạt
+  - `pageNumber?: number = 1`
+  - `pageSize?: number = 20`
+- **Response DTO (200 OK):** `PageResult<DeviceDto>`
+  ```typescript
+  interface DeviceDto {
+    id: string;               // UUID
+    ownerId: string;          // UUID chủ sở hữu
+    deviceCode: string;       // VD: "ESP32-POT-001"
+    name: string;             // VD: "Chậu cà chua bi"
+    description?: string;
+    isOnline: boolean;        // Kết nối MQTT/Gateway
+    isActive: boolean;
+    createdAtUtc: string;
+    updatedAtUtc: string;
+    lastSeenAtUtc?: string | null;
   }
   ```
 
-#### 3.5.2. Danh sách quy tắc tưới của thiết bị
-- **Endpoint**: `GET /api/devices/{deviceId}/irrigation-rules`
-- **Xác thực**: Bearer Token (Kiểm tra quyền sở hữu)
-- **Trang sử dụng**: `07. Irrigation`
-- **Response (`200 OK - IReadOnlyList<IrrigationRuleDto>`)**:
-  ```json
-  [
-    {
-      "id": "55555555-5555-5555-5555-555555555555",
-      "deviceId": "22222222-2222-2222-2222-222222222222",
-      "name": "Tưới duy trì độ ẩm cà chua",
-      "moistureThreshold": 40.0,
-      "targetMoisture": 70.0,
-      "minIntervalMinutes": 60,
-      "maxDurationSeconds": 180,
-      "isEnabled": true,
-      "createdAtUtc": "2026-11-05T08:00:00Z",
-      "updatedAtUtc": "2026-11-05T08:00:00Z",
-      "lastTriggeredAtUtc": "2026-11-15T06:00:00Z"
-    }
-  ]
-  ```
+#### 10. Chi tiết thiết bị theo ID
+- **Method:** `GET`
+- **Endpoint:** `/api/Devices/{id}`
+- **Authentication:** `Bearer JWT`
+- **Trang sử dụng:** `/devices/:deviceId`
+- **Trạng thái:** ✅ **Đã triển khai hoàn thiện (Backend)**
+- **Parameters:** path `id: string` (UUID)
+- **Response DTO (200 OK):** `DeviceDto` (404 nếu không tồn tại, 403 nếu không có quyền).
 
-#### 3.5.3. Tạo quy tắc tưới mới
-- **Endpoint**: `POST /api/devices/{deviceId}/irrigation-rules`
-- **Xác thực**: Bearer Token (Kiểm tra quyền sở hữu)
-- **Lưu ý validation**: `MoistureThreshold` <= 100, `TargetMoisture` <= 100, `MoistureThreshold` < `TargetMoisture`, `MaxDurationSeconds` <= 300, mỗi thiết bị chỉ được có tối đa 1 quy tắc đang bật (`isEnabled = true`).
-- **Trang sử dụng**: `07. Irrigation`
-- **Request Body (`CreateIrrigationRuleRequest`)**:
-  ```json
-  {
-    "deviceId": "22222222-2222-2222-2222-222222222222",
-    "name": "Quy tắc mùa hè",
-    "moistureThreshold": 35.0,
-    "targetMoisture": 65.0,
-    "minIntervalMinutes": 45,
-    "maxDurationSeconds": 120
+#### 11. Đăng ký thiết bị mới
+- **Method:** `POST`
+- **Endpoint:** `/api/Devices`
+- **Authentication:** `Bearer JWT`
+- **Trang sử dụng:** Modal "Thêm thiết bị mới" tại `/devices`
+- **Trạng thái:** ✅ **Đã triển khai hoàn thiện (Backend)**
+- **Request DTO (`CreateDeviceRequest`):**
+  ```typescript
+  interface CreateDeviceRequest {
+    ownerId?: string;     // Tùy chọn (Backend tự gán currentUserId nếu rỗng)
+    deviceCode: string;   // Bắt buộc, tối đa 50 ký tự, DUY NHẤT
+    name: string;         // Bắt buộc, tối đa 100 ký tự
+    description?: string; // Tối đa 500 ký tự
   }
   ```
-- **Response (`201 Created - IrrigationRuleDto`)**.
+- **Response DTO (201 Created):** `DeviceDto`.
 
-#### 3.5.4. Cập nhật cấu hình quy tắc tưới
-- **Endpoint**: `PUT /api/irrigation-rules/{ruleId}`
-- **Xác thực**: Bearer Token
-- **Trang sử dụng**: `07. Irrigation`
-- **Request Body (`UpdateIrrigationRuleRequest`)**:
-  ```json
-  {
-    "name": "Quy tắc mùa hè (Điều chỉnh)",
-    "moistureThreshold": 40.0,
-    "targetMoisture": 70.0,
-    "minIntervalMinutes": 30,
-    "maxDurationSeconds": 150
+#### 12. Cập nhật thông tin thiết bị (Tên & Mô tả)
+- **Method:** `PUT`
+- **Endpoint:** `/api/Devices/{id}`
+- **Authentication:** `Bearer JWT`
+- **Trang sử dụng:** Modal "Chỉnh sửa thiết bị" tại `/devices` hoặc `/devices/:deviceId`
+- **Trạng thái:** ✅ **Đã triển khai hoàn thiện (Backend)**
+- **Parameters:** path `id: string` (UUID)
+- **Request DTO (`UpdateDeviceRequest`):**
+  ```typescript
+  interface UpdateDeviceRequest {
+    name: string;         // Bắt buộc, tối đa 100 ký tự
+    description?: string; // Tối đa 500 ký tự
   }
   ```
-- **Response (`200 OK - IrrigationRuleDto`)**.
+- **Response DTO (200 OK):** `DeviceDto`.
 
-#### 3.5.5. Bật/Tắt quy tắc tưới (Toggle Rule)
-- **Endpoint**: `PATCH /api/irrigation-rules/{ruleId}/toggle`
-- **Xác thực**: Bearer Token
-- **Trang sử dụng**: `07. Irrigation` (Toggle Switch)
-- **Request Body (`ToggleIrrigationRuleRequest`, optional)**:
-  ```json
-  {
-    "isEnabled": true
-  }
-  ```
-- **Response (`200 OK - IrrigationRuleDto`)**.
+#### 13. Vô hiệu hóa thiết bị
+- **Method:** `PUT`
+- **Endpoint:** `/api/Devices/{id}/deactivate`
+- **Authentication:** `Bearer JWT`
+- **Trang sử dụng:** Thao tác "Tạm ngưng hoạt động" trên `/devices`
+- **Trạng thái:** ✅ **Đã triển khai hoàn thiện (Backend)**
+- **Parameters:** path `id: string` (UUID)
+- **Response DTO (204 No Content):** Không có body.
 
-#### 3.5.6. Xóa quy tắc tưới
-- **Endpoint**: `DELETE /api/irrigation-rules/{ruleId}`
-- **Xác thực**: Bearer Token
-- **Trang sử dụng**: `07. Irrigation`
-- **Response (`204 NoContent`)**.
-
-#### 3.5.7. Danh sách lịch sử tưới (Lọc thiết bị, chế độ, phân trang)
-- **Endpoint**: `GET /api/irrigation-logs`
-- **Xác thực**: Bearer Token
-- **Trang sử dụng**: `07. Irrigation`, `09. Irrigation History`
-- **Query Parameters**:
-  - `deviceId` (Guid, optional)
-  - `mode` (IrrigationMode, optional: 1=Manual, 2=Automatic)
-  - `pageNumber` (int, default: 1)
-  - `pageSize` (int, default: 20)
-- **Response (`200 OK - PageResult<IrrigationLogDto>`)**:
-  ```json
-  {
-    "items": [
-      {
-        "id": "33333333-3333-3333-3333-333333333333",
-        "deviceId": "22222222-2222-2222-2222-222222222222",
-        "mode": 1,
-        "modeName": "Manual",
-        "status": 2,
-        "statusName": "Completed",
-        "soilMoistureBefore": 32.0,
-        "soilMoistureAfter": 60.5,
-        "waterAmountMl": 500.0,
-        "startedAtUtc": "2026-11-15T05:30:00Z",
-        "completedAtUtc": "2026-11-15T05:32:00Z",
-        "durationSeconds": 120,
-        "note": "Tưới thủ công qua Web"
-      }
-    ],
-    "totalCount": 1,
-    "pageIndex": 1,
-    "pageSize": 20,
-    "totalPages": 1,
-    "hasPreviousPage": false,
-    "hasNextPage": false
-  }
-  ```
-
-#### 3.5.8. Chi tiết một phiên tưới nước
-- **Endpoint**: `GET /api/irrigation-logs/{logId}`
-- **Xác thực**: Bearer Token (Kiểm tra quyền sở hữu)
-- **Trang sử dụng**: `09. Irrigation History` (Drawer/Modal chi tiết)
-- **Response (`200 OK - IrrigationLogDto`)**.
+#### 14. Kích hoạt lại thiết bị
+- **Method:** `PUT`
+- **Endpoint:** `/api/Devices/{id}/activate`
+- **Authentication:** `Bearer JWT`
+- **Trang sử dụng:** Thao tác "Kích hoạt lại" trên `/devices`
+- **Trạng thái:** ✅ **Đã triển khai hoàn thiện (Backend)**
+- **Parameters:** path `id: string` (UUID)
+- **Response DTO (204 No Content):** Không có body.
 
 ---
 
-### 3.6. Nhóm Alerts – Cảnh báo sự cố
+### 3.4 Nhóm 4: Dữ liệu Cảm biến IoT (`SensorsController`)
 
-#### 3.6.1. Danh sách cảnh báo (Lọc mức độ, trạng thái xử lý, phân trang)
-- **Endpoint**: `GET /api/alerts`
-- **Xác thực**: Bearer Token
-- **Trang sử dụng**: `08. Alerts`
-- **Query Parameters**:
-  - `severity` (AlertSeverity, optional: 1=Info, 2=Warning, 3=Critical)
-  - `isResolved` (boolean, optional)
-  - `deviceId` (Guid, optional)
-  - `pageIndex` (int, default: 1)
-  - `pageSize` (int, default: 20)
-- **Response (`200 OK - PageResult<AlertDto>`)**:
-  ```json
-  {
-    "items": [
-      {
-        "id": "11111111-1111-1111-1111-111111111111",
-        "deviceId": "22222222-2222-2222-2222-222222222222",
-        "alertCode": "ALT-1731654000-A1B2C3",
-        "title": "Nhiệt độ nước vượt ngưỡng",
-        "message": "Nhiệt độ nước đo được 36.5°C, nguy cơ ảnh hưởng rễ cây.",
-        "severity": 3,
-        "severityName": "Critical",
-        "isResolved": false,
-        "createdAtUtc": "2026-11-15T07:00:00Z",
-        "resolvedAtUtc": null
-      }
-    ],
-    "totalCount": 1,
-    "pageIndex": 1,
-    "pageSize": 20,
-    "totalPages": 1,
-    "hasPreviousPage": false,
-    "hasNextPage": false
+#### 15. Chỉ số cảm biến tức thời mới nhất (`latest`)
+- **Method:** `GET`
+- **Endpoint:** `/api/devices/{deviceId}/sensors/latest`
+- **Authentication:** `Bearer JWT`
+- **Trang sử dụng:** Thẻ cảm biến thời gian thực tại `/dashboard`, `/devices/:deviceId`, `/devices/:deviceId/sensors`
+- **Trạng thái:** ✅ **Đã triển khai hoàn thiện (Backend)**
+- **Parameters:** path `deviceId: string` (UUID)
+- **Response DTO (200 OK — `SensorTelemetryDto`):**
+  ```typescript
+  interface SensorTelemetryDto {
+    deviceId: string;
+    soilMoisture?: number | null;     // %
+    airTemperature?: number | null;   // °C
+    airHumidity?: number | null;      // %
+    waterTemperature?: number | null; // °C
+    waterLevel?: number | null;       // %
+    lastUpdatedAtUtc?: string | null; // ISO 8601
   }
   ```
 
-#### 3.6.2. Thống kê tổng hợp cảnh báo
-- **Endpoint**: `GET /api/alerts/summary`
-- **Xác thực**: Bearer Token
-- **Trang sử dụng**: Header Notification Popover, `08. Alerts` Metric Cards
-- **Response (`200 OK - AlertSummaryDto`)**:
-  ```json
-  {
-    "total": 5,
-    "critical": 1,
-    "warning": 2,
-    "info": 2,
-    "unresolved": 3
+#### 16. Lịch sử dữ liệu cảm biến ngắn hạn (Vẽ biểu đồ chuỗi thời gian)
+- **Method:** `GET`
+- **Endpoint:** `/api/devices/{deviceId}/sensors/history`
+- **Authentication:** `Bearer JWT`
+- **Trang sử dụng:** Biểu đồ đường tại `/devices/:deviceId/sensors`, `/history`
+- **Trạng thái:** ✅ **Đã triển khai hoàn thiện (Backend)**
+- **Parameters:**
+  - path `deviceId: string`
+  - query `sensorType: SensorType = 1` (1=SoilMoisture, 2=AirTemp, 3=AirHum, 4=WaterTemp, 5=WaterLevel)
+  - query `fromUtc?: string` (Mặc định: `toUtc - 24h`)
+  - query `toUtc?: string` (Mặc định: thời điểm hiện tại `UtcNow`)
+- **Response DTO (200 OK — `SensorHistoryDto`):**
+  ```typescript
+  interface SensorHistoryDto {
+    deviceId: string;
+    sensorType: SensorType;
+    sensorTypeName: string; // "SoilMoisture", "AirTemperature", ...
+    unit: string;           // "%", "°C", ...
+    dataPoints: {
+      value: number;
+      timestampUtc: string;
+    }[];
   }
   ```
 
-#### 3.6.3. Chi tiết cảnh báo
-- **Endpoint**: `GET /api/alerts/{id}`
-- **Xác thực**: Bearer Token (Kiểm tra quyền sở hữu)
-- **Trang sử dụng**: `08. Alerts` (Drawer/Modal chi tiết)
-- **Response (`200 OK - AlertDto`)**.
-
-#### 3.6.4. Đánh dấu đã xử lý cảnh báo (Resolve Alert)
-- **Endpoint**: `PATCH /api/alerts/{id}/resolve`
-- **Xác thực**: Bearer Token (Kiểm tra quyền sở hữu)
-- **Trang sử dụng**: `08. Alerts`
-- **Response (`200 OK - AlertDto`)**: Trả về AlertDto đã cập nhật `isResolved = true` và `resolvedAtUtc`.
+#### 17. Thống kê cảm biến theo giờ (Biểu đồ dài ngày, Min/Max/Avg)
+- **Method:** `GET`
+- **Endpoint:** `/api/devices/{deviceId}/sensors/aggregates`
+- **Authentication:** `Bearer JWT`
+- **Trang sử dụng:** Phân tích xu hướng 7 ngày / 30 ngày tại `/devices/:deviceId/sensors`, `/history`
+- **Trạng thái:** ✅ **Đã triển khai hoàn thiện (Backend)**
+- **Parameters:**
+  - path `deviceId: string`
+  - query `sensorType?: SensorType` (Tùy chọn lọc 1 loại hoặc lấy tất cả)
+  - query `fromUtc?: string` (Mặc định: `toUtc - 7 ngày`)
+  - query `toUtc?: string` (Mặc định: `UtcNow`)
+- **Response DTO (200 OK — `SensorAggregateDto[]`):**
+  ```typescript
+  interface SensorAggregateDto {
+    id: string;
+    deviceId: string;
+    sensorType: SensorType;
+    sensorTypeName: string;
+    hourBucket: string;     // Đầu giờ (vd: "2026-11-16T13:00:00Z")
+    avgValue: number;
+    minValue: number;
+    maxValue: number;
+    sampleCount: number;    // Số mẫu đo trong giờ
+    unit: string;
+    aggregatedAtUtc: string;
+  }
+  ```
 
 ---
 
-### 3.7. Nhóm DeviceCommands – Lệnh điều khiển thiết bị
+### 3.5 Nhóm 5: Điều khiển & Quy tắc Tưới Nước (`IrrigationController`)
 
-#### 3.7.1. Gửi lệnh điều khiển thiết bị (Bật/tắt bơm thủ công, cấu hình, v.v.)
-- **Endpoint**: `POST /api/devices/{deviceId}/commands`
-- **Xác thực**: Bearer Token (Kiểm tra quyền sở hữu)
-- **Trang sử dụng**: `05. Device Detail`, `07. Irrigation` (Nút Bơm/Dừng bơm)
-- **Lưu ý đặc biệt**: Backend chấp nhận `Action` và `Payload` tùy biến. Với thao tác tưới thủ công:
-  - Bật bơm: `action: "START_PUMP"`, `payload: "{\"duration\": 60}"`
-  - Dừng bơm: `action: "STOP_PUMP"`, `payload: null`
-- **Request Body (`ManualDeviceCommandRequest`)**:
-  ```json
-  {
-    "action": "START_PUMP",
-    "payload": "{\"duration\":60}"
-  }
-  ```
-- **Response (`201 Created - DeviceCommandDto`)**:
-  ```json
-  {
-    "id": "66666666-6666-6666-6666-666666666666",
-    "deviceId": "22222222-2222-2222-2222-222222222222",
-    "commandCode": "CMD-1731654000-9F8E7D",
-    "action": "START_PUMP",
-    "payload": "{\"duration\":60}",
-    "status": 1,
-    "statusName": "Pending",
-    "createdAtUtc": "2026-11-15T07:25:00Z",
-    "acknowledgedAtUtc": null,
-    "completedAtUtc": null,
-    "errorMessage": null
+#### 18. Danh sách quy tắc tưới của thiết bị
+- **Method:** `GET`
+- **Endpoint:** `/api/devices/{deviceId}/irrigation-rules`
+- **Authentication:** `Bearer JWT`
+- **Trang sử dụng:** Tab Quy tắc tưới tại `/devices/:deviceId/irrigation`, `/irrigation`
+- **Trạng thái:** ✅ **Đã triển khai hoàn thiện (Backend)**
+- **Parameters:** path `deviceId: string` (UUID)
+- **Response DTO (200 OK — `IrrigationRuleDto[]`):**
+  ```typescript
+  interface IrrigationRuleDto {
+    id: string;
+    deviceId: string;
+    name: string;
+    moistureThreshold: number;  // 0..100 (%)
+    targetMoisture: number;     // 0..100 (%), > moistureThreshold
+    minIntervalMinutes: number; // >= 0 (phút)
+    maxDurationSeconds: number; // 1..300 (giây, tối đa 5 phút)
+    isEnabled: boolean;         // Chỉ tối đa 1 rule bật/thiết bị
+    createdAtUtc: string;
+    updatedAtUtc: string;
+    lastTriggeredAtUtc?: string | null;
   }
   ```
 
-#### 3.7.2. Lịch sử lệnh theo thiết bị
-- **Endpoint**: `GET /api/devices/{deviceId}/commands`
-- **Xác thực**: Bearer Token (Kiểm tra quyền sở hữu)
-- **Trang sử dụng**: `05. Device Detail`, `10. Command History`
-- **Query Parameters**:
-  - `status` (CommandStatus, optional: 1=Pending, 2=Acknowledged, 3=Completed, 4=Failed)
-  - `pageIndex` (int, default: 1)
-  - `pageSize` (int, default: 20)
-- **Response (`200 OK - PageResult<DeviceCommandDto>`)**.
+#### 19. Tạo quy tắc tưới tự động mới
+- **Method:** `POST`
+- **Endpoint:** `/api/devices/{deviceId}/irrigation-rules`
+- **Authentication:** `Bearer JWT`
+- **Trang sử dụng:** Modal "Thêm quy tắc tưới" tại `/devices/:deviceId/irrigation`
+- **Trạng thái:** ✅ **Đã triển khai hoàn thiện (Backend)**
+- **Parameters:** path `deviceId: string` (UUID)
+- **Request DTO (`CreateIrrigationRuleRequest`):**
+  ```typescript
+  interface CreateIrrigationRuleRequest {
+    deviceId: string;           // Phải khớp với route
+    name: string;               // 1..100 ký tự
+    moistureThreshold: number;  // 0.00 .. 100.00
+    targetMoisture: number;     // 0.00 .. 100.00 (> moistureThreshold)
+    minIntervalMinutes: number; // >= 0
+    maxDurationSeconds: number; // 1 .. 300
+  }
+  ```
+- **Response DTO (201 Created):** `IrrigationRuleDto`.
+- **Ràng buộc nghiệp vụ:** Backend tự động kiểm tra, nếu thiết bị đã có 1 quy tắc đang `isEnabled = 1`, hệ thống sẽ trả về lỗi `400` yêu cầu tắt quy tắc cũ trước khi tạo mới.
 
-#### 3.7.3. Tất cả lịch sử lệnh của người dùng
-- **Endpoint**: `GET /api/commands`
-- **Xác thực**: Bearer Token
-- **Trang sử dụng**: `10. Command History`
-- **Query Parameters**:
-  - `status` (CommandStatus, optional)
-  - `pageIndex` (int, default: 1)
-  - `pageSize` (int, default: 20)
-- **Response (`200 OK - PageResult<DeviceCommandDto>`)**.
+#### 20. Cập nhật cấu hình quy tắc tưới
+- **Method:** `PUT`
+- **Endpoint:** `/api/irrigation-rules/{ruleId}`
+- **Authentication:** `Bearer JWT`
+- **Trang sử dụng:** Modal "Sửa quy tắc tưới"
+- **Trạng thái:** ✅ **Đã triển khai hoàn thiện (Backend)**
+- **Parameters:** path `ruleId: string` (UUID)
+- **Request DTO (`UpdateIrrigationRuleRequest`):**
+  ```typescript
+  interface UpdateIrrigationRuleRequest {
+    name: string;
+    moistureThreshold: number;
+    targetMoisture: number;
+    minIntervalMinutes: number;
+    maxDurationSeconds: number;
+  }
+  ```
+- **Response DTO (200 OK):** `IrrigationRuleDto`.
 
-#### 3.7.4. Chi tiết một lệnh điều khiển
-- **Endpoint**: `GET /api/commands/{commandId}`
-- **Xác thực**: Bearer Token (Kiểm tra quyền sở hữu)
-- **Trang sử dụng**: `10. Command History` (Drawer/Modal chi tiết lệnh)
-- **Response (`200 OK - DeviceCommandDto`)**.
+#### 21. Bật / Tắt quy tắc tưới (`toggle`)
+- **Method:** `PATCH`
+- **Endpoint:** `/api/irrigation-rules/{ruleId}/toggle`
+- **Authentication:** `Bearer JWT`
+- **Trang sử dụng:** Nút gạt Switch quy tắc tưới
+- **Trạng thái:** ✅ **Đã triển khai hoàn thiện (Backend)**
+- **Parameters:** path `ruleId: string`, query `isEnabled?: boolean`
+- **Request DTO (Optional Body — `ToggleIrrigationRuleRequest`):**
+  ```typescript
+  interface ToggleIrrigationRuleRequest {
+    isEnabled?: boolean; // Nếu không truyền body/query, server tự đảo trạng thái hiện tại
+  }
+  ```
+- **Response DTO (200 OK):** `IrrigationRuleDto`.
+
+#### 22. Xóa quy tắc tưới
+- **Method:** `DELETE`
+- **Endpoint:** `/api/irrigation-rules/{ruleId}`
+- **Authentication:** `Bearer JWT`
+- **Trang sử dụng:** Nút xóa quy tắc tưới
+- **Trạng thái:** ✅ **Đã triển khai hoàn thiện (Backend)**
+- **Parameters:** path `ruleId: string` (UUID)
+- **Response DTO (204 No Content):** Không có body.
+
+#### 23. Kiểm tra trạng thái máy bơm tức thời
+- **Method:** `GET`
+- **Endpoint:** `/api/devices/{deviceId}/irrigation/status`
+- **Authentication:** `Bearer JWT`
+- **Trang sử dụng:** Thẻ trạng thái bơm thời gian thực trên `/dashboard`, `/devices/:deviceId/irrigation`
+- **Trạng thái:** ✅ **Đã triển khai hoàn thiện (Backend)**
+- **Parameters:** path `deviceId: string` (UUID)
+- **Response DTO (200 OK — `IrrigationStatusDto`):**
+  ```typescript
+  interface IrrigationStatusDto {
+    deviceId: string;
+    isPumpRunning: boolean;
+    currentMode: IrrigationMode; // 1=Manual, 2=Automatic
+    lastIrrigationStartedAtUtc?: string | null;
+    lastIrrigationDurationSeconds?: number | null;
+    lastSoilMoisture?: number | null;
+  }
+  ```
+
+#### 24. Lịch sử các phiên tưới (Lọc & Phân trang)
+- **Method:** `GET`
+- **Endpoint:** `/api/irrigation-logs`
+- **Authentication:** `Bearer JWT`
+- **Trang sử dụng:** Bảng lịch sử tưới tại `/irrigation-history`, `/devices/:deviceId/irrigation`
+- **Trạng thái:** ✅ **Đã triển khai hoàn thiện (Backend)**
+- **Query Parameters:**
+  - `deviceId?: string` — Lọc theo thiết bị cụ thể (nếu để trống: lấy toàn bộ thiết bị của user)
+  - `mode?: IrrigationMode` — 1=Manual, 2=Automatic
+  - `pageNumber?: number = 1`
+  - `pageSize?: number = 20`
+- **Response DTO (200 OK):** `PageResult<IrrigationLogDto>`
+  ```typescript
+  interface IrrigationLogDto {
+    id: string;
+    deviceId: string;
+    mode: IrrigationMode;
+    modeName: string;            // "Manual" | "Automatic"
+    status: IrrigationStatus;    // 1=InProgress, 2=Completed, 3=Stopped, 4=Failed
+    statusName: string;          // "InProgress", "Completed", ...
+    soilMoistureBefore?: number | null; // %
+    soilMoistureAfter?: number | null;  // %
+    waterAmountMl?: number | null;      // ml
+    startedAtUtc: string;
+    completedAtUtc?: string | null;
+    durationSeconds?: number | null;
+    note?: string | null;
+  }
+  ```
 
 ---
 
-### 3.8. Nhóm Health – Giám sát Backend & Database
+### 3.6 Nhóm 6: Health Check & Các Endpoint Dự kiến (Pending Backlog)
 
-#### 3.8.1. Kiểm tra sức khỏe tổng quan
-- **Endpoint**: `GET /health`
-- **Xác thực**: Public
-- **Response (`200 OK`)**: `{ "status": "Healthy", "timestampUtc": "..." }`
+#### 25. Health Check hệ thống
+- **Method:** `GET`
+- **Endpoint:** `/health`
+- **Authentication:** `Anonymous`
+- **Response:** `200 OK` `{ "status": "Healthy" }`
+- **Trạng thái:** ✅ **Đã triển khai hoàn thiện**
 
-#### 3.8.2. Liveness Probe
-- **Endpoint**: `GET /health/live`
-- **Xác thực**: Public
-- **Response (`200 OK`)**: `{ "status": "Alive", "timestampUtc": "..." }`
+#### 26. Quản lý Cảnh báo (`AlertsController`)
+- **Trạng thái hiện tại:** ⏳ **Pending Backend Controller**
+  - Schema Domain & DTO đã có sẵn: `AlertDto` (`id`, `deviceId`, `alertCode`, `title`, `message`, `severity`, `isResolved`, `createdAtUtc`, `resolvedAtUtc`).
+  - Dữ liệu tạm thời: Truy cập qua `DashboardSummaryDto.recentAlerts` (`GET /api/Dashboard/summary`).
+  - Dự kiến bổ sung tại Backend Sprint tới:
+    - `GET /api/alerts`: Danh sách cảnh báo có phân trang & lọc `severity`, `isResolved`.
+    - `PUT /api/alerts/{id}/resolve`: Xác nhận đã xử lý cảnh báo.
 
-#### 3.8.3. Readiness Probe (Kiểm tra kết nối SQL Server)
-- **Endpoint**: `GET /health/ready`
-- **Xác thực**: Public
-- **Response**:
-  - `200 OK` (Sẵn sàng): `{ "status": "Ready", "checks": { "database": "Ready" } }`
-  - `503 Service Unavailable` (Mất kết nối DB): `{ "status": "Degraded", "checks": { "database": "Error: ..." } }`
+#### 27. Lệnh điều khiển trực tiếp máy bơm (`DeviceCommands`)
+- **Trạng thái hiện tại:** ⏳ **Pending Backend Controller**
+  - Tầng Application đã có `IDeviceCommandService`, `DeviceCommandDto`, `CreateDeviceCommandRequest` (`START_PUMP`, `STOP_PUMP`, `EMERGENCY_STOP`).
+  - Backend đang thực thi thông qua MQTT Hosted Service.
+  - Dự kiến bổ sung REST Controller: `POST /api/devices/{deviceId}/commands`.
+
+---
+
+## 4. Bảng tổng hợp đối chiếu Endpoint — UI Route
+
+| STT | Endpoint | Method | Trang Frontend sử dụng | Trạng thái Backend |
+|---|---|---|---|---|
+| 1 | `/api/Auth/register` | `POST` | `/register` | ✅ Ready |
+| 2 | `/api/Auth/login` | `POST` | `/login` | ✅ Ready |
+| 3 | `/api/Auth/refresh-token` | `POST` | Axios Interceptor | ✅ Ready |
+| 4 | `/api/Auth/logout` | `POST` | Header / User Menu | ✅ Ready |
+| 5 | `/api/Auth/me` | `GET` | `/profile`, Topbar | ✅ Ready |
+| 6 | `/api/Auth/profile` | `PUT` | `/profile` | ✅ Ready |
+| 7 | `/api/Auth/change-password` | `POST` | `/profile` | ✅ Ready |
+| 8 | `/api/Dashboard/summary` | `GET` | `/dashboard` | ✅ Ready |
+| 9 | `/api/Devices` | `GET` | `/devices`, Dashboard select | ✅ Ready |
+| 10 | `/api/Devices/{id}` | `GET` | `/devices/:deviceId` | ✅ Ready |
+| 11 | `/api/Devices` | `POST` | Modal Add Device | ✅ Ready |
+| 12 | `/api/Devices/{id}` | `PUT` | Modal Edit Device | ✅ Ready |
+| 13 | `/api/Devices/{id}/deactivate` | `PUT` | `/devices` | ✅ Ready |
+| 14 | `/api/Devices/{id}/activate` | `PUT` | `/devices` | ✅ Ready |
+| 15 | `/api/devices/{deviceId}/sensors/latest` | `GET` | Dashboard, `/devices/:deviceId/sensors` | ✅ Ready |
+| 16 | `/api/devices/{deviceId}/sensors/history` | `GET` | Charts 24h (`/sensors`, `/history`) | ✅ Ready |
+| 17 | `/api/devices/{deviceId}/sensors/aggregates`| `GET` | Charts 7d/30d (`/sensors`, `/history`) | ✅ Ready |
+| 18 | `/api/devices/{deviceId}/irrigation-rules` | `GET` | `/devices/:deviceId/irrigation`, `/irrigation` | ✅ Ready |
+| 19 | `/api/devices/{deviceId}/irrigation-rules` | `POST` | Modal Add Rule | ✅ Ready |
+| 20 | `/api/irrigation-rules/{ruleId}` | `PUT` | Modal Edit Rule | ✅ Ready |
+| 21 | `/api/irrigation-rules/{ruleId}/toggle` | `PATCH`| Switch Rule Toggle | ✅ Ready |
+| 22 | `/api/irrigation-rules/{ruleId}` | `DELETE`| Delete Rule Button | ✅ Ready |
+| 23 | `/api/devices/{deviceId}/irrigation/status`| `GET` | Status Card (Bơm chạy/dừng) | ✅ Ready |
+| 24 | `/api/irrigation-logs` | `GET` | `/irrigation-history`, Tab Nhật ký | ✅ Ready |
+| 25 | `/health` | `GET` | Network Indicator | ✅ Ready |
+| 26 | `/api/alerts` | `GET` | `/alerts` | ⏳ Pending Controller (Dùng tạm summary) |
+| 27 | `/api/devices/{deviceId}/commands` | `POST`| Nút Bơm tay / E-Stop | ⏳ Pending Controller (MQTT/Backend) |
 

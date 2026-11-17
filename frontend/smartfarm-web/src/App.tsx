@@ -1,78 +1,84 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
-import AppLayout from './layouts/AppLayout'
-import { AuthLayout } from './layouts/AuthLayout'
-import { ProtectedRoute } from './components/auth/ProtectedRoute'
-import { PublicRoute } from './components/auth/PublicRoute'
+import { Navigate, Route, Routes } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import { ToastProvider } from './contexts/ToastContext';
 
-// 11 Core Pages + Subroutes
-import LoginPage from './pages/Login'
-import RegisterPage from './pages/Register'
-import DashboardPage from './pages/Dashboard'
-import DevicesPage from './pages/Devices'
-import AddDevicePage from './pages/AddDevice'
-import DeviceDetailsPage from './pages/DeviceDetails'
-import SensorHistoryPage from './pages/SensorHistory'
-import IrrigationControlPage from './pages/IrrigationControl'
-import IrrigationLogsPage from './pages/IrrigationLogs'
-import AlertsPage from './pages/Alerts'
-import CommandsPage from './pages/Commands'
-import ProfilePage from './pages/Profile'
-import NotFoundPage from './pages/NotFound'
+// Layouts & Route Guards
+import AppLayout from './layouts/AppLayout';
+import ProtectedRoute from './components/routing/ProtectedRoute';
+import PublicRoute from './components/routing/PublicRoute';
+
+// Pages
+import LoginPage from './pages/Login';
+import RegisterPage from './pages/Register';
+import DashboardPage from './pages/Dashboard';
+import DevicesPage from './pages/Devices';
+import DeviceDetailPlaceholder from './pages/Devices/DeviceDetailPlaceholder';
+import SensorsPage from './pages/Sensors';
+import IrrigationPage from './pages/Irrigation';
+import HistoryPage from './pages/History';
+import AlertsPage from './pages/Alerts';
+import CommandsPage from './pages/Commands';
+import ProfilePage from './pages/Profile';
+import SettingsPage from './pages/Settings';
+import NotFoundPage from './pages/NotFound';
 
 export default function App() {
   return (
-    <Routes>
-      {/* Root redirect */}
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+    <AuthProvider>
+      <ToastProvider>
+        <Routes>
+          {/* Root redirect */}
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
-      {/* Public Authentication Routes with AuthLayout */}
-      <Route
-        element={
-          <PublicRoute>
-            <AuthLayout />
-          </PublicRoute>
-        }
-      >
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-      </Route>
+          {/* Public Auth Routes */}
+          <Route
+            path="/login"
+            element={
+              <PublicRoute>
+                <LoginPage />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <PublicRoute>
+                <RegisterPage />
+              </PublicRoute>
+            }
+          />
 
-      {/* Authenticated Application Shell with AppLayout */}
-      <Route
-        element={
-          <ProtectedRoute>
-            <AppLayout />
-          </ProtectedRoute>
-        }
-      >
-        {/* Core Monitoring & Management */}
-        <Route path="/dashboard" element={<DashboardPage />} />
+          {/* Protected Main App Shell Routes */}
+          <Route
+            element={
+              <ProtectedRoute>
+                <AppLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="/dashboard" element={<DashboardPage />} />
+            
+            {/* Devices & Device-scoped routes */}
+            <Route path="/devices" element={<DevicesPage />} />
+            <Route path="/devices/:deviceId" element={<DeviceDetailPlaceholder />} />
+            <Route path="/devices/:deviceId/sensors" element={<DeviceDetailPlaceholder />} />
+            <Route path="/devices/:deviceId/irrigation" element={<DeviceDetailPlaceholder />} />
 
-        {/* Devices Cluster */}
-        <Route path="/devices" element={<DevicesPage />} />
-        <Route path="/devices/new" element={<AddDevicePage />} />
-        <Route path="/devices/:deviceId" element={<DeviceDetailsPage />} />
-        <Route path="/devices/:deviceId/sensors" element={<SensorHistoryPage />} />
-        <Route path="/devices/:deviceId/irrigation" element={<IrrigationControlPage />} />
+            {/* Global telemetry & management views */}
+            <Route path="/sensors" element={<SensorsPage />} />
+            <Route path="/irrigation" element={<IrrigationPage />} />
+            <Route path="/irrigation-history" element={<HistoryPage />} />
+            <Route path="/history" element={<Navigate to="/irrigation-history" replace />} />
+            <Route path="/alerts" element={<AlertsPage />} />
+            <Route path="/commands" element={<CommandsPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+          </Route>
 
-        {/* History, Alerts & Control Logs */}
-        <Route path="/alerts" element={<AlertsPage />} />
-        <Route path="/irrigation-history" element={<IrrigationLogsPage />} />
-        <Route path="/commands" element={<CommandsPage />} />
-
-        {/* Account Profile */}
-        <Route path="/profile" element={<ProfilePage />} />
-
-        {/* Backward Compatibility Aliases */}
-        <Route path="/irrigation-logs" element={<Navigate to="/irrigation-history" replace />} />
-        <Route path="/sensors" element={<Navigate to="/devices" replace />} />
-        <Route path="/irrigation" element={<Navigate to="/devices" replace />} />
-        <Route path="/history" element={<Navigate to="/irrigation-history" replace />} />
-        <Route path="/settings" element={<Navigate to="/profile" replace />} />
-      </Route>
-
-      {/* 404 Fallback */}
-      <Route path="*" element={<NotFoundPage />} />
-    </Routes>
-  )
+          {/* 404 Catch-all */}
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </ToastProvider>
+    </AuthProvider>
+  );
 }

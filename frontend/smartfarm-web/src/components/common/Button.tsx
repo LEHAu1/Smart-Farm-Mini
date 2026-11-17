@@ -1,15 +1,18 @@
-import React from 'react'
-import { Loader2 } from 'lucide-react'
+import { forwardRef } from 'react';
+import type { ButtonHTMLAttributes, ReactNode } from 'react';
 
-export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger'
-  size?: 'sm' | 'md' | 'lg'
-  isLoading?: boolean
-  leftIcon?: React.ReactNode
-  rightIcon?: React.ReactNode
+export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'outline' | 'ghost';
+export type ButtonSize = 'sm' | 'md' | 'lg';
+
+export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  isLoading?: boolean;
+  leftIcon?: ReactNode;
+  rightIcon?: ReactNode;
 }
 
-export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   (
     {
       children,
@@ -18,52 +21,49 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       isLoading = false,
       leftIcon,
       rightIcon,
-      className = '',
       disabled,
+      className = '',
       ...props
     },
     ref
   ) => {
     const baseStyles =
-      'inline-flex items-center justify-center font-medium rounded-lg transition-colors duration-150 cursor-pointer select-none disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2'
+      'inline-flex items-center justify-center font-medium transition-all focus-ring disabled:cursor-not-allowed disabled:opacity-50 active:scale-[0.98]';
 
-    const sizeStyles = {
-      sm: 'text-xs px-3 py-1.5 gap-1.5 h-8',
-      md: 'text-sm px-4 py-2 gap-2 h-10',
-      lg: 'text-base px-5 py-2.5 gap-2.5 h-12',
-    }[size]
+    const variantStyles: Record<ButtonVariant, string> = {
+      primary: 'bg-primary text-white hover:bg-primary-hover shadow-xs',
+      secondary: 'bg-primary-subtle text-primary hover:bg-primary-subtle/80',
+      danger: 'bg-danger text-white hover:bg-danger-hover shadow-xs',
+      outline: 'border border-line bg-surface text-ink hover:bg-canvas hover:text-primary',
+      ghost: 'text-muted hover:bg-canvas hover:text-ink',
+    };
 
-    const variantStyles = {
-      primary:
-        'bg-[#15803d] text-white hover:bg-[#166534] active:bg-[#14532d] shadow-xs',
-      secondary:
-        'bg-[#0f766e] text-white hover:bg-[#115e59] active:bg-[#134e4a] shadow-xs',
-      outline:
-        'border border-[#e5eae5] bg-white text-[#17251d] hover:bg-[#f8faf7] hover:border-[#cbd5e1] active:bg-[#f1f5f9]',
-      ghost:
-        'bg-transparent text-[#647067] hover:bg-[#f1f5f1] hover:text-[#17251d]',
-      danger:
-        'bg-[#dc2626] text-white hover:bg-[#b91c1c] active:bg-[#991b1b] shadow-xs',
-    }[variant]
+    const sizeStyles: Record<ButtonSize, string> = {
+      sm: 'h-8 px-3 text-xs rounded-md gap-1.5',
+      md: 'h-10 px-4 text-sm rounded-lg gap-2',
+      lg: 'h-12 px-6 text-base rounded-xl gap-2.5',
+    };
 
     return (
       <button
         ref={ref}
         disabled={disabled || isLoading}
-        className={`${baseStyles} ${sizeStyles} ${variantStyles} ${className}`}
+        className={`${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
         {...props}
       >
         {isLoading ? (
-          <Loader2 className="size-4 animate-spin shrink-0" />
+          <span
+            className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent motion-reduce:animate-none"
+            aria-hidden="true"
+          />
         ) : (
           leftIcon
         )}
         <span>{children}</span>
         {!isLoading && rightIcon}
       </button>
-    )
+    );
   }
-)
+);
 
-Button.displayName = 'Button'
-
+Button.displayName = 'Button';

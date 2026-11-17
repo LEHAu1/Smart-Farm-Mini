@@ -1,44 +1,31 @@
-import React from 'react'
-import { Inbox } from 'lucide-react'
-import { Button } from './Button'
+import type { ReactNode } from 'react';
+import { Sprout } from 'lucide-react';
 
 export interface EmptyStateProps {
-  icon?: React.ReactNode
-  title: string
-  description?: string
-  actionLabel?: string
-  onAction?: () => void
-  className?: string
+  icon?: ReactNode;
+  title: string;
+  description?: string;
+  action?: ReactNode;
+  className?: string;
 }
 
-export const EmptyState: React.FC<EmptyStateProps> = ({
+export function EmptyState({
   icon,
   title,
   description,
-  actionLabel,
-  onAction,
+  action,
   className = '',
-}) => {
+}: EmptyStateProps) {
   return (
     <div
-      className={`rounded-xl border border-dashed border-[#cbd5e1] bg-[#f8faf7] p-8 md:p-12 text-center flex flex-col items-center justify-center max-w-lg mx-auto ${className}`}
+      className={`flex flex-col items-center justify-center rounded-xl border border-dashed border-line bg-canvas/60 p-8 text-center sm:p-12 ${className}`}
     >
-      <div className="size-12 rounded-full bg-[#f1f5f1] text-[#647067] flex items-center justify-center mb-4">
-        {icon ?? <Inbox className="size-6 text-[#8a968d]" />}
+      <div className="flex size-12 items-center justify-center rounded-full bg-primary-subtle text-primary mb-4 shadow-xs">
+        {icon || <Sprout className="size-6" />}
       </div>
-
-      <h4 className="text-base font-semibold text-[#17251d] mb-1">{title}</h4>
-
-      {description && (
-        <p className="text-sm text-[#647067] mb-6 max-w-sm">{description}</p>
-      )}
-
-      {actionLabel && onAction && (
-        <Button variant="primary" size="sm" onClick={onAction}>
-          {actionLabel}
-        </Button>
-      )}
+      <h3 className="text-base font-semibold text-ink">{title}</h3>
+      {description && <p className="mt-1.5 max-w-sm text-sm text-muted leading-relaxed">{description}</p>}
+      {action && <div className="mt-5">{action}</div>}
     </div>
-  )
+  );
 }
-

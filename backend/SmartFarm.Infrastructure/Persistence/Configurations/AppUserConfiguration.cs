@@ -6,7 +6,7 @@ namespace SmartFarm.Infrastructure.Persistence.Configurations
 {
     /// <summary>
     /// Cấu hình Fluent API cho AppUser (mở rộng IdentityUser).
-    /// Chỉ cấu hình các cột custom; các cột Identity chuẩn được IdentityUserContext xử lý.
+    /// Hỗ trợ trường mở rộng GoogleSubjectId, AuthProvider, AvatarUrl.
     /// </summary>
     public class AppUserConfiguration : IEntityTypeConfiguration<AppUser>
     {
@@ -15,11 +15,23 @@ namespace SmartFarm.Infrastructure.Persistence.Configurations
             builder.Property(u => u.DisplayName)
                 .HasMaxLength(100);
 
+            builder.Property(u => u.GoogleSubjectId)
+                .HasMaxLength(128);
+
+            // Filtered Unique Index trên GoogleSubjectId để chống trùng lặp tài khoản Google
+            builder.HasIndex(u => u.GoogleSubjectId)
+                .IsUnique()
+                .HasFilter("[GoogleSubjectId] IS NOT NULL")
+                .HasDatabaseName("IX_AspNetUsers_GoogleSubjectId");
+
+            builder.Property(u => u.AuthProvider)
+                .HasMaxLength(50);
+
+            builder.Property(u => u.AvatarUrl)
+                .HasMaxLength(500);
+
             builder.Property(u => u.CreatedAtUtc)
                 .IsRequired();
-
-            // Index trên OwnerId đã có qua Identity; không cần thêm.
         }
     }
 }
-

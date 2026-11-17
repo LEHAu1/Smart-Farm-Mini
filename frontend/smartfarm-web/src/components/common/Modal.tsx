@@ -1,79 +1,94 @@
-import React, { useEffect } from 'react'
-import { X } from 'lucide-react'
+import { useEffect, useRef } from 'react';
+import type { ReactNode } from 'react';
+import { X } from 'lucide-react';
 
 export interface ModalProps {
-  isOpen: boolean
-  onClose: () => void
-  title?: string
-  description?: string
-  children: React.ReactNode
-  maxWidth?: 'sm' | 'md' | 'lg' | 'xl'
+  isOpen: boolean;
+  onClose: () => void;
+  title?: ReactNode;
+  description?: ReactNode;
+  children: ReactNode;
+  footer?: ReactNode;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
-export const Modal: React.FC<ModalProps> = ({
+export function Modal({
   isOpen,
   onClose,
   title,
   description,
   children,
-  maxWidth = 'md',
-}) => {
+  footer,
+  size = 'md',
+}: ModalProps) {
+  const modalRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose()
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape' && isOpen) {
+        onClose();
       }
     }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isOpen, onClose])
 
-  if (!isOpen) return null
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      window.addEventListener('keydown', handleKeyDown);
+    } else {
+      document.body.style.overflow = 'unset';
+    }
 
-  const maxWidthStyles = {
+    return () => {
+      document.body.style.overflow = 'unset';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  const sizeClasses = {
     sm: 'max-w-sm',
     md: 'max-w-md',
     lg: 'max-w-lg',
-    xl: 'max-w-xl',
-  }[maxWidth]
+    xl: 'max-w-2xl',
+  };
 
   return (
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
     >
+      {/* Backdrop */}
       <div
-        className="fixed inset-0"
+        className="fixed inset-0 bg-ink/50 backdrop-blur-xs transition-opacity animate-in fade-in"
         onClick={onClose}
         aria-hidden="true"
       />
 
+      {/* Modal Dialog */}
       <div
-        className={`relative w-full ${maxWidthStyles} rounded-xl border border-[#e5eae5] bg-white p-6 shadow-xl z-10`}
+        ref={modalRef}
+        className={`relative w-full rounded-2xl border border-line bg-surface p-6 shadow-xl transition-all animate-in zoom-in-95 ${sizeClasses[size]}`}
       >
-        <div className="flex items-start justify-between gap-4 mb-4">
+        <div className="flex items-start justify-between gap-4">
           <div>
-            {title && (
-              <h3 className="text-lg font-semibold text-[#17251d]">{title}</h3>
-            )}
-            {description && (
-              <p className="text-xs text-[#647067] mt-1">{description}</p>
-            )}
+            {title && <h2 className="text-lg font-bold text-ink">{title}</h2>}
+            {description && <p className="mt-1 text-sm text-muted leading-relaxed">{description}</p>}
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="text-[#647067] hover:text-[#17251d] p-1 rounded-md hover:bg-[#f1f5f1] transition-colors cursor-pointer"
-            aria-label="Đóng"
+            aria-label="Đóng cửa sổ"
+            className="rounded-lg p-1.5 text-muted hover:bg-canvas hover:text-ink focus-ring"
           >
             <X className="size-5" />
           </button>
         </div>
 
-        <div>{children}</div>
+        <div className="mt-5">{children}</div>
+
+        {footer && <div className="mt-6 flex flex-wrap items-center justify-end gap-3 border-t border-line/60 pt-4">{footer}</div>}
       </div>
     </div>
-  )
+  );
 }
-

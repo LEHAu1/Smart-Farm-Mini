@@ -1,125 +1,81 @@
-import React, { useId, useState } from 'react'
-import { Eye, EyeOff } from 'lucide-react'
+import { forwardRef, useId } from 'react';
+import type { InputHTMLAttributes, ReactNode } from 'react';
 
-export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  label?: string
-  helperText?: string
-  error?: string
-  leftIcon?: React.ReactNode
-  rightIcon?: React.ReactNode
-  showPasswordToggle?: boolean
+export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+  label?: string;
+  error?: string;
+  helperText?: string;
+  leftIcon?: ReactNode;
+  rightIcon?: ReactNode;
 }
 
-export const Input = React.forwardRef<HTMLInputElement, InputProps>(
+export const Input = forwardRef<HTMLInputElement, InputProps>(
   (
     {
       label,
-      helperText,
       error,
+      helperText,
       leftIcon,
       rightIcon,
-      showPasswordToggle = false,
-      type = 'text',
-      className = '',
-      id,
+      id: customId,
       disabled,
-      required,
+      className = '',
       ...props
     },
     ref
   ) => {
-    const generatedId = useId()
-    const inputId = id || generatedId
-    const errorId = `${inputId}-error`
-    const helperId = `${inputId}-helper`
-    const [isPasswordVisible, setIsPasswordVisible] = useState(false)
-
-    const actualType = showPasswordToggle
-      ? isPasswordVisible
-        ? 'text'
-        : 'password'
-      : type
+    const generatedId = useId();
+    const id = customId || generatedId;
+    const errorId = `${id}-error`;
+    const helperId = `${id}-helper`;
 
     return (
-      <div className="w-full flex flex-col gap-1.5">
+      <div className="w-full">
         {label && (
-          <label
-            htmlFor={inputId}
-            className="text-sm font-medium text-[#17251d] flex items-center justify-between"
-          >
-            <span>
-              {label}
-              {required && <span className="text-[#dc2626] ml-1">*</span>}
-            </span>
+          <label htmlFor={id} className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted">
+            {label}
           </label>
         )}
-
         <div className="relative flex items-center">
           {leftIcon && (
-            <div className="absolute left-3.5 flex items-center pointer-events-none text-[#647067]">
+            <div className="pointer-events-none absolute left-3.5 flex items-center text-muted">
               {leftIcon}
             </div>
           )}
-
           <input
             ref={ref}
-            id={inputId}
-            type={actualType}
+            id={id}
             disabled={disabled}
-            required={required}
             aria-invalid={Boolean(error)}
-            aria-describedby={
-              error ? errorId : helperText ? helperId : undefined
-            }
-            className={`w-full rounded-lg border bg-white px-3.5 py-2.5 text-sm text-[#17251d] placeholder:text-[#647067] transition-colors duration-150 outline-none
-              ${leftIcon ? 'pl-10' : ''}
-              ${rightIcon || showPasswordToggle ? 'pr-10' : ''}
-              ${
-                error
-                  ? 'border-[#dc2626] focus:border-[#dc2626] focus:ring-1 focus:ring-[#dc2626] bg-[#fef2f2]/30'
-                  : 'border-[#e5eae5] focus:border-[#15803d] focus:ring-1 focus:ring-[#15803d]'
-              }
-              disabled:bg-[#f8faf7] disabled:text-[#8a968d] disabled:cursor-not-allowed
-              ${className}
-            `}
+            aria-describedby={error ? errorId : helperText ? helperId : undefined}
+            className={`min-h-10 w-full rounded-lg border bg-surface px-3.5 py-2 text-sm text-ink transition-colors placeholder:text-muted/60 focus-ring disabled:bg-canvas disabled:text-muted ${
+              leftIcon ? 'pl-10' : ''
+            } ${rightIcon ? 'pr-10' : ''} ${
+              error
+                ? 'border-danger focus-visible:outline-danger'
+                : 'border-line hover:border-muted/50 focus-visible:outline-water'
+            } ${className}`}
             {...props}
           />
-
-          {showPasswordToggle ? (
-            <button
-              type="button"
-              onClick={() => setIsPasswordVisible(!isPasswordVisible)}
-              className="absolute right-3.5 text-[#647067] hover:text-[#17251d] focus:outline-none cursor-pointer"
-              aria-label={isPasswordVisible ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-            >
-              {isPasswordVisible ? (
-                <EyeOff className="size-4.5" />
-              ) : (
-                <Eye className="size-4.5" />
-              )}
-            </button>
-          ) : (
-            rightIcon && (
-              <div className="absolute right-3.5 flex items-center pointer-events-none text-[#647067]">
-                {rightIcon}
-              </div>
-            )
+          {rightIcon && (
+            <div className="absolute right-3.5 flex items-center text-muted">
+              {rightIcon}
+            </div>
           )}
         </div>
-
-        {error ? (
-          <p id={errorId} className="text-xs text-[#dc2626] flex items-center gap-1 font-medium">
+        {error && (
+          <p id={errorId} role="alert" className="mt-1.5 text-xs text-danger font-medium">
             {error}
           </p>
-        ) : helperText ? (
-          <p id={helperId} className="text-xs text-[#647067]">
+        )}
+        {!error && helperText && (
+          <p id={helperId} className="mt-1.5 text-xs text-muted">
             {helperText}
           </p>
-        ) : null}
+        )}
       </div>
-    )
+    );
   }
-)
+);
 
-Input.displayName = 'Input'
-
+Input.displayName = 'Input';

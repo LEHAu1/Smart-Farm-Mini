@@ -1,62 +1,135 @@
-import { Outlet, Link } from 'react-router-dom'
-import { Sprout, ShieldCheck } from 'lucide-react'
-import { ToastProvider } from '../components/common/ToastNotification'
+import type { ReactNode } from 'react';
+import { Sprout, Activity, Droplets, BellRing, Sparkles } from 'lucide-react';
 
-export function AuthLayout() {
+export interface AuthLayoutProps {
+  children: ReactNode;
+  title: string;
+  subtitle?: string;
+  eyebrow?: string;
+  storyTitle?: string;
+  storySubtitle?: string;
+}
+
+export default function AuthLayout({
+  children,
+  title,
+  subtitle,
+  eyebrow = 'SMART FARM MINI IOT',
+  storyTitle = 'Chăm một mầm xanh.\nNuôi cả bình yên.',
+  storySubtitle = 'Theo dõi cây trồng, giữ đất đủ ẩm và chăm sóc khu vườn từ một nơi duy nhất.',
+}: AuthLayoutProps) {
   return (
-    <ToastProvider>
-      <div className="min-h-screen bg-[var(--color-canvas,#f8faf7)] flex flex-col justify-between selection:bg-emerald-100 selection:text-emerald-900">
-        <a href="#auth-content" className="skip-link">
-          Chuyển đến nội dung chính
-        </a>
+    <main className="min-h-screen lg:grid lg:grid-cols-2 bg-slate-50">
+      {/* Cột trái: Brand Story / Visual Panel */}
+      <aside
+        className="hidden flex-col justify-between overflow-hidden bg-gradient-to-br from-[#134935] via-[#1a5a41] to-[#0c3123] p-10 text-white lg:flex xl:p-16 relative shadow-2xl"
+        aria-label="Smart Farm Mini"
+      >
+        {/* Glow effects */}
+        <div className="pointer-events-none absolute -top-24 -left-24 size-96 rounded-full bg-emerald-400/15 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 -right-24 size-96 rounded-full bg-teal-300/10 blur-3xl" />
 
-        {/* Minimal Auth Header */}
-        <header className="w-full px-6 py-5 max-w-7xl mx-auto flex items-center justify-between">
-          <Link
-            to="/"
-            className="flex items-center gap-2.5 text-inherit no-underline group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-lg p-1"
-          >
-            <div className="w-9 h-9 rounded-lg bg-[var(--color-primary,#15803d)] flex items-center justify-center text-white shadow-xs group-hover:bg-[var(--color-primary-hover,#166534)] transition-colors">
-              <Sprout className="w-5 h-5" />
+        {/* Top brand header */}
+        <div className="relative z-10 flex items-center gap-3">
+          <span className="flex size-11 items-center justify-center rounded-2xl bg-white/15 border border-white/20 text-white shadow-inner backdrop-blur-md">
+            <Sprout className="size-6 text-emerald-300" />
+          </span>
+          <div>
+            <span className="text-lg font-bold tracking-tight text-white block">Smart Farm Mini</span>
+            <span className="text-[11px] font-medium tracking-widest text-emerald-200/80 uppercase">Hệ sinh thái IoT thông minh</span>
+          </div>
+        </div>
+
+        {/* Hero content */}
+        <div className="relative z-10 my-auto py-8 max-w-lg">
+          <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/15 px-3.5 py-1 text-xs font-semibold text-emerald-200 backdrop-blur-sm">
+            <Sparkles className="size-3.5 text-emerald-300" />
+            <span>NÔNG NGHIỆP SỐ CHUẨN XÁC</span>
+          </div>
+
+          <h2 className="mt-5 text-4xl font-extrabold leading-tight tracking-tight text-white lg:text-5xl whitespace-pre-line">
+            {storyTitle}
+          </h2>
+
+          <p className="mt-5 max-w-md text-sm leading-relaxed text-emerald-100/85">
+            {storySubtitle}
+          </p>
+
+          {/* Feature Highlights Cards */}
+          <div className="mt-8 grid grid-cols-1 gap-3.5 pt-4">
+            <div className="flex items-center gap-3.5 rounded-xl bg-white/10 border border-white/10 p-3.5 backdrop-blur-sm transition-colors hover:bg-white/15">
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-300">
+                <Activity className="size-5" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-white">Giám sát cảm biến Realtime</p>
+                <p className="text-[11px] text-emerald-200/70">Nhiệt độ khí, độ ẩm đất và mực nước bồn chứa qua SignalR</p>
+              </div>
             </div>
+
+            <div className="flex items-center gap-3.5 rounded-xl bg-white/10 border border-white/10 p-3.5 backdrop-blur-sm transition-colors hover:bg-white/15">
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-cyan-500/20 text-cyan-300">
+                <Droplets className="size-5" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-white">Tự động hóa chu kỳ tưới</p>
+                <p className="text-[11px] text-emerald-200/70">Quy tắc thông minh bảo vệ máy bơm và tiết kiệm nguồn nước</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3.5 rounded-xl bg-white/10 border border-white/10 p-3.5 backdrop-blur-sm transition-colors hover:bg-white/15">
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/20 text-amber-300">
+                <BellRing className="size-5" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-white">Cảnh báo ngưỡng an toàn</p>
+                <p className="text-[11px] text-emerald-200/70">Thông báo tức thời khi độ ẩm đất cạn kiệt hoặc nhiệt độ quá cao</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer info */}
+        <div className="relative z-10 flex items-center justify-between border-t border-white/15 pt-5 text-xs text-emerald-200/70">
+          <span>Một khu vườn nhỏ. Một khởi đầu xanh.</span>
+          <span className="font-mono text-[11px] bg-white/10 px-2 py-0.5 rounded-md">SmartFarm v2.1</span>
+        </div>
+      </aside>
+
+      {/* Cột phải: Form Content Side */}
+      <section
+        className="flex min-h-screen items-center justify-center px-4 py-12 sm:px-8 lg:px-12 bg-slate-50"
+        aria-labelledby="auth-title"
+      >
+        <div className="w-full max-w-md bg-white p-7 sm:p-9 rounded-3xl border border-slate-200/80 shadow-xl shadow-slate-200/50">
+          {/* Mobile Brand Header */}
+          <div className="mb-6 flex items-center gap-3 font-bold text-emerald-800 lg:hidden">
+            <span className="flex size-10 items-center justify-center rounded-xl bg-emerald-700 text-white shadow-sm">
+              <Sprout className="size-5" />
+            </span>
             <div>
-              <span className="font-semibold text-base text-[var(--color-text-main,#17251d)] tracking-tight block leading-tight">
-                Smart Farm Mini
-              </span>
-              <span className="text-xs text-[var(--color-text-muted,#647067)] block leading-none">
-                IoT Agriculture Platform
-              </span>
-            </div>
-          </Link>
-
-          <div className="flex items-center gap-1.5 text-xs text-[var(--color-text-muted,#647067)] bg-white px-3 py-1.5 rounded-full border border-[var(--color-border,#e5eae5)] shadow-2xs">
-            <ShieldCheck className="w-4 h-4 text-[var(--color-primary,#15803d)]" />
-            <span>Bảo mật chuẩn JWT</span>
-          </div>
-        </header>
-
-        {/* Main Content Area */}
-        <main
-          id="auth-content"
-          className="flex-1 flex items-center justify-center px-4 py-8 sm:px-6 lg:px-8"
-        >
-          <div className="w-full max-w-md">
-            <Outlet />
-          </div>
-        </main>
-
-        {/* Minimal Auth Footer */}
-        <footer className="w-full py-4 text-center text-xs text-[var(--color-text-muted,#647067)] border-t border-[var(--color-border,#e5eae5)] bg-white/60">
-          <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-            <span>© {new Date().getFullYear()} Smart Farm Mini. Giải pháp IoT Nông Nghiệp Thông Minh.</span>
-            <div className="flex items-center gap-4">
-              <span className="hover:text-[var(--color-text-main,#17251d)] cursor-default">Bảo mật</span>
-              <span className="hover:text-[var(--color-text-main,#17251d)] cursor-default">Điều khoản</span>
-              <span className="hover:text-[var(--color-text-main,#17251d)] cursor-default">Hỗ trợ</span>
+              <span className="text-base tracking-tight block">Smart Farm Mini</span>
+              <span className="text-[10px] text-emerald-600 font-semibold uppercase tracking-wider">IoT Agriculture</span>
             </div>
           </div>
-        </footer>
-      </div>
-    </ToastProvider>
-  )
+
+          {eyebrow && (
+            <p className="text-xs font-bold uppercase tracking-wider text-emerald-700">
+              {eyebrow}
+            </p>
+          )}
+          <h1 id="auth-title" className="mt-1.5 text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+            {title}
+          </h1>
+          {subtitle && (
+            <p className="mt-1.5 text-sm leading-relaxed text-slate-500">
+              {subtitle}
+            </p>
+          )}
+
+          <div className="mt-6">{children}</div>
+        </div>
+      </section>
+    </main>
+  );
 }
