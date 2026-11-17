@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
-import { Sprout, Activity, Droplets, BellRing, Sparkles } from 'lucide-react';
+import { Sprout, Activity, Droplets, BellRing, Sparkles, Sun, Moon, Languages } from 'lucide-react';
+import { useTheme } from '../contexts/ThemeContext';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export interface AuthLayoutProps {
   children: ReactNode;
@@ -18,8 +20,11 @@ export default function AuthLayout({
   storyTitle = 'Chăm một mầm xanh.\nNuôi cả bình yên.',
   storySubtitle = 'Theo dõi cây trồng, giữ đất đủ ẩm và chăm sóc khu vườn từ một nơi duy nhất.',
 }: AuthLayoutProps) {
+  const { theme, toggleTheme } = useTheme();
+  const { language, toggleLanguage, t } = useLanguage();
+
   return (
-    <main className="min-h-screen lg:grid lg:grid-cols-2 bg-slate-50">
+    <main className="min-h-screen lg:grid lg:grid-cols-2 bg-canvas transition-colors duration-200">
       {/* Cột trái: Brand Story / Visual Panel */}
       <aside
         className="hidden flex-col justify-between overflow-hidden bg-gradient-to-br from-[#134935] via-[#1a5a41] to-[#0c3123] p-10 text-white lg:flex xl:p-16 relative shadow-2xl"
@@ -36,7 +41,9 @@ export default function AuthLayout({
           </span>
           <div>
             <span className="text-lg font-bold tracking-tight text-white block">Smart Farm Mini</span>
-            <span className="text-[11px] font-medium tracking-widest text-emerald-200/80 uppercase">Hệ sinh thái IoT thông minh</span>
+            <span className="text-[11px] font-medium tracking-widest text-emerald-200/80 uppercase">
+              {language === 'en' ? 'Smart IoT Agriculture' : 'Hệ sinh thái IoT thông minh'}
+            </span>
           </div>
         </div>
 
@@ -44,15 +51,17 @@ export default function AuthLayout({
         <div className="relative z-10 my-auto py-8 max-w-lg">
           <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/15 px-3.5 py-1 text-xs font-semibold text-emerald-200 backdrop-blur-sm">
             <Sparkles className="size-3.5 text-emerald-300" />
-            <span>NÔNG NGHIỆP SỐ CHUẨN XÁC</span>
+            <span>{language === 'en' ? 'PRECISION DIGITAL FARMING' : 'NÔNG NGHIỆP SỐ CHUẨN XÁC'}</span>
           </div>
 
           <h2 className="mt-5 text-4xl font-extrabold leading-tight tracking-tight text-white lg:text-5xl whitespace-pre-line">
-            {storyTitle}
+            {language === 'en' ? 'Nurturing green shoots.\nGrowing everyday peace.' : storyTitle}
           </h2>
 
           <p className="mt-5 max-w-md text-sm leading-relaxed text-emerald-100/85">
-            {storySubtitle}
+            {language === 'en'
+              ? 'Monitor crop microclimate, keep soil moisture optimal, and automate irrigation from one central dashboard.'
+              : storySubtitle}
           </p>
 
           {/* Feature Highlights Cards */}
@@ -62,8 +71,14 @@ export default function AuthLayout({
                 <Activity className="size-5" />
               </div>
               <div>
-                <p className="text-xs font-semibold text-white">Giám sát cảm biến Realtime</p>
-                <p className="text-[11px] text-emerald-200/70">Nhiệt độ khí, độ ẩm đất và mực nước bồn chứa qua SignalR</p>
+                <p className="text-xs font-semibold text-white">
+                  {language === 'en' ? 'Real-time Telemetry Monitoring' : 'Giám sát cảm biến Realtime'}
+                </p>
+                <p className="text-[11px] text-emerald-200/70">
+                  {language === 'en'
+                    ? 'Soil moisture, air temp, and water reservoir level via SignalR'
+                    : 'Nhiệt độ khí, độ ẩm đất và mực nước bồn chứa qua SignalR'}
+                </p>
               </div>
             </div>
 
@@ -72,8 +87,14 @@ export default function AuthLayout({
                 <Droplets className="size-5" />
               </div>
               <div>
-                <p className="text-xs font-semibold text-white">Tự động hóa chu kỳ tưới</p>
-                <p className="text-[11px] text-emerald-200/70">Quy tắc thông minh bảo vệ máy bơm và tiết kiệm nguồn nước</p>
+                <p className="text-xs font-semibold text-white">
+                  {language === 'en' ? 'Automated Irrigation Cycles' : 'Tự động hóa chu kỳ tưới'}
+                </p>
+                <p className="text-[11px] text-emerald-200/70">
+                  {language === 'en'
+                    ? 'Intelligent rules protect actuator pumps and conserve water'
+                    : 'Quy tắc thông minh bảo vệ máy bơm và tiết kiệm nguồn nước'}
+                </p>
               </div>
             </div>
 
@@ -82,8 +103,14 @@ export default function AuthLayout({
                 <BellRing className="size-5" />
               </div>
               <div>
-                <p className="text-xs font-semibold text-white">Cảnh báo ngưỡng an toàn</p>
-                <p className="text-[11px] text-emerald-200/70">Thông báo tức thời khi độ ẩm đất cạn kiệt hoặc nhiệt độ quá cao</p>
+                <p className="text-xs font-semibold text-white">
+                  {language === 'en' ? 'Proactive Safety Thresholds' : 'Cảnh báo ngưỡng an toàn'}
+                </p>
+                <p className="text-[11px] text-emerald-200/70">
+                  {language === 'en'
+                    ? 'Immediate alert broadcast when soil depletes or heat surges'
+                    : 'Thông báo tức thời khi độ ẩm đất cạn kiệt hoặc nhiệt độ quá cao'}
+                </p>
               </div>
             </div>
           </div>
@@ -91,38 +118,68 @@ export default function AuthLayout({
 
         {/* Footer info */}
         <div className="relative z-10 flex items-center justify-between border-t border-white/15 pt-5 text-xs text-emerald-200/70">
-          <span>Một khu vườn nhỏ. Một khởi đầu xanh.</span>
+          <span>{language === 'en' ? 'A small garden. A greener tomorrow.' : 'Một khu vườn nhỏ. Một khởi đầu xanh.'}</span>
           <span className="font-mono text-[11px] bg-white/10 px-2 py-0.5 rounded-md">SmartFarm v2.1</span>
         </div>
       </aside>
 
       {/* Cột phải: Form Content Side */}
       <section
-        className="flex min-h-screen items-center justify-center px-4 py-12 sm:px-8 lg:px-12 bg-slate-50"
+        className="flex min-h-screen items-center justify-center px-4 py-12 sm:px-8 lg:px-12 bg-canvas relative"
         aria-labelledby="auth-title"
       >
-        <div className="w-full max-w-md bg-white p-7 sm:p-9 rounded-3xl border border-slate-200/80 shadow-xl shadow-slate-200/50">
+        {/* Top-Right Theme & Language Toolbar */}
+        <div className="absolute top-4 right-4 sm:top-6 sm:right-6 flex items-center gap-2">
+          {/* Theme Toggle */}
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="p-2 rounded-xl border border-line bg-surface text-muted hover:text-ink hover:bg-surface-hover focus-ring transition-colors shadow-xs"
+            title={theme === 'dark' ? t('theme_light', 'Chế độ sáng') : t('theme_dark', 'Chế độ tối')}
+            aria-label={t('theme_toggle', 'Chuyển đổi giao diện sáng/tối')}
+          >
+            {theme === 'dark' ? (
+              <Sun className="size-4 text-amber-400" />
+            ) : (
+              <Moon className="size-4 text-slate-600" />
+            )}
+          </button>
+
+          {/* Language Toggle */}
+          <button
+            type="button"
+            onClick={toggleLanguage}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-line bg-surface text-ink hover:bg-surface-hover focus-ring text-xs font-bold transition-colors shadow-xs"
+            title={t('language_select', 'Chọn ngôn ngữ')}
+            aria-label={t('language_select', 'Chọn ngôn ngữ')}
+          >
+            <Languages className="size-3.5 text-primary" />
+            <span>{language === 'vi' ? '🇻🇳 VI' : '🇬🇧 EN'}</span>
+          </button>
+        </div>
+
+        <div className="w-full max-w-md bg-surface p-7 sm:p-9 rounded-3xl border border-line shadow-xl">
           {/* Mobile Brand Header */}
-          <div className="mb-6 flex items-center gap-3 font-bold text-emerald-800 lg:hidden">
-            <span className="flex size-10 items-center justify-center rounded-xl bg-emerald-700 text-white shadow-sm">
+          <div className="mb-6 flex items-center gap-3 font-bold text-primary lg:hidden">
+            <span className="flex size-10 items-center justify-center rounded-xl bg-primary text-white shadow-sm">
               <Sprout className="size-5" />
             </span>
             <div>
               <span className="text-base tracking-tight block">Smart Farm Mini</span>
-              <span className="text-[10px] text-emerald-600 font-semibold uppercase tracking-wider">IoT Agriculture</span>
+              <span className="text-[10px] text-muted font-semibold uppercase tracking-wider">IoT Agriculture</span>
             </div>
           </div>
 
           {eyebrow && (
-            <p className="text-xs font-bold uppercase tracking-wider text-emerald-700">
+            <p className="text-xs font-bold uppercase tracking-wider text-primary">
               {eyebrow}
             </p>
           )}
-          <h1 id="auth-title" className="mt-1.5 text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+          <h1 id="auth-title" className="mt-1.5 text-2xl sm:text-3xl font-extrabold tracking-tight text-ink">
             {title}
           </h1>
           {subtitle && (
-            <p className="mt-1.5 text-sm leading-relaxed text-slate-500">
+            <p className="mt-1.5 text-sm leading-relaxed text-muted">
               {subtitle}
             </p>
           )}

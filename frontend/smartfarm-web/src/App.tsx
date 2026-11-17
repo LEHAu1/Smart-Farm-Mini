@@ -1,6 +1,8 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { LanguageProvider } from './contexts/LanguageContext';
 
 // Layouts & Route Guards
 import AppLayout from './layouts/AppLayout';
@@ -24,9 +26,11 @@ import NotFoundPage from './pages/NotFound';
 
 export default function App() {
   return (
-    <AuthProvider>
-      <ToastProvider>
-        <Routes>
+    <ThemeProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <ToastProvider>
+            <Routes>
           {/* Root redirect */}
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
@@ -78,7 +82,9 @@ export default function App() {
           {/* 404 Catch-all */}
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
-      </ToastProvider>
-    </AuthProvider>
+          </ToastProvider>
+        </AuthProvider>
+      </LanguageProvider>
+    </ThemeProvider>
   );
 }
