@@ -19,7 +19,6 @@ export default function Navigation() {
           {label}
         </NavLink>
       ))}
-      <NavLink to="/login" className="nav-link">Đăng nhập</NavLink>
     </nav>
   )
 }

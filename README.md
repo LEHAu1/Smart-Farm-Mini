@@ -27,6 +27,11 @@ Dự án kết hợp giữa phần cứng nhúng biên (**ESP32** với cơ ch�
 
 ## 3. Các tính năng chính (Planned Features)
 
+### Bản demo phần cứng theo sơ đồ lắp hiện tại
+- ESP32 DevKit V1, YL-38 + đầu dò YL-69 đọc analog ở GPIO34, DHT11 tại GPIO4, phao 2 dây tại GPIO27, relay 5V tại GPIO26 và bơm 5V.
+- Đây là cấu hình demo khác với thiết kế mục tiêu bên dưới: YL-69 là đầu dò điện trở; sơ đồ chưa có DHT22, DS18B20 hoặc OLED. Vì vậy bản demo hiện chưa đo nhiệt độ nước và không đáp ứng đầy đủ các điều kiện tự động hóa dựa trên thiết kế mục tiêu.
+- Sketch kiểm tra cảm biến nằm tại `firmware/esp32-controller/hardware-check/`. Project MQTT telemetry tại `firmware/esp32-controller/telemetry/` gửi DHT11 và trạng thái phao; hiện chưa điều khiển relay/bơm và chưa được biên dịch trong workspace này. Xem `firmware/esp32-controller/README.md` trước khi nạp.
+
 ### 3.1 Giám sát cảm biến thời gian thực (Telemetry)
 - Đo độ ẩm đất (%): Cảm biến điện dung chống ăn mòn (Capacitive Soil Moisture Sensor).
 - Đo nhiệt độ (°C) và độ ẩm không khí (%): Cảm biến kỹ thuật số DHT22.

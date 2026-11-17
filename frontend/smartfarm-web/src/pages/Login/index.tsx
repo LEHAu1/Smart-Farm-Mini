@@ -1,12 +1,15 @@
 import { useRef, useState } from 'react'
 import type { FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { demoCredentials, loginDemo } from '../../services/auth-service'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { useAuth } from '../../hooks/AuthContext'
+import { getAuthErrorMessage } from '../../services/auth-service'
 import { validateLogin } from '../../utils/validate-login'
 import type { LoginCredentials, LoginErrors } from '../../types/auth'
 
 export default function LoginPage() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const { signIn } = useAuth()
   const [credentials, setCredentials] = useState<LoginCredentials>({ email: '', password: '' })
   const [errors, setErrors] = useState<LoginErrors>({})
   const [submitError, setSubmitError] = useState('')
@@ -36,10 +39,11 @@ export default function LoginPage() {
     submitting.current = true
     setIsSubmitting(true)
     try {
-      await loginDemo(credentials)
-      navigate('/dashboard', { replace: true })
+      await signIn(credentials)
+      const returnTo = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname
+      navigate(returnTo || '/dashboard', { replace: true })
     } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : 'Không thể đăng nhập. Vui lòng thử lại.')
+      setSubmitError(getAuthErrorMessage(error))
     } finally {
       submitting.current = false
       setIsSubmitting(false)
@@ -66,8 +70,8 @@ export default function LoginPage() {
           <p className="mt-3 text-sm leading-6 text-muted">Khu vườn của bạn đang chờ được chăm sóc.</p>
           <form className="mt-8 space-y-5" noValidate onSubmit={handleSubmit} aria-busy={isSubmitting}>
             <div>
-              <label className="login-label" htmlFor="email">Email</label>
-              <input ref={emailRef} className="login-input" id="email" name="email" type="email" autoComplete="username" placeholder="ban@example.com" required value={credentials.email} disabled={isSubmitting} onChange={(event) => updateField('email', event.target.value)} aria-invalid={Boolean(errors.email)} aria-describedby={errors.email ? 'email-error' : undefined} />
+              <label className="login-label" htmlFor="email">Email hoặc tên đăng nhập</label>
+              <input ref={emailRef} className="login-input" id="email" name="email" type="text" autoComplete="username" placeholder="ban@example.com" required value={credentials.email} disabled={isSubmitting} onChange={(event) => updateField('email', event.target.value)} aria-invalid={Boolean(errors.email)} aria-describedby={errors.email ? 'email-error' : undefined} />
               {errors.email && <p className="login-field-error" id="email-error" role="alert">{errors.email}</p>}
             </div>
             <div>
@@ -84,12 +88,9 @@ export default function LoginPage() {
               {isSubmitting ? 'Đang đăng nhập…' : 'Đăng nhập'}
             </button>
           </form>
-          <div className="mt-7 rounded-xl border border-line bg-canvas p-4 text-sm leading-6 text-muted">
-            <p className="font-semibold text-primary">Trải nghiệm bản demo</p>
-            <p className="mt-1">Chưa kết nối xác thực backend. Dùng tài khoản mẫu bên dưới để thử giao diện.</p>
-            <dl className="mt-3 space-y-1 text-xs"><div className="flex flex-wrap gap-1"><dt>Email:</dt><dd className="break-all font-medium text-ink">{demoCredentials.email}</dd></div><div className="flex flex-wrap gap-1"><dt>Mật khẩu:</dt><dd className="font-medium text-ink">{demoCredentials.password}</dd></div></dl>
-            <button type="button" disabled={isSubmitting} className="mt-3 font-semibold text-primary underline underline-offset-4 disabled:opacity-50" onClick={() => { setCredentials({ ...demoCredentials }); setErrors({}); setSubmitError('') }}>Điền tài khoản demo</button>
-          </div>
+          <p className="mt-7 rounded-xl border border-line bg-canvas p-4 text-sm leading-6 text-muted">
+            Đăng nhập bằng email hoặc tên đăng nhập của tài khoản Smart Farm Mini.
+          </p>
           <p className="mt-8 text-center text-xs text-muted">Smart Farm Mini · Chăm vườn thông minh, sống xanh mỗi ngày.</p>
         </div>
       </section>
