@@ -5,7 +5,7 @@
 - **Date:** 2026-11-17 (Asia/Saigon)
 - **Branch / baseline:** `feature/iot-end-to-end-integration` created from `develop` / `772cfef`; existing workspace changes were preserved on the new branch.
 - **Git state at start:** modified/untracked files existed on `develop`; no files were discarded.
-- **Change control:** user authorized creating a feature branch and committing/pushing after this work; no push or commit has occurred yet.
+- **Change control:** user authorized branch/commit/push. Commit `a83bd74` was pushed to `origin/feature/iot-end-to-end-integration`; no PR was created.
 - **Current task:** Extend existing auth/dashboard foundation toward telemetry and command integration; SF-8, SF-18 and API-PROFILE-TESTS retain their prior implemented/tested scopes.
 - **Current environment:** React/Vite responded HTTP 200 at `http://127.0.0.1:5173` and `:5174`; Web API `/health/live` responded HTTP 200 at `http://127.0.0.1:5206`. Local SQL Server is unavailable and MQTT is disabled. User reports the assembled ESP32 hardware has been tested and runs stably; the board is not directly attached to this development environment.
 - **Browser limitation:** In-app browser skill setup failed because its trusted control bridge is unavailable. Earlier headless Chrome verified React rendering, but interactive browser testing is not claimed for this session.
