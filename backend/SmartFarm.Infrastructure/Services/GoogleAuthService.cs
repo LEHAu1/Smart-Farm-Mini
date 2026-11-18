@@ -35,10 +35,12 @@ namespace SmartFarm.Infrastructure.Services
             {
                 var validationSettings = new GoogleJsonWebSignature.ValidationSettings();
 
-                // Nếu ClientId được cấu hình, bắt buộc kiểm tra Audience (Client ID)
+                // Nếu ClientId được cấu hình, bắt buộc kiểm tra Audience (hỗ trợ nhiều Client ID phân cách bởi dấu phẩy)
                 if (!string.IsNullOrWhiteSpace(_settings.ClientId))
                 {
-                    validationSettings.Audience = new[] { _settings.ClientId };
+                    var clientIds = _settings.ClientId
+                        .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                    validationSettings.Audience = clientIds;
                 }
                 else
                 {
