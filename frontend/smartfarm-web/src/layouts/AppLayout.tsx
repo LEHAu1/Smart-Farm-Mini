@@ -4,6 +4,7 @@ import Navigation from '../components/layout/Navigation';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useSensorHub } from '../hooks/useSensorHub';
 import { apiClient } from '../services/api-client';
 import type { DeviceDto } from '../types/device';
 import type { AlertDto } from '../types/alert';
@@ -35,6 +36,21 @@ export default function AppLayout() {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { language, setLanguage, t } = useLanguage();
+  const { connectionStatus } = useSensorHub();
+
+  const getSignalRStatusDot = () => {
+    switch (connectionStatus) {
+      case 'connected':
+        return { status: 'online' as const, label: t('signalr_connected', 'Thời gian thực: Đã kết nối') };
+      case 'connecting':
+        return { status: 'warning' as const, label: t('signalr_connecting', 'Thời gian thực: Đang kết nối...') };
+      case 'reconnecting':
+        return { status: 'warning' as const, label: t('signalr_reconnecting', 'Thời gian thực: Đang kết nối lại...') };
+      default:
+        return { status: 'offline' as const, label: t('signalr_disconnected', 'Thời gian thực: Mất kết nối') };
+    }
+  };
+  const signalRStatus = getSignalRStatusDot();
 
   // Responsive state
   const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
@@ -217,7 +233,7 @@ export default function AppLayout() {
         <div className="p-3 border-t border-line space-y-2">
           {!isCollapsed ? (
             <div className="flex items-center justify-between rounded-lg bg-canvas p-2.5 text-xs">
-              <StatusDot status="online" label={t('gateway_mqtt_ready', 'Gateway MQTT: Sẵn sàng')} size="sm" />
+              <StatusDot status={signalRStatus.status} label={signalRStatus.label} size="sm" />
               <button
                 type="button"
                 onClick={toggleSidebar}
@@ -229,8 +245,8 @@ export default function AppLayout() {
               </button>
             </div>
           ) : (
-            <div className="flex flex-col items-center gap-2">
-              <StatusDot status="online" size="sm" />
+            <div className="flex flex-col items-center gap-2" title={signalRStatus.label}>
+              <StatusDot status={signalRStatus.status} size="sm" />
               <button
                 type="button"
                 onClick={toggleSidebar}
@@ -286,7 +302,7 @@ export default function AppLayout() {
             </div>
 
             <div className="border-t border-line pt-4">
-              <StatusDot status="online" label="ESP32 Gateway: Online" size="sm" />
+              <StatusDot status={signalRStatus.status} label={signalRStatus.label} size="sm" />
             </div>
           </div>
         </div>
