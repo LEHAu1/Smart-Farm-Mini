@@ -294,17 +294,9 @@ export default function LoginPage() {
 
             {/* Password Field */}
             <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label htmlFor="password" className="block text-xs font-bold uppercase tracking-wider text-ink">
-                  {t('auth_password_label', 'Mật khẩu')}
-                </label>
-                <Link
-                  to="/forgot-password"
-                  className="text-xs font-semibold text-primary hover:text-primary-hover hover:underline"
-                >
-                  {t('auth_forgot_password_link', 'Quên mật khẩu?')}
-                </Link>
-              </div>
+              <label htmlFor="password" className="block text-xs font-bold uppercase tracking-wider text-ink mb-1.5">
+                {t('auth_password_label', 'Mật khẩu')}
+              </label>
               <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-muted">
                   <Lock className="size-4" />
@@ -345,6 +337,15 @@ export default function LoginPage() {
                   {errors.password}
                 </p>
               )}
+              {/* Forgot password link below input */}
+              <div className="flex justify-end mt-2">
+                <Link
+                  to="/forgot-password"
+                  className="text-xs font-semibold text-primary hover:text-primary-hover hover:underline"
+                >
+                  {t('auth_forgot_password_link', 'Quên mật khẩu?')}
+                </Link>
+              </div>
             </div>
 
             {/* Submit Button */}

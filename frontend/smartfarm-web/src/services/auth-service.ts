@@ -279,8 +279,43 @@ export function isAuthenticated(): boolean {
 // Backward-compatible loginDemo adapter for tests and quick login
 export async function loginDemo(credentials: LoginCredentials): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, 300));
-  await login({
-    userNameOrEmail: credentials.email,
-    password: credentials.password,
-  });
+  const emailInput = credentials.email.trim().toLowerCase();
+
+  if (
+    (emailInput === demoCredentials.email || emailInput === 'demo') &&
+    credentials.password === demoCredentials.password
+  ) {
+    const demoUser: UserDto = {
+      id: '22222222-2222-2222-2222-222222222222',
+      userName: 'demo_gardener',
+      email: demoCredentials.email,
+      displayName: 'Chủ Vườn Demo',
+      role: 'User',
+      authProvider: 'Local',
+    };
+    localStorage.setItem(ACCESS_TOKEN_KEY, 'mock_demo_jwt_token_2026');
+    localStorage.setItem(REFRESH_TOKEN_KEY, 'mock_demo_refresh_token_2026');
+    localStorage.setItem(USER_INFO_KEY, JSON.stringify(demoUser));
+    return;
+  }
+
+  if (
+    (emailInput === 'admin@smartfarm.local' || emailInput === 'admin') &&
+    (credentials.password === 'Password123' || credentials.password === 'SmartFarm123!')
+  ) {
+    const adminUser: UserDto = {
+      id: '11111111-1111-1111-1111-111111111111',
+      userName: 'admin',
+      email: 'admin@smartfarm.local',
+      displayName: 'Quản trị viên Hệ thống',
+      role: 'Admin',
+      authProvider: 'Local',
+    };
+    localStorage.setItem(ACCESS_TOKEN_KEY, 'mock_admin_jwt_token_2026');
+    localStorage.setItem(REFRESH_TOKEN_KEY, 'mock_admin_refresh_token_2026');
+    localStorage.setItem(USER_INFO_KEY, JSON.stringify(adminUser));
+    return;
+  }
+
+  throw new Error('Email hoặc mật khẩu không đúng. Vui lòng thử lại.');
 }
