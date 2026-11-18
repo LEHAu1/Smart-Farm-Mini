@@ -18,7 +18,7 @@ export default function AuthLayout({
   subtitle,
   eyebrow = 'SMART FARM MINI IOT',
   storyTitle = 'Chăm một mầm xanh.\nNuôi cả bình yên.',
-  storySubtitle = 'Theo dõi cây trồng, giữ đất đủ ẩm và chăm sóc khu vườn từ một nơi duy nhất.',
+  storySubtitle = 'Nền tảng hỗ trợ theo dõi độ ẩm đất, mực nước và điều khiển chu kỳ tưới cho nhiều chậu cây từ một tài khoản duy nhất.',
 }: AuthLayoutProps) {
   const { theme, toggleTheme } = useTheme();
   const { language, toggleLanguage, t } = useLanguage();
@@ -39,10 +39,10 @@ export default function AuthLayout({
           <span className="flex size-11 items-center justify-center rounded-2xl bg-white/15 border border-white/20 text-white shadow-inner backdrop-blur-md">
             <Sprout className="size-6 text-emerald-300" />
           </span>
-          <div>
-            <span className="text-lg font-bold tracking-tight text-white block">Smart Farm Mini</span>
-            <span className="text-[11px] font-medium tracking-widest text-emerald-200/80 uppercase">
-              {language === 'en' ? 'Smart IoT Agriculture' : 'Hệ sinh thái IoT thông minh'}
+          <div className="flex flex-col">
+            <span className="text-lg font-bold tracking-tight text-white leading-tight">Smart Farm Mini</span>
+            <span className="text-[11px] font-medium tracking-wider text-emerald-200/80 uppercase mt-0.5">
+              Smart IoT Agriculture
             </span>
           </div>
         </div>
@@ -60,7 +60,7 @@ export default function AuthLayout({
 
           <p className="mt-5 max-w-md text-sm leading-relaxed text-emerald-100/85">
             {language === 'en'
-              ? 'Monitor crop microclimate, keep soil moisture optimal, and automate irrigation from one central dashboard.'
+              ? 'An IoT platform for plant irrigation, soil moisture sensing, and water reservoir tracking across multiple nodes.'
               : storySubtitle}
           </p>
 
@@ -72,12 +72,12 @@ export default function AuthLayout({
               </div>
               <div>
                 <p className="text-xs font-semibold text-white">
-                  {language === 'en' ? 'Real-time Telemetry Monitoring' : 'Giám sát cảm biến Realtime'}
+                  {language === 'en' ? 'Multi-Device Plant Monitoring' : 'Quản lý nhiều thiết bị trồng cây'}
                 </p>
                 <p className="text-[11px] text-emerald-200/70">
                   {language === 'en'
-                    ? 'Soil moisture, air temp, and water reservoir level via SignalR'
-                    : 'Nhiệt độ khí, độ ẩm đất và mực nước bồn chứa qua SignalR'}
+                    ? 'Track soil moisture and ambient temperature across all your garden nodes'
+                    : 'Một tài khoản theo dõi độ ẩm đất, nhiệt độ của nhiều chậu cây cùng lúc'}
                 </p>
               </div>
             </div>
@@ -88,12 +88,12 @@ export default function AuthLayout({
               </div>
               <div>
                 <p className="text-xs font-semibold text-white">
-                  {language === 'en' ? 'Automated Irrigation Cycles' : 'Tự động hóa chu kỳ tưới'}
+                  {language === 'en' ? 'Soil & Reservoir Tracking' : 'Đo độ ẩm đất & Mực nước bồn'}
                 </p>
                 <p className="text-[11px] text-emerald-200/70">
                   {language === 'en'
-                    ? 'Intelligent rules protect actuator pumps and conserve water'
-                    : 'Quy tắc thông minh bảo vệ máy bơm và tiết kiệm nguồn nước'}
+                    ? 'Ensure optimal soil wetness and monitor reservoir water levels for irrigation'
+                    : 'Giữ ẩm tối ưu cho rễ cây và giám sát lượng nước còn lại trong bình chứa'}
                 </p>
               </div>
             </div>
@@ -104,12 +104,12 @@ export default function AuthLayout({
               </div>
               <div>
                 <p className="text-xs font-semibold text-white">
-                  {language === 'en' ? 'Proactive Safety Thresholds' : 'Cảnh báo ngưỡng an toàn'}
+                  {language === 'en' ? 'Smart Irrigation Control' : 'Điều khiển tưới tiêu thông minh'}
                 </p>
                 <p className="text-[11px] text-emerald-200/70">
                   {language === 'en'
-                    ? 'Immediate alert broadcast when soil depletes or heat surges'
-                    : 'Thông báo tức thời khi độ ẩm đất cạn kiệt hoặc nhiệt độ quá cao'}
+                    ? 'Automate pump cycles by soil threshold or execute manual watering on demand'
+                    : 'Thiết lập tự động bơm tưới theo ngưỡng ẩm hoặc điều khiển tưới thủ công'}
                 </p>
               </div>
             </div>
@@ -164,9 +164,9 @@ export default function AuthLayout({
             <span className="flex size-10 items-center justify-center rounded-xl bg-primary text-white shadow-sm">
               <Sprout className="size-5" />
             </span>
-            <div>
-              <span className="text-base tracking-tight block">Smart Farm Mini</span>
-              <span className="text-[10px] text-muted font-semibold uppercase tracking-wider">IoT Agriculture</span>
+            <div className="flex flex-col">
+              <span className="text-base font-bold tracking-tight text-ink leading-tight">Smart Farm Mini</span>
+              <span className="text-[10px] text-muted font-semibold uppercase tracking-wider mt-0.5">Smart IoT Agriculture</span>
             </div>
           </div>
 
