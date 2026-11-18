@@ -117,6 +117,46 @@ export const translations = {
     auth_error_confirm_password_required: 'Vui lòng xác nhận mật khẩu.',
     auth_error_password_mismatch: 'Mật khẩu xác nhận không khớp.',
     auth_register_success: 'Tạo tài khoản thành công! Đang chuyển hướng...',
+
+    // Forgot Password
+    auth_forgot_password_link: 'Quên mật khẩu?',
+    auth_forgot_password_title: 'Quên mật khẩu',
+    auth_forgot_password_subtitle: 'Nhập địa chỉ email của bạn để nhận hướng dẫn đặt lại mật khẩu.',
+    auth_forgot_password_eyebrow: 'KHÔI PHỤC TÀI KHOẢN',
+    auth_submit_forgot_password: 'Gửi liên kết đặt lại',
+    auth_submitting_forgot_password: 'Đang gửi…',
+    auth_forgot_password_success: 'Nếu email hợp lệ, chúng tôi đã gửi hướng dẫn đặt lại mật khẩu. Vui lòng kiểm tra hộp thư của bạn.',
+    auth_back_to_login: 'Quay lại đăng nhập',
+
+    // Reset Password
+    auth_reset_password_title: 'Đặt lại mật khẩu',
+    auth_reset_password_subtitle: 'Tạo mật khẩu mới cho tài khoản của bạn.',
+    auth_reset_password_eyebrow: 'BẢO MẬT TÀI KHOẢN',
+    auth_new_password_label: 'Mật khẩu mới',
+    auth_new_password_placeholder: 'Tối thiểu 8 ký tự',
+    auth_submit_reset_password: 'Đặt lại mật khẩu',
+    auth_submitting_reset_password: 'Đang cập nhật…',
+    auth_reset_password_success: 'Mật khẩu đã được đặt lại thành công! Bạn có thể đăng nhập bằng mật khẩu mới.',
+    auth_reset_password_invalid_token: 'Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.',
+    auth_request_new_reset_link: 'Yêu cầu liên kết mới',
+
+    // Verify Email
+    auth_verify_email_title: 'Xác minh email',
+    auth_verify_email_subtitle: 'Đang tiến hành xác minh địa chỉ email của bạn.',
+    auth_verify_email_eyebrow: 'XÁC THỰC TÀI KHOẢN',
+    auth_verifying_email: 'Đang xác minh email, vui lòng đợi trong giây lát…',
+    auth_verify_email_success: 'Email đã được xác minh thành công! Bạn có thể đăng nhập ngay.',
+    auth_verify_email_failed: 'Xác minh email thất bại hoặc liên kết đã hết hạn.',
+    auth_resend_verification_email: 'Gửi lại email xác minh',
+    auth_resending_verification_email: 'Đang gửi lại…',
+    auth_resend_verification_success: 'Đã gửi lại email xác minh! Vui lòng kiểm tra hộp thư của bạn.',
+
+    // Email Not Verified Alert in Login
+    auth_email_not_verified_alert: 'Email chưa được xác minh. Vui lòng kiểm tra hộp thư để kích hoạt tài khoản.',
+
+    // Register Email Check Notice
+    auth_register_check_email_title: 'Kiểm tra hộp thư của bạn',
+    auth_register_check_email_desc: 'Chúng tôi đã gửi liên kết xác nhận tới địa chỉ email của bạn. Vui lòng kiểm tra hộp thư (bao gồm cả thư mục Spam) và nhấn vào liên kết để kích hoạt tài khoản.',
   },
   en: {
     // Brand & System
@@ -234,6 +274,46 @@ export const translations = {
     auth_error_confirm_password_required: 'Please confirm your password.',
     auth_error_password_mismatch: 'Passwords do not match.',
     auth_register_success: 'Account created successfully! Redirecting...',
+
+    // Forgot Password
+    auth_forgot_password_link: 'Forgot password?',
+    auth_forgot_password_title: 'Forgot Password',
+    auth_forgot_password_subtitle: 'Enter your email address to receive password reset instructions.',
+    auth_forgot_password_eyebrow: 'ACCOUNT RECOVERY',
+    auth_submit_forgot_password: 'Send Reset Link',
+    auth_submitting_forgot_password: 'Sending…',
+    auth_forgot_password_success: 'If the email is valid, we have sent password reset instructions. Please check your inbox.',
+    auth_back_to_login: 'Back to Sign In',
+
+    // Reset Password
+    auth_reset_password_title: 'Reset Password',
+    auth_reset_password_subtitle: 'Create a new password for your account.',
+    auth_reset_password_eyebrow: 'ACCOUNT SECURITY',
+    auth_new_password_label: 'New Password',
+    auth_new_password_placeholder: 'At least 8 characters',
+    auth_submit_reset_password: 'Reset Password',
+    auth_submitting_reset_password: 'Updating…',
+    auth_reset_password_success: 'Password reset successfully! You can now sign in with your new password.',
+    auth_reset_password_invalid_token: 'Password reset link is invalid or has expired.',
+    auth_request_new_reset_link: 'Request New Link',
+
+    // Verify Email
+    auth_verify_email_title: 'Verify Email',
+    auth_verify_email_subtitle: 'Verifying your email address.',
+    auth_verify_email_eyebrow: 'ACCOUNT VERIFICATION',
+    auth_verifying_email: 'Verifying email, please wait a moment…',
+    auth_verify_email_success: 'Email verified successfully! You can sign in now.',
+    auth_verify_email_failed: 'Email verification failed or link has expired.',
+    auth_resend_verification_email: 'Resend Verification Email',
+    auth_resending_verification_email: 'Resending…',
+    auth_resend_verification_success: 'Verification email resent! Please check your inbox.',
+
+    // Email Not Verified Alert in Login
+    auth_email_not_verified_alert: 'Email is not verified. Please check your inbox to activate your account.',
+
+    // Register Email Check Notice
+    auth_register_check_email_title: 'Check Your Inbox',
+    auth_register_check_email_desc: 'We have sent a verification link to your email address. Please check your inbox (including Spam folder) and click the link to activate your account.',
   },
 } as const;
 

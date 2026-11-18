@@ -1,8 +1,9 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartFarm.Application.Contracts.Services;
 using SmartFarm.Application.DTOs.Auth;
-using System.Security.Claims;
+using SmartFarm.WebAPI.Attributes;
 
 namespace SmartFarm.WebAPI.Controllers
 {
@@ -19,15 +20,67 @@ namespace SmartFarm.WebAPI.Controllers
         }
 
         /// <summary>
-        /// Đăng ký tài khoản người dùng mới với quyền User
+        /// Đăng ký tài khoản người dùng mới với quyền User (yêu cầu xác minh email)
         /// </summary>
         [HttpPost("register")]
-        [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(RegisterResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken cancellationToken)
         {
             var result = await _authService.RegisterAsync(request, cancellationToken);
             return Ok(result);
+        }
+
+        /// <summary>
+        /// Xác minh email người dùng qua link xác nhận
+        /// </summary>
+        [HttpPost("verify-email")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailRequest request, CancellationToken cancellationToken)
+        {
+            await _authService.VerifyEmailAsync(request, cancellationToken);
+            return Ok(new { success = true, message = "Email đã được xác minh thành công." });
+        }
+
+        /// <summary>
+        /// Gửi lại email xác minh tài khoản (Rate limited: tối đa 3 lần/phút/IP)
+        /// </summary>
+        [HttpPost("resend-verification")]
+        [IpRateLimit(maxRequests: 3, windowSeconds: 60)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+        public async Task<IActionResult> ResendVerification([FromBody] ResendVerificationRequest request, CancellationToken cancellationToken)
+        {
+            await _authService.ResendVerificationEmailAsync(request, cancellationToken);
+            return Ok(new { success = true, message = "Nếu email hợp lệ và chưa xác minh, hướng dẫn xác minh đã được gửi." });
+        }
+
+        /// <summary>
+        /// Yêu cầu đặt lại mật khẩu (Rate limited: tối đa 3 lần/phút/IP)
+        /// </summary>
+        [HttpPost("forgot-password")]
+        [IpRateLimit(maxRequests: 3, windowSeconds: 60)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request, CancellationToken cancellationToken)
+        {
+            await _authService.ForgotPasswordAsync(request, cancellationToken);
+            return Ok(new { success = true, message = "Nếu email hợp lệ, chúng tôi đã gửi hướng dẫn đặt lại mật khẩu." });
+        }
+
+        /// <summary>
+        /// Đặt lại mật khẩu mới với token từ email
+        /// </summary>
+        [HttpPost("reset-password")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request, CancellationToken cancellationToken)
+        {
+            await _authService.ResetPasswordAsync(request, cancellationToken);
+            return Ok(new { success = true, message = "Mật khẩu đã được đặt lại thành công." });
         }
 
         /// <summary>

@@ -1,15 +1,14 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import AuthLayout from '../../layouts/AuthLayout';
 import { useAuth } from '../../contexts/AuthContext';
-import { register as apiRegister } from '../../services/auth-service';
+import { register as apiRegister, resendVerificationEmail } from '../../services/auth-service';
 import { useToast } from '../../contexts/ToastContext';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { User, Mail, Lock, Eye, EyeOff, UserPlus, AlertCircle, ArrowRight } from 'lucide-react';
+import { User, Mail, Lock, Eye, EyeOff, UserPlus, AlertCircle, ArrowRight, Send, Loader2 } from 'lucide-react';
 
 export default function RegisterPage() {
-  const navigate = useNavigate();
   const { success, error: toastError } = useToast();
   const { t, language } = useLanguage();
 
@@ -33,6 +32,9 @@ export default function RegisterPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isRegisteredSuccess, setIsRegisteredSuccess] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
 
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -98,8 +100,8 @@ export default function RegisterPage() {
         await apiRegister(payload);
       }
 
-      success(t('auth_register_success', 'Tạo tài khoản thành công! Đang chuyển hướng...'));
-      navigate('/dashboard', { replace: true });
+      setIsRegisteredSuccess(true);
+      success(t('auth_register_check_email_title', 'Kiểm tra hộp thư của bạn'));
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : (language === 'en' ? 'Registration failed. Please try again.' : 'Đăng ký không thành công. Vui lòng thử lại.');
       setSubmitError(msg);
@@ -109,10 +111,24 @@ export default function RegisterPage() {
     }
   };
 
+  const handleResend = async () => {
+    if (!formData.email.trim() || isResending) return;
+    setIsResending(true);
+    try {
+      await resendVerificationEmail({ email: formData.email.trim() });
+      setResendSuccess(true);
+      success(t('auth_resend_verification_success', 'Đã gửi lại email xác minh! Vui lòng kiểm tra hộp thư của bạn.'));
+    } catch (err: unknown) {
+      toastError(err instanceof Error ? err.message : 'Không thể gửi lại email xác minh.');
+    } finally {
+      setIsResending(false);
+    }
+  };
+
   return (
     <AuthLayout
-      title={t('auth_register_title', 'Tạo tài khoản')}
-      subtitle={t('auth_register_subtitle', 'Tạo tài khoản để bắt đầu theo dõi và chăm sóc vườn cây thông minh.')}
+      title={isRegisteredSuccess ? t('auth_register_check_email_title', 'Kiểm tra hộp thư của bạn') : t('auth_register_title', 'Tạo tài khoản')}
+      subtitle={isRegisteredSuccess ? t('auth_register_check_email_desc', 'Chúng tôi đã gửi liên kết xác nhận tới địa chỉ email của bạn. Vui lòng kiểm tra hộp thư (bao gồm cả thư mục Spam) và nhấn vào liên kết để kích hoạt tài khoản.') : t('auth_register_subtitle', 'Tạo tài khoản để bắt đầu theo dõi và chăm sóc vườn cây thông minh.')}
       eyebrow={t('auth_register_eyebrow', 'BẮT ĐẦU CÙNG SMART FARM')}
     >
       <div className="space-y-4">
@@ -127,7 +143,57 @@ export default function RegisterPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} noValidate className="space-y-3.5">
+        {isRegisteredSuccess ? (
+          <div className="space-y-5 text-center animate-in fade-in duration-300">
+            <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
+              <Mail className="size-8" />
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-ink">
+                Email xác thực đã được gửi tới:
+              </p>
+              <p className="text-base font-bold text-primary break-all">
+                {formData.email}
+              </p>
+              <p className="text-xs text-muted">
+                {resendSuccess
+                  ? t('auth_resend_verification_success', 'Đã gửi lại email xác minh! Vui lòng kiểm tra hộp thư của bạn.')
+                  : 'Vui lòng kiểm tra hộp thư (kể cả thư mục Spam/Rác) và nhấn vào liên kết trong email để kích hoạt tài khoản.'}
+              </p>
+            </div>
+
+            <div className="space-y-2.5 pt-2">
+              <Link
+                to="/login"
+                className="inline-flex w-full min-h-[48px] items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white shadow-md shadow-primary/20 transition-all hover:bg-primary-hover active:bg-primary-active focus:outline-none focus:ring-4 focus:ring-primary/20"
+              >
+                <span>{t('auth_login_now', 'Đăng nhập ngay')}</span>
+                <ArrowRight className="size-4" />
+              </Link>
+
+              <button
+                type="button"
+                onClick={handleResend}
+                disabled={isResending}
+                className="w-full min-h-[44px] rounded-xl border border-line bg-surface hover:bg-surface-hover text-ink font-semibold text-xs shadow-xs transition-all flex items-center justify-center gap-2 disabled:opacity-60"
+              >
+                {isResending ? (
+                  <>
+                    <Loader2 className="size-3.5 animate-spin" />
+                    <span>{t('auth_resending_verification_email', 'Đang gửi lại…')}</span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="size-3.5" />
+                    <span>{t('auth_resend_verification_email', 'Gửi lại email xác minh')}</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} noValidate className="space-y-3.5">
           {/* Username Field */}
           <div>
             <label htmlFor="reg-username" className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
@@ -339,6 +405,7 @@ export default function RegisterPage() {
             </Link>
           </p>
         </form>
+        )}
       </div>
     </AuthLayout>
   );

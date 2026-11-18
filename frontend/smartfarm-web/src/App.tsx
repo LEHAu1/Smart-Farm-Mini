@@ -12,6 +12,9 @@ import PublicRoute from './components/routing/PublicRoute';
 // Pages
 import LoginPage from './pages/Login';
 import RegisterPage from './pages/Register';
+import VerifyEmailPage from './pages/VerifyEmail';
+import ForgotPasswordPage from './pages/ForgotPassword';
+import ResetPasswordPage from './pages/ResetPassword';
 import DashboardPage from './pages/Dashboard';
 import DevicesPage from './pages/Devices';
 import DeviceDetailPlaceholder from './pages/Devices/DeviceDetailPlaceholder';
@@ -48,6 +51,30 @@ export default function App() {
             element={
               <PublicRoute>
                 <RegisterPage />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/verify-email"
+            element={
+              <PublicRoute>
+                <VerifyEmailPage />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/forgot-password"
+            element={
+              <PublicRoute>
+                <ForgotPasswordPage />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/reset-password"
+            element={
+              <PublicRoute>
+                <ResetPasswordPage />
               </PublicRoute>
             }
           />

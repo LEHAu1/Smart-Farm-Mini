@@ -3,20 +3,24 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
 using SmartFarm.Application.Common.Configurations;
 using SmartFarm.Application.Contracts.Services;
 using SmartFarm.Application.DTOs.Auth;
 using SmartFarm.Application.DTOs.Device;
+using SmartFarm.Domain.Exceptions;
 using SmartFarm.Infrastructure.Identity;
 using SmartFarm.Infrastructure.Persistence.Data;
 using SmartFarm.Infrastructure.Services;
 using SmartFarm.Infrastructure;
 using SmartFarm.WebAPI.Controllers;
+using SmartFarm.WebAPI.Extensions;
 
 namespace SmartFarm.UnitTests;
 
@@ -38,15 +42,22 @@ public class SecurityRemediationTests
         userManager.Setup(x => x.AddClaimAsync(It.IsAny<AppUser>(), It.IsAny<Claim>()))
             .Callback<AppUser, Claim>((_, claim) => addedClaim = claim)
             .ReturnsAsync(IdentityResult.Success);
+        userManager.Setup(x => x.GenerateEmailConfirmationTokenAsync(It.IsAny<AppUser>()))
+            .ReturnsAsync("unit-test-confirmation-token");
 
         var context = CreateContext();
         var tokenService = new Mock<ITokenService>();
-        tokenService.Setup(x => x.GenerateAccessToken(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
-            .Returns("access-token");
-        tokenService.Setup(x => x.GenerateRefreshToken()).Returns(("refresh-token", "refresh-hash"));
-        var service = new AuthService(userManager.Object, context.Object, tokenService.Object,
+        var emailService = new Mock<IEmailService>();
+
+        var service = new AuthService(
+            userManager.Object,
+            context.Object,
+            tokenService.Object,
             Mock.Of<IGoogleAuthService>(),
-            Options.Create(new JwtSettings { SecretKey = "unit-test-key", RefreshTokenExpiryDays = 30, AccessTokenExpiryMinutes = 15 }));
+            emailService.Object,
+            Options.Create(new JwtSettings { SecretKey = "unit-test-key", RefreshTokenExpiryDays = 30, AccessTokenExpiryMinutes = 15 }),
+            Options.Create(new ResendSettings { FrontendBaseUrl = "http://localhost:5173" }),
+            Mock.Of<ILogger<AuthService>>());
 
         // Simulate a legacy/client JSON request that still sends the former Role field.
         var request = JsonSerializer.Deserialize<RegisterRequest>("""
@@ -55,17 +66,18 @@ public class SecurityRemediationTests
 
         var response = await service.RegisterAsync(request);
 
-        Assert.Equal("User", response.User.Role);
+        Assert.True(response.RequiresEmailVerification);
         Assert.NotNull(createdUser);
+        Assert.False(createdUser!.EmailConfirmed);
         Assert.Equal(ClaimTypes.Role, addedClaim?.Type);
         Assert.Equal("User", addedClaim?.Value);
-        tokenService.Verify(x => x.GenerateAccessToken(createdUser!.Id, "new-user", "new@example.com", "User"), Times.Once);
+        emailService.Verify(x => x.SendEmailVerificationAsync("new@example.com", It.IsAny<string>(), It.Is<string>(url => url.Contains("userId="))), Times.Once);
     }
 
     [Fact]
     public async Task Login_WrongPassword_RecordsFailedAttempt()
     {
-        var user = new AppUser { Id = Guid.NewGuid(), UserName = "user", Email = "user@example.com" };
+        var user = new AppUser { Id = Guid.NewGuid(), UserName = "user", Email = "user@example.com", EmailConfirmed = true };
         var userStore = new Mock<IUserStore<AppUser>>();
         var userManager = CreateUserManager(userStore.Object);
         userManager.Setup(x => x.FindByNameAsync("user")).ReturnsAsync(user);
@@ -73,9 +85,15 @@ public class SecurityRemediationTests
         userManager.Setup(x => x.IsLockedOutAsync(user)).ReturnsAsync(false);
         userManager.Setup(x => x.AccessFailedAsync(user)).ReturnsAsync(IdentityResult.Success);
 
-        var service = new AuthService(userManager.Object, CreateContext().Object, Mock.Of<ITokenService>(),
+        var service = new AuthService(
+            userManager.Object,
+            CreateContext().Object,
+            Mock.Of<ITokenService>(),
             Mock.Of<IGoogleAuthService>(),
-            Options.Create(new JwtSettings()));
+            Mock.Of<IEmailService>(),
+            Options.Create(new JwtSettings()),
+            Options.Create(new ResendSettings()),
+            Mock.Of<ILogger<AuthService>>());
 
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => service.LoginAsync(
             new LoginRequest { UserNameOrEmail = "user", Password = "wrong-password" }));
@@ -87,7 +105,7 @@ public class SecurityRemediationTests
     [Fact]
     public async Task Login_FifthFailedAttemptLocksAccount_AndNextAttemptIsRejectedBeforePasswordCheck()
     {
-        var user = new AppUser { Id = Guid.NewGuid(), UserName = "user", Email = "user@example.com" };
+        var user = new AppUser { Id = Guid.NewGuid(), UserName = "user", Email = "user@example.com", EmailConfirmed = true };
         var userStore = new Mock<IUserStore<AppUser>>();
         var userManager = CreateUserManager(userStore.Object);
         var failedAttempts = 0;
@@ -103,9 +121,15 @@ public class SecurityRemediationTests
             return IdentityResult.Success;
         });
 
-        var service = new AuthService(userManager.Object, CreateContext().Object, Mock.Of<ITokenService>(),
+        var service = new AuthService(
+            userManager.Object,
+            CreateContext().Object,
+            Mock.Of<ITokenService>(),
             Mock.Of<IGoogleAuthService>(),
-            Options.Create(new JwtSettings()));
+            Mock.Of<IEmailService>(),
+            Options.Create(new JwtSettings()),
+            Options.Create(new ResendSettings()),
+            Mock.Of<ILogger<AuthService>>());
         var request = new LoginRequest { UserNameOrEmail = "user", Password = "wrong-password" };
 
         for (var attempt = 0; attempt < 5; attempt++)
@@ -124,7 +148,7 @@ public class SecurityRemediationTests
     [Fact]
     public async Task Login_CorrectPassword_ResetsFailedAttemptCount()
     {
-        var user = new AppUser { Id = Guid.NewGuid(), UserName = "user", Email = "user@example.com" };
+        var user = new AppUser { Id = Guid.NewGuid(), UserName = "user", Email = "user@example.com", EmailConfirmed = true };
         var userStore = new Mock<IUserStore<AppUser>>();
         var userManager = CreateUserManager(userStore.Object);
         userManager.Setup(x => x.FindByNameAsync("user")).ReturnsAsync(user);
@@ -137,9 +161,15 @@ public class SecurityRemediationTests
         tokenService.Setup(x => x.GenerateAccessToken(user.Id, "user", "user@example.com", "User"))
             .Returns("access-token");
         tokenService.Setup(x => x.GenerateRefreshToken()).Returns(("refresh-token", "refresh-hash"));
-        var service = new AuthService(userManager.Object, CreateContext().Object, tokenService.Object,
+        var service = new AuthService(
+            userManager.Object,
+            CreateContext().Object,
+            tokenService.Object,
             Mock.Of<IGoogleAuthService>(),
-            Options.Create(new JwtSettings { RefreshTokenExpiryDays = 30, AccessTokenExpiryMinutes = 15 }));
+            Mock.Of<IEmailService>(),
+            Options.Create(new JwtSettings { RefreshTokenExpiryDays = 30, AccessTokenExpiryMinutes = 15 }),
+            Options.Create(new ResendSettings()),
+            Mock.Of<ILogger<AuthService>>());
 
         var response = await service.LoginAsync(new LoginRequest
         {
@@ -150,6 +180,116 @@ public class SecurityRemediationTests
         Assert.Equal("access-token", response.AccessToken);
         userManager.Verify(x => x.ResetAccessFailedCountAsync(user), Times.Once);
         userManager.Verify(x => x.AccessFailedAsync(It.IsAny<AppUser>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Login_UnconfirmedLocalEmail_ThrowsEmailNotVerifiedException()
+    {
+        var user = new AppUser
+        {
+            Id = Guid.NewGuid(),
+            UserName = "unverified_user",
+            Email = "unverified@example.com",
+            AuthProvider = "Local",
+            EmailConfirmed = false
+        };
+        var userStore = new Mock<IUserStore<AppUser>>();
+        var userManager = CreateUserManager(userStore.Object);
+        userManager.Setup(x => x.FindByNameAsync("unverified_user")).ReturnsAsync(user);
+        userManager.Setup(x => x.IsLockedOutAsync(user)).ReturnsAsync(false);
+        userManager.Setup(x => x.CheckPasswordAsync(user, "Password123!")).ReturnsAsync(true);
+
+        var service = new AuthService(
+            userManager.Object,
+            CreateContext().Object,
+            Mock.Of<ITokenService>(),
+            Mock.Of<IGoogleAuthService>(),
+            Mock.Of<IEmailService>(),
+            Options.Create(new JwtSettings()),
+            Options.Create(new ResendSettings()),
+            Mock.Of<ILogger<AuthService>>());
+
+        var ex = await Assert.ThrowsAsync<EmailNotVerifiedException>(() => service.LoginAsync(new LoginRequest
+        {
+            UserNameOrEmail = "unverified_user",
+            Password = "Password123!"
+        }));
+
+        Assert.Equal("EMAIL_NOT_VERIFIED", ex.ErrorCode);
+    }
+
+    [Fact]
+    public async Task VerifyEmail_ValidToken_ConfirmsEmail()
+    {
+        var userId = Guid.NewGuid();
+        var user = new AppUser { Id = userId, EmailConfirmed = false };
+        var userStore = new Mock<IUserStore<AppUser>>();
+        var userManager = CreateUserManager(userStore.Object);
+        userManager.Setup(x => x.FindByIdAsync(userId.ToString())).ReturnsAsync(user);
+        userManager.Setup(x => x.ConfirmEmailAsync(user, "valid-token")).ReturnsAsync(IdentityResult.Success);
+
+        var service = new AuthService(
+            userManager.Object,
+            CreateContext().Object,
+            Mock.Of<ITokenService>(),
+            Mock.Of<IGoogleAuthService>(),
+            Mock.Of<IEmailService>(),
+            Options.Create(new JwtSettings()),
+            Options.Create(new ResendSettings()),
+            Mock.Of<ILogger<AuthService>>());
+
+        await service.VerifyEmailAsync(new VerifyEmailRequest { UserId = userId.ToString(), Token = "valid-token" });
+
+        userManager.Verify(x => x.ConfirmEmailAsync(user, "valid-token"), Times.Once);
+    }
+
+    [Fact]
+    public async Task ForgotPassword_ConfirmedUser_GeneratesTokenAndSendsEmail()
+    {
+        var user = new AppUser { Id = Guid.NewGuid(), UserName = "gardener", Email = "gardener@example.com", EmailConfirmed = true };
+        var userStore = new Mock<IUserStore<AppUser>>();
+        var userManager = CreateUserManager(userStore.Object);
+        userManager.Setup(x => x.FindByEmailAsync("gardener@example.com")).ReturnsAsync(user);
+        userManager.Setup(x => x.GeneratePasswordResetTokenAsync(user)).ReturnsAsync("reset-token-xyz");
+
+        var emailService = new Mock<IEmailService>();
+        var service = new AuthService(
+            userManager.Object,
+            CreateContext().Object,
+            Mock.Of<ITokenService>(),
+            Mock.Of<IGoogleAuthService>(),
+            emailService.Object,
+            Options.Create(new JwtSettings()),
+            Options.Create(new ResendSettings { FrontendBaseUrl = "http://localhost:5173" }),
+            Mock.Of<ILogger<AuthService>>());
+
+        await service.ForgotPasswordAsync(new ForgotPasswordRequest { Email = "gardener@example.com" });
+
+        userManager.Verify(x => x.GeneratePasswordResetTokenAsync(user), Times.Once);
+        emailService.Verify(x => x.SendPasswordResetAsync("gardener@example.com", It.IsAny<string>(), It.Is<string>(url => url.Contains("reset-password"))), Times.Once);
+    }
+
+    [Fact]
+    public async Task ForgotPassword_NonExistentOrUnconfirmedEmail_DoesNotThrowAndDoesNotSendEmail()
+    {
+        var userStore = new Mock<IUserStore<AppUser>>();
+        var userManager = CreateUserManager(userStore.Object);
+        userManager.Setup(x => x.FindByEmailAsync("ghost@example.com")).ReturnsAsync((AppUser?)null);
+
+        var emailService = new Mock<IEmailService>();
+        var service = new AuthService(
+            userManager.Object,
+            CreateContext().Object,
+            Mock.Of<ITokenService>(),
+            Mock.Of<IGoogleAuthService>(),
+            emailService.Object,
+            Options.Create(new JwtSettings()),
+            Options.Create(new ResendSettings()),
+            Mock.Of<ILogger<AuthService>>());
+
+        await service.ForgotPasswordAsync(new ForgotPasswordRequest { Email = "ghost@example.com" });
+
+        emailService.Verify(x => x.SendPasswordResetAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
     }
 
     [Fact]

@@ -67,16 +67,21 @@ namespace SmartFarm.WebAPI.Middlewares
 
             context.Response.StatusCode = (int)statusCode;
 
-            var response = new
+            var responseObj = new Dictionary<string, object?>
             {
-                status = (int)statusCode,
-                error = statusCode == HttpStatusCode.InternalServerError ? "Đã có lỗi hệ thống xảy ra." : exception.Message,
-                details = _environment.IsDevelopment() && statusCode == HttpStatusCode.InternalServerError ? exception.ToString() : null,
-                timestampUtc = DateTimeOffset.UtcNow
+                ["status"] = (int)statusCode,
+                ["error"] = statusCode == HttpStatusCode.InternalServerError ? "Đã có lỗi hệ thống xảy ra." : exception.Message,
+                ["details"] = _environment.IsDevelopment() && statusCode == HttpStatusCode.InternalServerError ? exception.ToString() : null,
+                ["timestampUtc"] = DateTimeOffset.UtcNow
             };
 
+            if (exception is EmailNotVerifiedException notVerifiedEx)
+            {
+                responseObj["errorCode"] = notVerifiedEx.ErrorCode;
+            }
+
             var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-            await context.Response.WriteAsync(JsonSerializer.Serialize(response, options));
+            await context.Response.WriteAsync(JsonSerializer.Serialize(responseObj, options));
         }
     }
 }

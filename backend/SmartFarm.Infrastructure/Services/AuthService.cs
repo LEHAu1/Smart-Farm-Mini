@@ -1,14 +1,17 @@
+using System.Net;
+using System.Security;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SmartFarm.Application.Common.Configurations;
 using SmartFarm.Application.Contracts.Services;
 using SmartFarm.Application.DTOs.Auth;
 using SmartFarm.Domain.Entities;
+using SmartFarm.Domain.Exceptions;
 using SmartFarm.Infrastructure.Identity;
 using SmartFarm.Infrastructure.Persistence.Data;
-using System.Security;
-using System.Security.Claims;
 
 namespace SmartFarm.Infrastructure.Services
 {
@@ -18,23 +21,32 @@ namespace SmartFarm.Infrastructure.Services
         private readonly SmartFarmDbContext _context;
         private readonly ITokenService _tokenService;
         private readonly IGoogleAuthService _googleAuthService;
+        private readonly IEmailService _emailService;
         private readonly JwtSettings _jwtSettings;
+        private readonly ResendSettings _resendSettings;
+        private readonly ILogger<AuthService> _logger;
 
         public AuthService(
             UserManager<AppUser> userManager,
             SmartFarmDbContext context,
             ITokenService tokenService,
             IGoogleAuthService googleAuthService,
-            IOptions<JwtSettings> jwtOptions)
+            IEmailService emailService,
+            IOptions<JwtSettings> jwtOptions,
+            IOptions<ResendSettings> resendOptions,
+            ILogger<AuthService> logger)
         {
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
             _context = context ?? throw new ArgumentNullException(nameof(context));
             _tokenService = tokenService ?? throw new ArgumentNullException(nameof(tokenService));
             _googleAuthService = googleAuthService ?? throw new ArgumentNullException(nameof(googleAuthService));
+            _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
             _jwtSettings = jwtOptions?.Value ?? throw new ArgumentNullException(nameof(jwtOptions));
+            _resendSettings = resendOptions?.Value ?? throw new ArgumentNullException(nameof(resendOptions));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public async Task<AuthResponseDto> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default)
+        public async Task<RegisterResponseDto> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default)
         {
             if (request is null)
                 throw new ArgumentNullException(nameof(request));
@@ -68,7 +80,7 @@ namespace SmartFarm.Infrastructure.Services
                 DisplayName = string.IsNullOrWhiteSpace(request.DisplayName) ? request.UserName.Trim() : request.DisplayName.Trim(),
                 AuthProvider = "Local",
                 CreatedAtUtc = now,
-                EmailConfirmed = true
+                EmailConfirmed = false
             };
 
             var createResult = await _userManager.CreateAsync(user, request.Password);
@@ -81,27 +93,25 @@ namespace SmartFarm.Infrastructure.Services
             // Gán Role Claim vào bảng AspNetUserClaims
             await _userManager.AddClaimAsync(user, new Claim(ClaimTypes.Role, role));
 
-            // Tạo access token & refresh token mới
-            var accessToken = _tokenService.GenerateAccessToken(user.Id, user.UserName, user.Email, role);
-            var (rawRefreshToken, tokenHash) = _tokenService.GenerateRefreshToken();
-            var tokenFamily = Guid.NewGuid();
+            // Generate email confirmation token
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            var encodedToken = WebUtility.UrlEncode(token);
+            var baseUrl = _resendSettings.FrontendBaseUrl.TrimEnd('/');
+            var verifyUrl = $"{baseUrl}/verify-email?userId={user.Id}&token={encodedToken}";
 
-            var refreshTokenEntity = new RefreshToken(
-                user.Id,
-                tokenHash,
-                tokenFamily,
-                now.AddDays(_jwtSettings.RefreshTokenExpiryDays),
-                now);
-
-            _context.RefreshTokens.Add(refreshTokenEntity);
-            await _context.SaveChangesAsync(cancellationToken);
-
-            return new AuthResponseDto
+            try
             {
-                AccessToken = accessToken,
-                RefreshToken = rawRefreshToken,
-                ExpiresAtUtc = now.AddMinutes(_jwtSettings.AccessTokenExpiryMinutes),
-                User = MapToUserDto(user, role)
+                await _emailService.SendEmailVerificationAsync(user.Email, user.DisplayName ?? user.UserName, verifyUrl);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi gửi email xác minh sau khi đăng ký cho user {Email}", user.Email);
+            }
+
+            return new RegisterResponseDto
+            {
+                Message = "Đăng ký thành công! Vui lòng kiểm tra hộp thư email để xác minh tài khoản.",
+                RequiresEmailVerification = true
             };
         }
 
@@ -136,6 +146,12 @@ namespace SmartFarm.Infrastructure.Services
             }
 
             await _userManager.ResetAccessFailedCountAsync(user);
+
+            // Kiểm tra trạng thái xác minh email cho tài khoản Local
+            if (!user.EmailConfirmed && (user.AuthProvider == "Local" || string.IsNullOrEmpty(user.AuthProvider)))
+            {
+                throw new EmailNotVerifiedException("Email chưa được xác minh. Vui lòng kiểm tra hộp thư.");
+            }
 
             var claims = await _userManager.GetClaimsAsync(user);
             var role = claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value ?? "User";
@@ -463,6 +479,143 @@ namespace SmartFarm.Infrastructure.Services
                 var errors = string.Join("; ", changeResult.Errors.Select(e => e.Description));
                 throw new InvalidOperationException($"Đổi mật khẩu thất bại: {errors}");
             }
+        }
+
+        public async Task VerifyEmailAsync(VerifyEmailRequest request, CancellationToken cancellationToken = default)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            if (string.IsNullOrWhiteSpace(request.UserId) || string.IsNullOrWhiteSpace(request.Token))
+                throw new ArgumentException("Mã người dùng hoặc mã xác minh không hợp lệ.");
+
+            var user = await _userManager.FindByIdAsync(request.UserId);
+            if (user == null)
+            {
+                throw new KeyNotFoundException("Không tìm thấy thông tin tài khoản.");
+            }
+
+            if (user.EmailConfirmed)
+            {
+                return; // Đã xác minh trước đó
+            }
+
+            var decodedToken = WebUtility.UrlDecode(request.Token);
+            var result = await _userManager.ConfirmEmailAsync(user, decodedToken);
+            if (!result.Succeeded)
+            {
+                var errors = string.Join("; ", result.Errors.Select(e => e.Description));
+                throw new InvalidOperationException($"Xác minh email thất bại hoặc mã xác nhận đã hết hạn: {errors}");
+            }
+        }
+
+        public async Task ResendVerificationEmailAsync(ResendVerificationRequest request, CancellationToken cancellationToken = default)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            if (string.IsNullOrWhiteSpace(request.Email))
+                throw new ArgumentException("Email không được để trống.", nameof(request.Email));
+
+            var user = await _userManager.FindByEmailAsync(request.Email.Trim());
+            // Chống dò email: nếu không tồn tại hoặc đã xác minh, kết thúc an toàn không throw lỗi
+            if (user == null || user.EmailConfirmed)
+            {
+                return;
+            }
+
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            var encodedToken = WebUtility.UrlEncode(token);
+            var baseUrl = _resendSettings.FrontendBaseUrl.TrimEnd('/');
+            var verifyUrl = $"{baseUrl}/verify-email?userId={user.Id}&token={encodedToken}";
+
+            try
+            {
+                await _emailService.SendEmailVerificationAsync(user.Email!, user.DisplayName ?? user.UserName!, verifyUrl);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi gửi lại email xác minh tới {Email}", user.Email);
+            }
+        }
+
+        public async Task ForgotPasswordAsync(ForgotPasswordRequest request, CancellationToken cancellationToken = default)
+        {
+            if (request == null || string.IsNullOrWhiteSpace(request.Email))
+            {
+                return;
+            }
+
+            var user = await _userManager.FindByEmailAsync(request.Email.Trim());
+            // Chống dò email: nếu không tồn tại hoặc email chưa xác minh, return generic
+            if (user == null || !user.EmailConfirmed)
+            {
+                return;
+            }
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var encodedToken = WebUtility.UrlEncode(token);
+            var baseUrl = _resendSettings.FrontendBaseUrl.TrimEnd('/');
+            var resetUrl = $"{baseUrl}/reset-password?email={WebUtility.UrlEncode(user.Email!)}&token={encodedToken}";
+
+            try
+            {
+                await _emailService.SendPasswordResetAsync(user.Email!, user.DisplayName ?? user.UserName!, resetUrl);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi gửi email đặt lại mật khẩu tới {Email}", user.Email);
+            }
+        }
+
+        public async Task ResetPasswordAsync(ResetPasswordRequest request, CancellationToken cancellationToken = default)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            if (string.IsNullOrWhiteSpace(request.Email))
+                throw new ArgumentException("Email không được để trống.", nameof(request.Email));
+
+            if (string.IsNullOrWhiteSpace(request.Token))
+                throw new ArgumentException("Mã xác thực không được để trống.", nameof(request.Token));
+
+            if (string.IsNullOrWhiteSpace(request.NewPassword))
+                throw new ArgumentException("Mật khẩu mới không được để trống.", nameof(request.NewPassword));
+
+            if (request.NewPassword != request.ConfirmPassword)
+                throw new ArgumentException("Mật khẩu xác nhận không khớp.", nameof(request.ConfirmPassword));
+
+            if (request.NewPassword.Length < 8)
+                throw new ArgumentException("Mật khẩu mới phải có ít nhất 8 ký tự.", nameof(request.NewPassword));
+
+            var user = await _userManager.FindByEmailAsync(request.Email.Trim());
+            if (user == null)
+            {
+                throw new InvalidOperationException("Yêu cầu đặt lại mật khẩu không hợp lệ.");
+            }
+
+            var decodedToken = WebUtility.UrlDecode(request.Token);
+            var result = await _userManager.ResetPasswordAsync(user, decodedToken, request.NewPassword);
+            if (!result.Succeeded)
+            {
+                var errors = string.Join("; ", result.Errors.Select(e => e.Description));
+                throw new InvalidOperationException($"Đặt lại mật khẩu thất bại: {errors}");
+            }
+
+            // Thu hồi tất cả Refresh Token đang active của user
+            var now = DateTimeOffset.UtcNow;
+            var activeTokens = await _context.RefreshTokens
+                .Where(t => t.UserId == user.Id && t.RevokedAtUtc == null && t.ExpiresAtUtc > now)
+                .ToListAsync(cancellationToken);
+
+            foreach (var token in activeTokens)
+            {
+                token.Revoke(now, "PASSWORD_RESET");
+            }
+            await _context.SaveChangesAsync(cancellationToken);
+
+            // Cập nhật SecurityStamp để vô hiệu hóa phiên cũ
+            await _userManager.UpdateSecurityStampAsync(user);
         }
 
         private static UserDto MapToUserDto(AppUser user, string role)

@@ -9,7 +9,7 @@ import {
   register as apiRegister,
   getCurrentUserProfile,
 } from '../services/auth-service';
-import type { LoginRequest, RegisterRequest, UserDto } from '../types/auth';
+import type { LoginRequest, RegisterRequest, RegisterResponseDto, UserDto } from '../types/auth';
 
 interface AuthContextType {
   user: UserDto | null;
@@ -17,7 +17,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (request: LoginRequest) => Promise<void>;
   loginWithGoogle: (idToken: string) => Promise<void>;
-  register: (request: RegisterRequest) => Promise<void>;
+  register: (request: RegisterRequest) => Promise<RegisterResponseDto>;
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -86,12 +86,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const register = async (request: RegisterRequest) => {
+  const register = async (request: RegisterRequest): Promise<RegisterResponseDto> => {
     setIsLoading(true);
     try {
       const result = await apiRegister(request);
-      setUser(result.user);
-      setIsAuthenticated(true);
+      return result;
     } finally {
       setIsLoading(false);
     }

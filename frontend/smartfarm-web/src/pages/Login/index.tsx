@@ -5,7 +5,7 @@ import { GoogleOAuthProvider, GoogleLogin, type CredentialResponse } from '@reac
 import AuthLayout from '../../layouts/AuthLayout';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { loginDemo, loginWithGoogle } from '../../services/auth-service';
+import { loginDemo, loginWithGoogle, resendVerificationEmail } from '../../services/auth-service';
 import { validateLogin } from '../../utils/validate-login';
 import type { LoginCredentials, LoginErrors } from '../../types/auth';
 import { Mail, Lock, Eye, EyeOff, AlertCircle, ArrowRight } from 'lucide-react';
@@ -42,6 +42,9 @@ export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [isEmailUnverified, setIsEmailUnverified] = useState(false);
+  const [isResendingVerify, setIsResendingVerify] = useState(false);
+  const [resendVerifyMessage, setResendVerifyMessage] = useState('');
   const submitting = useRef(false);
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
@@ -50,6 +53,21 @@ export default function LoginPage() {
     setCredentials((current) => ({ ...current, [field]: value }));
     setErrors((current) => ({ ...current, [field]: undefined }));
     setSubmitError('');
+    setIsEmailUnverified(false);
+    setResendVerifyMessage('');
+  }
+
+  async function handleResendVerification() {
+    if (!credentials.email.trim() || isResendingVerify) return;
+    setIsResendingVerify(true);
+    try {
+      await resendVerificationEmail({ email: credentials.email.trim() });
+      setResendVerifyMessage(t('auth_resend_verification_success', 'Đã gửi lại email xác minh! Vui lòng kiểm tra hộp thư của bạn.'));
+    } catch (err: unknown) {
+      setSubmitError(err instanceof Error ? err.message : 'Không thể gửi lại email xác minh.');
+    } finally {
+      setIsResendingVerify(false);
+    }
   }
 
   async function handleGoogleSuccess(idToken: string) {
@@ -100,6 +118,8 @@ export default function LoginPage() {
 
     submitting.current = true;
     setIsSubmitting(true);
+    setIsEmailUnverified(false);
+    setResendVerifyMessage('');
 
     try {
       if (authContext) {
@@ -113,7 +133,10 @@ export default function LoginPage() {
 
       const returnUrl = searchParams.get('returnUrl') || '/dashboard';
       navigate(returnUrl, { replace: true });
-    } catch (error) {
+    } catch (error: unknown) {
+      const isUnverified = (error as { errorCode?: string })?.errorCode === 'EMAIL_NOT_VERIFIED' ||
+        (error instanceof Error && error.message.includes('EMAIL_NOT_VERIFIED'));
+      setIsEmailUnverified(Boolean(isUnverified));
       setSubmitError(error instanceof Error ? error.message : 'Không thể đăng nhập. Vui lòng thử lại.');
     } finally {
       submitting.current = false;
@@ -130,13 +153,40 @@ export default function LoginPage() {
       >
         <div className="space-y-4">
           {/* Submit Error Alert */}
-          {submitError && (
+          {submitError && !isEmailUnverified && (
             <div
               role="alert"
               className="flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50/90 dark:bg-rose-950/40 dark:border-rose-900 p-3.5 text-xs font-medium text-rose-800 dark:text-rose-200 animate-in fade-in duration-200"
             >
               <AlertCircle className="size-4 shrink-0 text-rose-600 dark:text-rose-400 mt-0.5" />
               <span>{submitError}</span>
+            </div>
+          )}
+
+          {/* Email Not Verified Alert */}
+          {isEmailUnverified && (
+            <div
+              role="alert"
+              className="rounded-xl border border-amber-300 bg-amber-50/95 dark:bg-amber-950/40 dark:border-amber-800 p-3.5 text-xs text-amber-900 dark:text-amber-200 space-y-2 animate-in fade-in duration-200"
+            >
+              <div className="flex items-start gap-2">
+                <AlertCircle className="size-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+                <p className="font-semibold">
+                  {t('auth_email_not_verified_alert', 'Email chưa được xác minh. Vui lòng kiểm tra hộp thư để kích hoạt tài khoản.')}
+                </p>
+              </div>
+              {resendVerifyMessage ? (
+                <p className="text-emerald-700 dark:text-emerald-400 font-semibold">{resendVerifyMessage}</p>
+              ) : (
+                <button
+                  type="button"
+                  disabled={isResendingVerify}
+                  onClick={handleResendVerification}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs shadow-xs transition-all disabled:opacity-60"
+                >
+                  {isResendingVerify ? t('auth_resending_verification_email', 'Đang gửi lại…') : t('auth_resend_verification_email', 'Gửi lại email xác minh')}
+                </button>
+              )}
             </div>
           )}
 
@@ -248,6 +298,12 @@ export default function LoginPage() {
                 <label htmlFor="password" className="block text-xs font-bold uppercase tracking-wider text-ink">
                   {t('auth_password_label', 'Mật khẩu')}
                 </label>
+                <Link
+                  to="/forgot-password"
+                  className="text-xs font-semibold text-primary hover:text-primary-hover hover:underline"
+                >
+                  {t('auth_forgot_password_link', 'Quên mật khẩu?')}
+                </Link>
               </div>
               <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-muted">

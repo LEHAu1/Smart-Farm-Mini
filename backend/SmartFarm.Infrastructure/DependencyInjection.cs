@@ -84,7 +84,8 @@ namespace SmartFarm.Infrastructure
                 options.Lockout.MaxFailedAccessAttempts = 5;
                 options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
             })
-            .AddEntityFrameworkStores<SmartFarmDbContext>();
+            .AddEntityFrameworkStores<SmartFarmDbContext>()
+            .AddDefaultTokenProviders();
 
             // ── 4. Repositories ───────────────────────────────────────────────
             services.AddScoped<IDeviceRepository, DeviceRepository>();
@@ -97,6 +98,16 @@ namespace SmartFarm.Infrastructure
             services.AddScoped<ISystemLogRepository, SystemLogRepository>();
 
             // ── 5. Services ───────────────────────────────────────────────────
+            services.Configure<ResendSettings>(options =>
+            {
+                var section = configuration.GetSection(ResendSettings.SectionName);
+                options.ApiKey = section["ApiKey"] ?? string.Empty;
+                options.FromEmail = section["FromEmail"] ?? options.FromEmail;
+                options.FromName = section["FromName"] ?? options.FromName;
+                options.FrontendBaseUrl = section["FrontendBaseUrl"] ?? options.FrontendBaseUrl;
+            });
+            services.AddHttpClient<IEmailService, ResendEmailService>();
+
             services.Configure<GoogleAuthSettings>(options =>
             {
                 var section = configuration.GetSection(GoogleAuthSettings.SectionName);
