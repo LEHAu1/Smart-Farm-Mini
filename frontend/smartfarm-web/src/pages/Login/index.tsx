@@ -237,7 +237,7 @@ export default function LoginPage() {
                   onChange={(event) => updateField('email', event.target.value)}
                   aria-invalid={Boolean(errors.email)}
                   aria-describedby={errors.email ? 'email-error' : undefined}
-                  className={`w-full rounded-xl border bg-surface/80 hover:border-slate-300 dark:hover:border-slate-600 focus:bg-surface pl-10 pr-4 py-3 text-sm font-medium text-ink shadow-2xs focus:shadow-xs transition-all placeholder:text-muted/60 focus:outline-none focus:ring-4 disabled:bg-canvas disabled:text-muted ${
+                  className={`w-full min-h-[48px] rounded-xl border bg-surface/80 hover:border-slate-300 dark:hover:border-slate-600 focus:bg-surface pl-10 pr-4 py-3 text-base sm:text-sm font-medium text-ink shadow-2xs focus:shadow-xs transition-all placeholder:text-muted/60 focus:outline-none focus:ring-4 disabled:bg-canvas disabled:text-muted ${
                     errors.email
                       ? 'border-danger focus:border-danger focus:ring-danger/10'
                       : 'border-line focus:border-primary focus:ring-primary/15'
@@ -275,7 +275,7 @@ export default function LoginPage() {
                   onChange={(event) => updateField('password', event.target.value)}
                   aria-invalid={Boolean(errors.password)}
                   aria-describedby={errors.password ? 'password-error' : undefined}
-                  className={`w-full rounded-xl border bg-surface/80 hover:border-slate-300 dark:hover:border-slate-600 focus:bg-surface pl-10 pr-20 py-3 text-sm font-medium text-ink shadow-2xs focus:shadow-xs transition-all placeholder:text-muted/60 focus:outline-none focus:ring-4 disabled:bg-canvas disabled:text-muted ${
+                  className={`w-full min-h-[48px] rounded-xl border bg-surface/80 hover:border-slate-300 dark:hover:border-slate-600 focus:bg-surface pl-10 pr-16 py-3 text-base sm:text-sm font-medium text-ink shadow-2xs focus:shadow-xs transition-all placeholder:text-muted/60 focus:outline-none focus:ring-4 disabled:bg-canvas disabled:text-muted ${
                     errors.password
                       ? 'border-danger focus:border-danger focus:ring-danger/10'
                       : 'border-line focus:border-primary focus:ring-primary/15'
@@ -287,10 +287,10 @@ export default function LoginPage() {
                   aria-label={showPassword ? (langContext?.language === 'en' ? 'Hide password' : 'Ẩn mật khẩu') : (langContext?.language === 'en' ? 'Show password' : 'Hiện mật khẩu')}
                   aria-pressed={showPassword}
                   disabled={isSubmitting || isGoogleSubmitting}
-                  className="absolute inset-y-0 right-2 flex items-center gap-1 px-2.5 text-xs font-semibold text-primary hover:text-primary-hover focus:outline-none disabled:opacity-50"
+                  className="absolute inset-y-0 right-1 sm:right-2 flex items-center justify-center min-w-[44px] min-h-[44px] text-xs font-semibold text-primary hover:text-primary-hover focus:outline-none touch-manipulation disabled:opacity-50"
                 >
-                  {showPassword ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-                  <span>{showPassword ? t('auth_hide_password', 'Ẩn') : t('auth_show_password', 'Hiện')}</span>
+                  {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                  <span className="ml-1 hidden xs:inline">{showPassword ? t('auth_hide_password', 'Ẩn') : t('auth_show_password', 'Hiện')}</span>
                 </button>
               </div>
               {errors.password && (
@@ -304,7 +304,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isSubmitting || isGoogleSubmitting}
-              className="w-full min-h-[48px] rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-800 hover:from-emerald-700 hover:to-teal-900 active:scale-[0.99] text-white font-semibold text-sm shadow-md shadow-emerald-800/25 hover:shadow-lg hover:shadow-emerald-800/35 transition-all flex items-center justify-center gap-2 focus:outline-none focus:ring-4 focus:ring-primary/20 disabled:cursor-wait disabled:opacity-70 mt-2"
+              className="w-full min-h-[48px] sm:min-h-[50px] rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-800 hover:from-emerald-700 hover:to-teal-900 active:scale-[0.98] text-white font-semibold text-sm sm:text-base shadow-md shadow-emerald-800/25 hover:shadow-lg hover:shadow-emerald-800/35 transition-all touch-manipulation flex items-center justify-center gap-2 focus:outline-none focus:ring-4 focus:ring-primary/20 disabled:cursor-wait disabled:opacity-70 mt-2"
             >
               {isSubmitting ? (
                 <>
@@ -321,9 +321,9 @@ export default function LoginPage() {
           </form>
 
           {/* Switch to Register */}
-          <div className="mt-5 text-center text-xs text-muted">
+          <div className="mt-5 text-center text-xs sm:text-sm text-muted">
             {t('auth_no_account', 'Chưa có tài khoản?')}{' '}
-            <Link to="/register" className="font-semibold text-primary hover:text-primary-hover hover:underline">
+            <Link to="/register" className="font-semibold text-primary hover:text-primary-hover hover:underline inline-block py-1.5 px-1 touch-manipulation">
               {t('auth_register_now', 'Đăng ký ngay')}
             </Link>
           </div>
