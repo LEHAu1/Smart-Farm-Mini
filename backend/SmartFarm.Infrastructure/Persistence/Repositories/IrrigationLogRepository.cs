@@ -43,6 +43,8 @@ namespace SmartFarm.Infrastructure.Persistence.Repositories
             IrrigationMode? mode,
             int pageNumber,
             int pageSize,
+            DateTimeOffset? fromUtc = null,
+            DateTimeOffset? toUtc = null,
             CancellationToken cancellationToken = default)
         {
             var query = _context.IrrigationLogs.AsNoTracking().AsQueryable();
@@ -61,6 +63,16 @@ namespace SmartFarm.Infrastructure.Persistence.Repositories
             if (mode.HasValue)
             {
                 query = query.Where(l => l.Mode == mode.Value);
+            }
+
+            if (fromUtc.HasValue)
+            {
+                query = query.Where(l => l.StartedAtUtc >= fromUtc.Value);
+            }
+
+            if (toUtc.HasValue)
+            {
+                query = query.Where(l => l.StartedAtUtc <= toUtc.Value);
             }
 
             var totalCount = await query.CountAsync(cancellationToken);

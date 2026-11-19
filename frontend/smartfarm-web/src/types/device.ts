@@ -11,6 +11,15 @@ export interface DeviceDto {
   lastSeenAtUtc?: string | null;
 }
 
+export interface DeviceConnectionStatusDto {
+  deviceId: string;
+  deviceCode: string;
+  name: string;
+  isOnline: boolean;
+  lastSeenAtUtc?: string | null;
+  connectionStatus?: string;
+}
+
 export interface CreateDeviceRequest {
   ownerId?: string;
   deviceCode: string;

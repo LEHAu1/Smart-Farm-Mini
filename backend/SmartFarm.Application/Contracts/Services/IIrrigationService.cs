@@ -28,6 +28,8 @@ namespace SmartFarm.Application.Contracts.Services
             IrrigationMode? mode,
             int pageNumber,
             int pageSize,
+            DateTimeOffset? fromUtc = null,
+            DateTimeOffset? toUtc = null,
             CancellationToken cancellationToken = default);
         Task<IrrigationStatusDto> GetCurrentStatusAsync(Guid deviceId, CancellationToken cancellationToken = default);
     }

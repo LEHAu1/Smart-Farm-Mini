@@ -194,6 +194,8 @@ namespace SmartFarm.WebAPI.Controllers
         public async Task<IActionResult> GetLogs(
             [FromQuery] Guid? deviceId = null,
             [FromQuery] IrrigationMode? mode = null,
+            [FromQuery] DateTimeOffset? fromUtc = null,
+            [FromQuery] DateTimeOffset? toUtc = null,
             [FromQuery] int pageNumber = 1,
             [FromQuery] int pageSize = 20,
             CancellationToken cancellationToken = default)
@@ -212,7 +214,7 @@ namespace SmartFarm.WebAPI.Controllers
             Guid? filterOwnerId = isAdmin ? null : userId;
 
             var result = await _irrigationService.GetLogsPagedAsync(
-                filterOwnerId, deviceId, mode, pageNumber, pageSize, cancellationToken);
+                filterOwnerId, deviceId, mode, pageNumber, pageSize, fromUtc, toUtc, cancellationToken);
 
             return Ok(result);
         }

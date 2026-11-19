@@ -3,6 +3,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { LanguageProvider } from './contexts/LanguageContext';
+import { SignalRProvider } from './contexts/SignalRContext';
 
 // Layouts & Route Guards
 import AppLayout from './layouts/AppLayout';
@@ -29,8 +30,9 @@ export default function App() {
     <ThemeProvider>
       <LanguageProvider>
         <AuthProvider>
-          <ToastProvider>
-            <Routes>
+          <SignalRProvider>
+            <ToastProvider>
+              <Routes>
           {/* Root redirect */}
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
@@ -82,7 +84,8 @@ export default function App() {
           {/* 404 Catch-all */}
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
-          </ToastProvider>
+            </ToastProvider>
+          </SignalRProvider>
         </AuthProvider>
       </LanguageProvider>
     </ThemeProvider>

@@ -16,6 +16,8 @@ namespace SmartFarm.Application.Contracts.Persistence
             IrrigationMode? mode,
             int pageNumber,
             int pageSize,
+            DateTimeOffset? fromUtc = null,
+            DateTimeOffset? toUtc = null,
             CancellationToken cancellationToken = default);
         Task<IrrigationLog?> GetLatestByDeviceIdAsync(Guid deviceId, CancellationToken cancellationToken = default);
         Task<IrrigationLog?> GetCurrentInProgressByDeviceIdAsync(Guid deviceId, CancellationToken cancellationToken = default);
