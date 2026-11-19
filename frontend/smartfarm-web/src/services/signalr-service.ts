@@ -2,8 +2,12 @@ import {
   HubConnection,
   HubConnectionBuilder,
   HubConnectionState,
+  HttpTransportType,
   LogLevel,
 } from '@microsoft/signalr';
+
+/** Human-readable transport name inferred from the active connection */
+export type SignalRTransport = 'WebSocket' | 'ServerSentEvents' | 'LongPolling' | 'Unknown';
 import { ACCESS_TOKEN_KEY } from './api-client';
 import type { SensorTelemetryDto } from '../types/sensor';
 import type { DeviceConnectionStatusDto } from '../types/device';
@@ -57,6 +61,42 @@ class SignalRService {
 
   public isConnected(): boolean {
     return this.connection?.state === HubConnectionState.Connected;
+  }
+
+  /**
+   * Returns the actual SignalR transport currently in use.
+   * @microsoft/signalr stores the active transport on the internal
+   * `_transport` field, which is typed as `any`. We read it defensively.
+   */
+  public getTransport(): SignalRTransport {
+    if (!this.connection || this.connection.state !== HubConnectionState.Connected) {
+      return 'Unknown';
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const internal = this.connection as any;
+    const transport: HttpTransportType | undefined =
+      internal._transport?.transferFormat !== undefined
+        ? internal._transport?.transport
+        : internal._connectionState?.selectedTransport;
+
+    switch (transport) {
+      case HttpTransportType.WebSockets:
+        return 'WebSocket';
+      case HttpTransportType.ServerSentEvents:
+        return 'ServerSentEvents';
+      case HttpTransportType.LongPolling:
+        return 'LongPolling';
+      default:
+        // Fallback: check constructor name of internal transport
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        {
+          const name: string = internal._transport?.constructor?.name || '';
+          if (name.includes('WebSocket')) return 'WebSocket';
+          if (name.includes('ServerSent')) return 'ServerSentEvents';
+          if (name.includes('LongPolling')) return 'LongPolling';
+        }
+        return 'Unknown';
+    }
   }
 
   public async connect(): Promise<void> {

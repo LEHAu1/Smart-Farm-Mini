@@ -9,6 +9,7 @@ import {
 import {
   signalRService,
   type SignalRConnectionStatus,
+  type SignalRTransport,
   type TelemetryHandler,
   type DeviceStatusHandler,
   type CommandStatusHandler,
@@ -21,6 +22,8 @@ import type { DeviceCommandDto } from '../types/command';
 interface SignalRContextType {
   connectionStatus: SignalRConnectionStatus;
   isConnected: boolean;
+  /** Actual transport being used: WebSocket | ServerSentEvents | LongPolling | Unknown */
+  transport: SignalRTransport;
   lastTelemetry: SensorTelemetryDto | null;
   lastDeviceStatus: DeviceConnectionStatusDto | null;
   lastCommandStatus: DeviceCommandDto | null;
@@ -37,6 +40,7 @@ export function SignalRProvider({ children }: { children: ReactNode }) {
   const [connectionStatus, setConnectionStatus] = useState<SignalRConnectionStatus>(
     () => signalRService.getConnectionStatus()
   );
+  const [transport, setTransport] = useState<SignalRTransport>('Unknown');
   const [lastTelemetry, setLastTelemetry] = useState<SensorTelemetryDto | null>(null);
   const [lastDeviceStatus, setLastDeviceStatus] = useState<DeviceConnectionStatusDto | null>(null);
   const [lastCommandStatus, setLastCommandStatus] = useState<DeviceCommandDto | null>(null);
@@ -45,10 +49,18 @@ export function SignalRProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let isCancelled = false;
 
-    // Track connection state changes
+    // Track connection state changes — also read the transport when connected
     const unsubState = signalRService.onStateChange((status) => {
       if (!isCancelled) {
         setConnectionStatus(status);
+        // Defer slightly so the internal _transport field is populated
+        if (status === 'connected') {
+          setTimeout(() => {
+            if (!isCancelled) setTransport(signalRService.getTransport());
+          }, 100);
+        } else {
+          setTransport('Unknown');
+        }
       }
     });
 
@@ -82,6 +94,7 @@ export function SignalRProvider({ children }: { children: ReactNode }) {
       setLastTelemetry(null);
       setLastDeviceStatus(null);
       setLastCommandStatus(null);
+      setTransport('Unknown');
     }
 
     return () => {
@@ -115,6 +128,7 @@ export function SignalRProvider({ children }: { children: ReactNode }) {
       value={{
         connectionStatus,
         isConnected: connectionStatus === 'connected',
+        transport,
         lastTelemetry,
         lastDeviceStatus,
         lastCommandStatus,

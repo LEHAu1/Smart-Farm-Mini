@@ -21,7 +21,7 @@ import {
 
 export default function DashboardPage() {
   const { t, language } = useLanguage();
-  const { isConnected, connectionStatus, onTelemetry, onDeviceStatus, onCommandStatus } =
+  const { isConnected, connectionStatus, transport, onTelemetry, onDeviceStatus, onCommandStatus } =
     useSensorHub();
 
   const [summary, setSummary] = useState<DashboardSummaryDto | null>(null);
@@ -412,7 +412,7 @@ export default function DashboardPage() {
                 <span className="text-xs text-muted">Online</span>
               </div>
               <p className="mt-2 text-2xl font-bold text-ink">
-                {summary?.devices?.onlineDevices ?? 0}
+                {summary ? (summary.devices?.onlineDevices ?? 0) : '--'}
               </p>
             </div>
 
@@ -422,7 +422,7 @@ export default function DashboardPage() {
                 <span className="text-xs text-muted">Offline</span>
               </div>
               <p className="mt-2 text-2xl font-bold text-ink">
-                {summary?.devices?.offlineDevices ?? 0}
+                {summary ? (summary.devices?.offlineDevices ?? 0) : '--'}
               </p>
             </div>
           </div>
@@ -467,14 +467,47 @@ export default function DashboardPage() {
             <span className="text-[11px] font-mono text-muted">/hubs/sensors</span>
           </div>
 
-          <div className="rounded-xl border border-line bg-canvas p-3 space-y-2">
+          <div className="rounded-xl border border-line bg-canvas p-3 space-y-2.5">
+            {/* Connection status */}
             <div className="flex items-center justify-between text-xs">
-              <span className="text-muted">{language === 'vi' ? 'Trạng thái kết nối:' : 'Connection:'}</span>
-              <span className="font-semibold capitalize text-ink">{connectionStatus}</span>
+              <span className="text-muted">{language === 'vi' ? 'Kết nối:' : 'Connection:'}</span>
+              <span
+                className={`font-semibold capitalize ${
+                  connectionStatus === 'connected'
+                    ? 'text-emerald-600 dark:text-emerald-400'
+                    : connectionStatus === 'connecting' || connectionStatus === 'reconnecting'
+                    ? 'text-amber-600 dark:text-amber-400'
+                    : 'text-muted'
+                }`}
+              >
+                {connectionStatus}
+              </span>
             </div>
+
+            {/* Transport – only show when actually connected */}
             <div className="flex items-center justify-between text-xs">
-              <span className="text-muted">{language === 'vi' ? 'Giao thức:' : 'Protocol:'}</span>
-              <span className="font-mono text-ink">WebSocket / JWT</span>
+              <span className="text-muted">{language === 'vi' ? 'Truyền tải:' : 'Transport:'}</span>
+              <span className="font-mono text-ink">
+                {connectionStatus === 'connected' && transport !== 'Unknown'
+                  ? transport
+                  : connectionStatus === 'connected'
+                  ? 'Negotiating…'
+                  : '--'}
+              </span>
+            </div>
+
+            {/* Authentication method – always static */}
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted">{language === 'vi' ? 'Xác thực:' : 'Auth:'}</span>
+              <span className="font-mono text-ink">JWT Bearer</span>
+            </div>
+
+            {/* Auto-reconnect – always static */}
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted">{language === 'vi' ? 'Tự kết nối lại:' : 'Auto Reconnect:'}</span>
+              <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                {language === 'vi' ? 'Bật' : 'Enabled'}
+              </span>
             </div>
           </div>
         </section>
