@@ -17,7 +17,19 @@ import {
   Radio,
   Clock,
   ArrowRight,
+  Server,
+  AlertTriangle,
+  History,
+  CheckCircle2,
+  Play,
 } from 'lucide-react';
+
+interface SystemHealthData {
+  backendStatus: string;
+  databaseStatus: string;
+  mqttBrokerStatus: string;
+  isMqttEnabled: boolean;
+}
 
 export default function DashboardPage() {
   const { t, language } = useLanguage();
@@ -25,24 +37,29 @@ export default function DashboardPage() {
     useSensorHub();
 
   const [summary, setSummary] = useState<DashboardSummaryDto | null>(null);
+  const [systemHealth, setSystemHealth] = useState<SystemHealthData | null>(null);
   const [lastTelemetryTime, setLastTelemetryTime] = useState<Date | null>(null);
   const [isTelemetryFlashing, setIsTelemetryFlashing] = useState<boolean>(false);
 
   // 1. Initial REST API loading
   useEffect(() => {
     let isMounted = true;
-    async function loadSummary() {
+    async function loadData() {
       try {
-        const { data } = await apiClient.get<DashboardSummaryDto>('/api/Dashboard/summary');
-        if (isMounted && data) {
-          setSummary(data);
+        const [summaryRes, healthRes] = await Promise.all([
+          apiClient.get<DashboardSummaryDto>('/api/Dashboard/summary'),
+          apiClient.get<SystemHealthData>('/api/Dashboard/system-health').catch(() => null),
+        ]);
+        if (isMounted) {
+          if (summaryRes?.data) setSummary(summaryRes.data);
+          if (healthRes?.data) setSystemHealth(healthRes.data);
         }
       } catch {
         // Fallback or empty state if API offline
       }
     }
 
-    loadSummary();
+    loadData();
     return () => {
       isMounted = false;
     };
@@ -50,7 +67,6 @@ export default function DashboardPage() {
 
   // 2. Real-time SignalR Event Listeners
   useEffect(() => {
-    // Listen for live sensor telemetry
     const unsubTelemetry = onTelemetry((telemetry) => {
       setLastTelemetryTime(new Date());
       setIsTelemetryFlashing(true);
@@ -87,7 +103,6 @@ export default function DashboardPage() {
       });
     });
 
-    // Listen for device connection status changes (online/offline)
     const unsubDeviceStatus = onDeviceStatus((status) => {
       setSummary((prev) => {
         if (!prev) return null;
@@ -117,7 +132,6 @@ export default function DashboardPage() {
       });
     });
 
-    // Listen for device command status updates (actuators / pumps)
     const unsubCommand = onCommandStatus((command) => {
       if (command.action.toLowerCase().includes('pump') || command.action.toLowerCase().includes('water')) {
         const isRunning = command.statusName === 'Acknowledged' || command.statusName === 'Pending';
@@ -193,13 +207,61 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Hero Banner with Live Gateway Status */}
+      {/* System Health Status Panel */}
+      <section className="panel p-4 bg-canvas/60">
+        <div className="flex items-center justify-between border-b border-line pb-2.5 mb-3">
+          <span className="text-xs font-bold uppercase tracking-wider text-muted flex items-center gap-1.5">
+            <Server className="size-3.5 text-primary" />
+            {language === 'vi' ? 'Hạ tầng hệ thống' : 'System Infrastructure Health'}
+          </span>
+          <span className="text-[11px] text-muted">
+            {language === 'vi' ? 'Phân biệt trạng thái thực tế' : 'Live Gateway Status'}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+          {/* Backend Health */}
+          <div className="flex items-center justify-between rounded-xl border border-line bg-surface p-3">
+            <span className="text-muted font-medium">ASP.NET Core WebAPI</span>
+            <Badge variant={systemHealth?.backendStatus === 'Healthy' ? 'success' : 'default'} showDot>
+              {systemHealth?.backendStatus || 'Online'}
+            </Badge>
+          </div>
+
+          {/* MQTT Broker Health */}
+          <div className="flex items-center justify-between rounded-xl border border-line bg-surface p-3">
+            <span className="text-muted font-medium">MQTT Broker</span>
+            <Badge
+              variant={
+                systemHealth?.mqttBrokerStatus === 'Connected'
+                  ? 'success'
+                  : systemHealth?.mqttBrokerStatus === 'Disabled'
+                  ? 'default'
+                  : 'warning'
+              }
+              showDot
+            >
+              {systemHealth?.mqttBrokerStatus || (language === 'vi' ? 'Mất kết nối' : 'Disconnected')}
+            </Badge>
+          </div>
+
+          {/* SignalR Client Gateway */}
+          <div className="flex items-center justify-between rounded-xl border border-line bg-surface p-3">
+            <span className="text-muted font-medium">SignalR WebSocket</span>
+            <Badge variant={isConnected ? 'success' : 'default'} showDot>
+              {isConnected ? (transport !== 'Unknown' ? transport : 'Connected') : 'Disconnected'}
+            </Badge>
+          </div>
+        </div>
+      </section>
+
+      {/* Hero Banner with Quick Actions */}
       <section
         className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-900 p-6 text-white md:p-8 shadow-md"
         aria-labelledby="welcome-title"
       >
         <div className="pointer-events-none absolute -top-16 -right-16 size-64 rounded-full bg-white/10 blur-2xl" />
-        
+
         <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div className="max-w-xl">
             <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold backdrop-blur-xs">
@@ -210,7 +272,7 @@ export default function DashboardPage() {
                     ? 'DỮ LIỆU TỨC THỜI HOẠT ĐỘNG'
                     : 'LIVE REAL-TIME STREAMING'
                   : language === 'vi'
-                  ? 'ĐANG KẾT NỐI MÁY CHỦ'
+                  ? 'CHỜ KẾT NỐI MÁY CHỦ'
                   : 'CONNECTING TO SERVER'}
               </span>
             </div>
@@ -227,17 +289,18 @@ export default function DashboardPage() {
 
           <div className="flex flex-col gap-2 shrink-0">
             <Link
-              to="/sensors"
+              to="/irrigation"
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-emerald-900 hover:bg-emerald-50 transition-colors shadow-xs"
+            >
+              <Play className="size-4 fill-emerald-900" />
+              <span>{language === 'vi' ? 'Bật tưới nhanh' : 'Quick Irrigate'}</span>
+            </Link>
+            <Link
+              to="/sensors"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-white/15 hover:bg-white/25 px-4 py-2.5 text-xs sm:text-sm font-semibold text-white transition-colors"
             >
               <span>{language === 'vi' ? 'Xem cảm biến chi tiết' : 'View Sensor Telemetry'}</span>
               <ArrowRight className="size-4" />
-            </Link>
-            <Link
-              to="/irrigation"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-white/15 hover:bg-white/25 px-4 py-2.5 text-xs sm:text-sm font-semibold text-white transition-colors"
-            >
-              <span>{language === 'vi' ? 'Điều khiển tưới cây' : 'Irrigation Controls'}</span>
             </Link>
           </div>
         </div>
@@ -306,9 +369,7 @@ export default function DashboardPage() {
                 {formatTelemetryValue(summary?.sensors?.averageAirTemperature, '°C')}
               </span>
             </div>
-            <p className="mt-1 text-[11px] text-muted">
-              {language === 'vi' ? 'DHT22 Sensor' : 'DHT22 Sensor'}
-            </p>
+            <p className="mt-1 text-[11px] text-muted">DHT22 Sensor</p>
           </div>
 
           {/* Air Humidity */}
@@ -332,9 +393,7 @@ export default function DashboardPage() {
                 {formatTelemetryValue(summary?.sensors?.averageAirHumidity, '%')}
               </span>
             </div>
-            <p className="mt-1 text-[11px] text-muted">
-              {language === 'vi' ? 'Độ ẩm môi trường' : 'Ambient humidity'}
-            </p>
+            <p className="mt-1 text-[11px] text-muted">Ambient humidity</p>
           </div>
 
           {/* Water Temperature */}
@@ -358,9 +417,7 @@ export default function DashboardPage() {
                 {formatTelemetryValue(summary?.sensors?.averageWaterTemperature, '°C')}
               </span>
             </div>
-            <p className="mt-1 text-[11px] text-muted">
-              {language === 'vi' ? 'DS18B20 Probe' : 'DS18B20 Probe'}
-            </p>
+            <p className="mt-1 text-[11px] text-muted">DS18B20 Probe</p>
           </div>
 
           {/* Water Level */}
@@ -436,7 +493,7 @@ export default function DashboardPage() {
               <span>{t('nav_irrigation', 'Tưới nước')}</span>
             </h3>
             <Link to="/irrigation" className="text-xs text-primary font-semibold hover:underline">
-              {language === 'vi' ? 'Lịch tưới' : 'Rules'} →
+              {language === 'vi' ? 'Điều khiển' : 'Controls'} →
             </Link>
           </div>
 
@@ -496,13 +553,13 @@ export default function DashboardPage() {
               </span>
             </div>
 
-            {/* Authentication method – always static */}
+            {/* Authentication method */}
             <div className="flex items-center justify-between text-xs">
               <span className="text-muted">{language === 'vi' ? 'Xác thực:' : 'Auth:'}</span>
               <span className="font-mono text-ink">JWT Bearer</span>
             </div>
 
-            {/* Auto-reconnect – always static */}
+            {/* Auto-reconnect */}
             <div className="flex items-center justify-between text-xs">
               <span className="text-muted">{language === 'vi' ? 'Tự kết nối lại:' : 'Auto Reconnect:'}</span>
               <span className="font-semibold text-emerald-600 dark:text-emerald-400">
@@ -510,6 +567,87 @@ export default function DashboardPage() {
               </span>
             </div>
           </div>
+        </section>
+      </div>
+
+      {/* Recent Alerts & Recent Activities Section (Real Data from summary) */}
+      <div className="grid gap-5 md:grid-cols-2">
+        {/* Recent Alerts */}
+        <section className="panel space-y-3">
+          <div className="flex items-center justify-between border-b border-line pb-2.5">
+            <h3 className="text-sm font-bold text-ink flex items-center gap-2">
+              <AlertTriangle className="size-4 text-amber-500" />
+              <span>{language === 'vi' ? 'Cảnh báo gần đây' : 'Recent Alerts'}</span>
+            </h3>
+            <Link to="/alerts" className="text-xs text-primary font-semibold hover:underline">
+              {language === 'vi' ? 'Tất cả' : 'View all'} →
+            </Link>
+          </div>
+
+          {!summary?.recentAlerts || summary.recentAlerts.length === 0 ? (
+            <div className="py-6 text-center text-xs text-muted">
+              <CheckCircle2 className="mx-auto size-6 text-emerald-500 mb-1" />
+              <p>{language === 'vi' ? 'Không có cảnh báo bất thường nào' : 'No active alerts'}</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {summary.recentAlerts.slice(0, 4).map((alert) => (
+                <div
+                  key={alert.id}
+                  className="rounded-xl border border-line bg-canvas p-2.5 flex items-center justify-between text-xs"
+                >
+                  <div>
+                    <p className="font-bold text-ink">{alert.title}</p>
+                    <p className="text-[11px] text-muted">{alert.message}</p>
+                  </div>
+                  <span className="text-[10px] text-muted font-mono whitespace-nowrap">
+                    {new Date(alert.createdAtUtc).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Recent Irrigation Activities */}
+        <section className="panel space-y-3">
+          <div className="flex items-center justify-between border-b border-line pb-2.5">
+            <h3 className="text-sm font-bold text-ink flex items-center gap-2">
+              <History className="size-4 text-primary" />
+              <span>{language === 'vi' ? 'Hoạt động tưới gần đây' : 'Recent Irrigation Activities'}</span>
+            </h3>
+            <Link to="/history" className="text-xs text-primary font-semibold hover:underline">
+              {language === 'vi' ? 'Nhật ký' : 'Full log'} →
+            </Link>
+          </div>
+
+          {!summary?.recentIrrigationLogs || summary.recentIrrigationLogs.length === 0 ? (
+            <div className="py-6 text-center text-xs text-muted">
+              <Droplets className="mx-auto size-6 text-muted/60 mb-1" />
+              <p>{language === 'vi' ? 'Chưa có hoạt động tưới nào' : 'No watering activities yet'}</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {summary.recentIrrigationLogs.slice(0, 4).map((log) => (
+                <div
+                  key={log.id}
+                  className="rounded-xl border border-line bg-canvas p-2.5 flex items-center justify-between text-xs"
+                >
+                  <div>
+                    <span className="font-semibold text-ink">
+                      {log.mode === 1 ? (language === 'vi' ? 'Tưới thủ công' : 'Manual') : (language === 'vi' ? 'Tưới tự động' : 'Automatic')}
+                    </span>
+                    <p className="text-[11px] text-muted">
+                      {log.durationSeconds ?? 0}s • {log.waterAmountMl ?? 0}ml
+                    </p>
+                  </div>
+                  <span className="text-[10px] text-muted font-mono whitespace-nowrap">
+                    {new Date(log.startedAtUtc).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
       </div>
     </div>
