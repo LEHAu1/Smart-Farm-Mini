@@ -5,6 +5,7 @@ import { GoogleOAuthProvider, GoogleLogin, type CredentialResponse } from '@reac
 import AuthLayout from '../../layouts/AuthLayout';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import { loginDemo, loginWithGoogle } from '../../services/auth-service';
 import { validateLogin } from '../../utils/validate-login';
 import type { LoginCredentials, LoginErrors } from '../../types/auth';
@@ -35,6 +36,14 @@ export default function LoginPage() {
     // Safe fallback for unit tests running outside LanguageProvider
   }
   const t = langContext?.t || ((key: string, def?: string) => def ?? key);
+
+  let themeContext: ReturnType<typeof useTheme> | null = null;
+  try {
+    themeContext = useTheme();
+  } catch {
+    // Safe fallback for unit tests
+  }
+  const isDark = themeContext?.theme === 'dark';
 
   const [credentials, setCredentials] = useState<LoginCredentials>({ email: '', password: '' });
   const [errors, setErrors] = useState<LoginErrors>({});
@@ -141,9 +150,9 @@ export default function LoginPage() {
           )}
 
           {/* Google Sign-in Section */}
-          <div className="space-y-2">
+          <div className="w-full">
             {isRealGoogleClientId ? (
-              <div className="flex justify-center w-full">
+              <div className="w-full flex justify-center [&>div]:!w-full [&>div>iframe]:!w-full [&_iframe]:!w-full [&_iframe]:!max-w-full rounded-xl overflow-hidden shadow-xs hover:shadow-md transition-shadow">
                 <GoogleLogin
                   onSuccess={(credentialResponse: CredentialResponse) => {
                     if (credentialResponse.credential) {
@@ -155,10 +164,10 @@ export default function LoginPage() {
                   }}
                   useOneTap
                   shape="rectangular"
-                  theme="outline"
+                  theme={isDark ? 'filled_black' : 'outline'}
                   size="large"
                   text="signin_with"
-                  width="100%"
+                  width="380"
                 />
               </div>
             ) : (
@@ -166,7 +175,7 @@ export default function LoginPage() {
                 type="button"
                 disabled={isSubmitting || isGoogleSubmitting}
                 onClick={handleGoogleCustomClick}
-                className="w-full min-h-[48px] rounded-xl border border-line bg-surface hover:bg-surface-hover text-ink font-semibold text-sm shadow-xs transition-all flex items-center justify-center gap-3 focus:outline-none focus:ring-4 focus:ring-slate-100 dark:focus:ring-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                className="w-full min-h-[44px] rounded-xl border border-line/80 bg-surface hover:bg-surface-hover text-ink font-semibold text-sm shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-3 focus:outline-none focus:ring-4 focus:ring-slate-100 dark:focus:ring-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {/* Official Google G Logo SVG */}
                 <svg className="size-5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
@@ -195,10 +204,10 @@ export default function LoginPage() {
           {/* Divider */}
           <div className="relative my-4">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-line" />
+              <div className="w-full border-t border-line/70" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-surface px-3 text-muted font-semibold tracking-wider">
+              <span className="bg-surface px-3 text-muted/80 font-bold tracking-wider text-[11px]">
                 {t('auth_or_divider', 'HOẶC TIẾP TỤC VỚI EMAIL')}
               </span>
             </div>
@@ -228,7 +237,7 @@ export default function LoginPage() {
                   onChange={(event) => updateField('email', event.target.value)}
                   aria-invalid={Boolean(errors.email)}
                   aria-describedby={errors.email ? 'email-error' : undefined}
-                  className={`w-full rounded-xl border bg-surface pl-10 pr-4 py-3 text-sm font-medium text-ink shadow-xs transition-all placeholder:text-muted/60 focus:outline-none focus:ring-4 disabled:bg-canvas disabled:text-muted ${
+                  className={`w-full rounded-xl border bg-surface/80 hover:border-slate-300 dark:hover:border-slate-600 focus:bg-surface pl-10 pr-4 py-3 text-sm font-medium text-ink shadow-2xs focus:shadow-xs transition-all placeholder:text-muted/60 focus:outline-none focus:ring-4 disabled:bg-canvas disabled:text-muted ${
                     errors.email
                       ? 'border-danger focus:border-danger focus:ring-danger/10'
                       : 'border-line focus:border-primary focus:ring-primary/15'
@@ -266,7 +275,7 @@ export default function LoginPage() {
                   onChange={(event) => updateField('password', event.target.value)}
                   aria-invalid={Boolean(errors.password)}
                   aria-describedby={errors.password ? 'password-error' : undefined}
-                  className={`w-full rounded-xl border bg-surface pl-10 pr-20 py-3 text-sm font-medium text-ink shadow-xs transition-all placeholder:text-muted/60 focus:outline-none focus:ring-4 disabled:bg-canvas disabled:text-muted ${
+                  className={`w-full rounded-xl border bg-surface/80 hover:border-slate-300 dark:hover:border-slate-600 focus:bg-surface pl-10 pr-20 py-3 text-sm font-medium text-ink shadow-2xs focus:shadow-xs transition-all placeholder:text-muted/60 focus:outline-none focus:ring-4 disabled:bg-canvas disabled:text-muted ${
                     errors.password
                       ? 'border-danger focus:border-danger focus:ring-danger/10'
                       : 'border-line focus:border-primary focus:ring-primary/15'
@@ -291,11 +300,11 @@ export default function LoginPage() {
               )}
             </div>
 
-            {/* Submit Button */}
+            {/* Submit Button with Gradient and Depth */}
             <button
               type="submit"
               disabled={isSubmitting || isGoogleSubmitting}
-              className="w-full min-h-[48px] rounded-xl bg-primary hover:bg-primary-hover active:bg-primary-active text-white font-semibold text-sm shadow-md shadow-primary/20 transition-all flex items-center justify-center gap-2 focus:outline-none focus:ring-4 focus:ring-primary/20 disabled:cursor-wait disabled:opacity-70 mt-2"
+              className="w-full min-h-[48px] rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-800 hover:from-emerald-700 hover:to-teal-900 active:scale-[0.99] text-white font-semibold text-sm shadow-md shadow-emerald-800/25 hover:shadow-lg hover:shadow-emerald-800/35 transition-all flex items-center justify-center gap-2 focus:outline-none focus:ring-4 focus:ring-primary/20 disabled:cursor-wait disabled:opacity-70 mt-2"
             >
               {isSubmitting ? (
                 <>

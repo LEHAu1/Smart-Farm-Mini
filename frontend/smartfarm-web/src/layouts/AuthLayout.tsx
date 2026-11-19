@@ -125,16 +125,20 @@ export default function AuthLayout({
 
       {/* Cột phải: Form Content Side */}
       <section
-        className="flex min-h-screen items-center justify-center px-4 py-12 sm:px-8 lg:px-12 bg-canvas relative"
+        className="flex min-h-screen items-center justify-center px-4 py-12 sm:px-8 lg:px-12 bg-canvas relative overflow-hidden"
         aria-labelledby="auth-title"
       >
+        {/* Ambient background depth glows */}
+        <div className="pointer-events-none absolute -top-40 -right-20 size-96 rounded-full bg-emerald-500/8 dark:bg-emerald-400/5 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-40 -left-20 size-96 rounded-full bg-teal-500/8 dark:bg-teal-400/5 blur-3xl" />
+
         {/* Top-Right Theme & Language Toolbar */}
-        <div className="absolute top-4 right-4 sm:top-6 sm:right-6 flex items-center gap-2">
+        <div className="absolute top-4 right-4 sm:top-6 sm:right-6 flex items-center gap-2 z-20">
           {/* Theme Toggle */}
           <button
             type="button"
             onClick={toggleTheme}
-            className="p-2 rounded-xl border border-line bg-surface text-muted hover:text-ink hover:bg-surface-hover focus-ring transition-colors shadow-xs"
+            className="p-2 rounded-xl border border-line bg-surface/90 backdrop-blur-xs text-muted hover:text-ink hover:bg-surface-hover focus-ring transition-colors shadow-xs"
             title={theme === 'dark' ? t('theme_light', 'Chế độ sáng') : t('theme_dark', 'Chế độ tối')}
             aria-label={t('theme_toggle', 'Chuyển đổi giao diện sáng/tối')}
           >
@@ -149,7 +153,7 @@ export default function AuthLayout({
           <button
             type="button"
             onClick={toggleLanguage}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-line bg-surface text-ink hover:bg-surface-hover focus-ring text-xs font-bold transition-colors shadow-xs"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-line bg-surface/90 backdrop-blur-xs text-ink hover:bg-surface-hover focus-ring text-xs font-bold transition-colors shadow-xs"
             title={t('language_select', 'Chọn ngôn ngữ')}
             aria-label={t('language_select', 'Chọn ngôn ngữ')}
           >
@@ -158,7 +162,7 @@ export default function AuthLayout({
           </button>
         </div>
 
-        <div className="w-full max-w-md bg-surface p-7 sm:p-9 rounded-3xl border border-line shadow-xl">
+        <div className="w-full max-w-md bg-surface/95 backdrop-blur-md p-7 sm:p-9 rounded-3xl border border-line/80 shadow-2xl shadow-slate-900/5 dark:shadow-black/50 ring-1 ring-black/5 dark:ring-white/10 relative z-10 transition-all">
           {/* Mobile Brand Header */}
           <div className="mb-6 flex items-center gap-3 font-bold text-primary lg:hidden">
             <span className="flex size-10 items-center justify-center rounded-xl bg-primary text-white shadow-sm">
