@@ -10,7 +10,7 @@ import { validateLogin } from '../../utils/validate-login';
 import type { LoginCredentials, LoginErrors } from '../../types/auth';
 import { Mail, Lock, Eye, EyeOff, AlertCircle, ArrowRight } from 'lucide-react';
 
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '480776599363-msu0jv4a0dl5js8h2kdn9nd4vo97ndga.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '847311755277-hkm959nlmjee42aiccr313pah9mtokd2.apps.googleusercontent.com';
 const isRealGoogleClientId = Boolean(
   GOOGLE_CLIENT_ID &&
   !GOOGLE_CLIENT_ID.includes('YOUR_GOOGLE_CLIENT_ID') &&
@@ -208,7 +208,6 @@ export default function LoginPage() {
                   theme="outline"
                   size="large"
                   text="signin_with"
-                  width="100%"
                 />
               </div>
             ) : (
