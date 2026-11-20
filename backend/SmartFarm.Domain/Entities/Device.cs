@@ -35,6 +35,12 @@ namespace SmartFarm.Domain.Entities
         // Thời điểm cuối cùng nhận được tín hiệu từ ESP32
         public DateTimeOffset? LastSeenAtUtc { get; private set; }
 
+        // Soft Delete — thiết bị đã xóa khỏi hệ thống (vẫn giữ lịch sử dữ liệu)
+        public bool IsDeleted { get; private set; }
+
+        // Thời điểm thiết bị bị xóa (UTC); null = chưa xóa
+        public DateTimeOffset? DeletedAtUtc { get; private set; }
+
         // Constructor dành cho việc khởi tạo Entity
         public Device(
             Guid ownerId,
@@ -127,6 +133,18 @@ namespace SmartFarm.Domain.Entities
 
             IsActive = true;
             UpdatedAtUtc = updatedAtUtc;
+        }
+
+        // Soft Delete — đánh dấu xóa, giữ toàn bộ dữ liệu lịch sử liên quan
+        public void SoftDelete(DateTimeOffset deletedAtUtc)
+        {
+            ValidateUtc(deletedAtUtc, nameof(deletedAtUtc));
+
+            IsDeleted = true;
+            IsActive = false;
+            IsOnline = false;
+            DeletedAtUtc = deletedAtUtc;
+            UpdatedAtUtc = deletedAtUtc;
         }
 
         // Chuẩn hóa mô tả

@@ -187,6 +187,31 @@ namespace SmartFarm.WebAPI.Controllers
             return NoContent();
         }
 
+        /// <summary>
+        /// Xóa thiết bị IoT (Soft Delete — dữ liệu lịch sử được giữ lại)
+        /// </summary>
+        [HttpDelete("{id:guid}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+        {
+            var (userId, isAdmin) = GetCurrentUserContext();
+            if (userId == Guid.Empty)
+                return Unauthorized();
+
+            try
+            {
+                await _deviceService.DeleteAsync(id, userId, isAdmin, cancellationToken);
+                return NoContent();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, new { message = "Bạn không có quyền xóa thiết bị này." });
+            }
+        }
+
         private (Guid UserId, bool IsAdmin) GetCurrentUserContext()
         {
             var subClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);

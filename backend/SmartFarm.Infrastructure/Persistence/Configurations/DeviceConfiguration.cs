@@ -60,6 +60,16 @@ namespace SmartFarm.Infrastructure.Persistence.Configurations
                 .IsRequired();
 
             builder.Property(d => d.LastSeenAtUtc);
+
+            // Soft Delete
+            builder.Property(d => d.IsDeleted)
+                .IsRequired()
+                .HasDefaultValue(false);
+
+            builder.Property(d => d.DeletedAtUtc);
+
+            // Global Query Filter: ẩn thiết bị đã bị Soft Delete khỏi mọi query thông thường
+            builder.HasQueryFilter(d => !d.IsDeleted);
         }
     }
 }
