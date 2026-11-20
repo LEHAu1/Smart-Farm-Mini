@@ -15,9 +15,12 @@
 #include <cstdio>
 #include <cstring>
 
-// This production path intentionally has no relay, pump, command subscription,
-// or acknowledgement implementation. YL-69 raw ADC is also intentionally not
-// published as SoilMoisture: an in-soil dry/wet calibration has not been made.
+// This telemetry path has no relay, pump, or command subscription. Soil moisture
+// currently uses temporary air/water endpoints for demo measurement only; replace
+// them with calibration values measured in the actual soil before relying on %.
+constexpr uint8_t SoilMoisturePin = 34;
+constexpr uint16_t DemoSoilDryRaw = 4095;
+constexpr uint16_t DemoSoilWetRaw = 1400;
 
 WiFiClientSecure secureNetwork;
 WiFiClient plainNetwork;
@@ -128,6 +131,26 @@ void enqueue(const char* sensorType, float value, const char* unit) {
   ++queueSize;
 }
 
+uint16_t readSoilAdcAverage() {
+  constexpr uint8_t sampleCount = 16;
+  uint32_t total = 0;
+  for (uint8_t sample = 0; sample < sampleCount; ++sample) {
+    total += static_cast<uint16_t>(analogRead(SoilMoisturePin));
+    delay(5);
+  }
+  return static_cast<uint16_t>((total + sampleCount / 2) / sampleCount);
+}
+
+float soilRawToPercent(uint16_t raw) {
+  const float span = static_cast<float>(DemoSoilWetRaw) - DemoSoilDryRaw;
+  if (span == 0.0F) return 0.0F;
+
+  float percent = 100.0F * (static_cast<float>(raw) - DemoSoilDryRaw) / span;
+  if (percent < 0.0F) percent = 0.0F;
+  if (percent > 100.0F) percent = 100.0F;
+  return percent;
+}
+
 void sampleSensors() {
   const float temperatureC = dht.readTemperature();
   const float humidityPercent = dht.readHumidity();
@@ -135,6 +158,14 @@ void sampleSensors() {
   else Serial.println("DHT11 temperature unavailable; sample skipped.");
   if (std::isfinite(humidityPercent)) enqueue("AirHumidity", humidityPercent, "%");
   else Serial.println("DHT11 humidity unavailable; sample skipped.");
+  Serial.printf("DHT raw: T=%.1f C, RH=%.1f%%\n",
+              temperatureC, humidityPercent);
+
+  const uint16_t soilRaw = readSoilAdcAverage();
+  const float soilMoisturePercent = soilRawToPercent(soilRaw);
+  Serial.printf("YL-69 temporary calibration: ADC=%u, soil=%.1f%% (dry=%u, wet=%u)\n",
+                soilRaw, soilMoisturePercent, DemoSoilDryRaw, DemoSoilWetRaw);
+  enqueue("SoilMoisture", soilMoisturePercent, "%");
 
   // INPUT_PULLUP plus the float wired to GND makes LOW mean closed. This
   // configured mapping is explicitly binary (0/100), not measured tank level.
@@ -240,15 +271,17 @@ bool publishNext() {
 
 void setup() {
   Serial.begin(115200);
+  analogReadResolution(12);
+  pinMode(SoilMoisturePin, INPUT);
   pinMode(config::FloatSwitchPin, INPUT_PULLUP);
   dht.begin();
   WiFi.setAutoReconnect(true);
 
   if (config::MqttUseTls) mqtt.begin(config::MqttHost, config::MqttPort, secureNetwork);
   else mqtt.begin(config::MqttHost, config::MqttPort, plainNetwork);
-  mqtt.setOptions(30, true, 10);
+  mqtt.setOptions(30, true, 3000);
   Serial.println("Smart Farm Mini telemetry firmware; no actuator or command path.");
-  Serial.println("YL-69 SoilMoisture is disabled until an in-soil calibration is configured.");
+  Serial.println("YL-69 soil percentage uses TEMPORARY endpoints (dry=4095, wet=1400); calibrate in soil before relying on it.");
 }
 
 void loop() {

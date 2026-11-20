@@ -35,10 +35,7 @@ namespace SmartFarm.WebAPI.Extensions
 
                 options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
                 {
-                    {
-                        new OpenApiSecuritySchemeReference("Bearer"),
-                        new List<string>()
-                    }
+                    [new OpenApiSecuritySchemeReference("Bearer", document)] = []
                 });
             });
 
