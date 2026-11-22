@@ -121,6 +121,6 @@ public sealed class AuthProfileServiceTests
             .Options;
         var context = new SmartFarmDbContext(options);
         return new AuthService(userManager, context, Mock.Of<ITokenService>(),
-            Options.Create(new JwtSettings()));
+            Mock.Of<IGoogleAuthService>(), Options.Create(new JwtSettings()));
     }
 }

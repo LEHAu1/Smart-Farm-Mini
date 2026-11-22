@@ -7,8 +7,7 @@ namespace SmartFarm.Infrastructure.Identity
 {
     /// <summary>
     /// User entity mở rộng từ IdentityUser&lt;Guid&gt;.
-    /// Thêm DisplayName và CreatedAtUtc theo thiết kế Database.
-    /// Single User model — không dùng Roles.
+    /// Hỗ trợ đăng nhập truyền thống (Email/Password) và Google OAuth 2.0 (GoogleSubjectId).
     /// </summary>
     public class AppUser : IdentityUser<Guid>
     {
@@ -16,6 +15,22 @@ namespace SmartFarm.Infrastructure.Identity
         /// Tên hiển thị trên dashboard.
         /// </summary>
         public string? DisplayName { get; set; }
+
+        /// <summary>
+        /// Google Subject ID (sub claim trong Google ID Token).
+        /// Dùng làm định danh duy nhất cho tài khoản đăng nhập bằng Google.
+        /// </summary>
+        public string? GoogleSubjectId { get; set; }
+
+        /// <summary>
+        /// Nhà cung cấp xác thực ("Local", "Google").
+        /// </summary>
+        public string? AuthProvider { get; set; } = "Local";
+
+        /// <summary>
+        /// Đường dẫn ảnh đại diện (avatar) từ Google Profile.
+        /// </summary>
+        public string? AvatarUrl { get; set; }
 
         /// <summary>
         /// Thời điểm tạo tài khoản (UTC).
@@ -27,4 +42,3 @@ namespace SmartFarm.Infrastructure.Identity
         public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
     }
 }
-

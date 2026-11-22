@@ -24,5 +24,6 @@ namespace SmartFarm.Application.Contracts.Services
         Task<DeviceDto> UpdateAsync(Guid id, Guid currentUserId, bool isAdmin, UpdateDeviceRequest request, CancellationToken cancellationToken = default);
         Task DeactivateAsync(Guid id, CancellationToken cancellationToken = default);
         Task ActivateAsync(Guid id, CancellationToken cancellationToken = default);
+        Task DeleteAsync(Guid id, Guid currentUserId, bool isAdmin, CancellationToken cancellationToken = default);
     }
 }

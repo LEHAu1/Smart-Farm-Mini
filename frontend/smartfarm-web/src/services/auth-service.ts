@@ -1,161 +1,128 @@
-import axios from 'axios'
-import type { AxiosError, InternalAxiosRequestConfig } from 'axios'
-import { apiClient } from './api-client'
 import {
-  AUTH_SESSION_EXPIRED_EVENT,
-  AUTH_SESSION_UPDATED_EVENT,
-  clearAuthSession,
-  readAuthSession,
-  saveAuthSession,
-} from './auth-storage'
-import type { AuthSession, AuthUser, LoginCredentials } from '../types/auth'
+  apiClient,
+  ACCESS_TOKEN_KEY,
+  REFRESH_TOKEN_KEY,
+  USER_INFO_KEY,
+} from './api-client';
+import type {
+  AuthResponseDto,
+  GoogleLoginRequest,
+  LoginCredentials,
+  LoginRequest,
+  RegisterRequest,
+  UserDto,
+  UserProfileDto,
+  UpdateProfileRequest,
+  ChangePasswordRequest,
+} from '../types/auth';
 
-type AuthResponse = AuthSession
-let sessionRestorePromise: Promise<AuthSession | null> | null = null
-let refreshInProgress: Promise<AuthSession> | null = null
+// Demo fallback credentials
+export const demoCredentials: LoginCredentials = {
+  email: 'demo@smartfarm.local',
+  password: 'SmartFarm123!',
+};
 
-type RetryableRequestConfig = InternalAxiosRequestConfig & { _authRetry?: boolean }
-
-export async function login(credentials: LoginCredentials): Promise<AuthSession> {
-  const response = await apiClient.post<AuthResponse>('/api/Auth/login', {
-    userNameOrEmail: credentials.email.trim(),
-    password: credentials.password,
-  })
-  return storeAuthResponse(response.data)
-}
-
-export async function refreshAuthSession(refreshToken: string): Promise<AuthSession> {
-  try {
-    const response = await apiClient.post<AuthResponse>('/api/Auth/refresh-token', { refreshToken })
-    return storeAuthResponse(response.data)
-  } catch (error) {
-    expireSession()
-    throw error
+export async function login(request: LoginRequest): Promise<AuthResponseDto> {
+  const { data } = await apiClient.post<AuthResponseDto>('/api/Auth/login', request);
+  localStorage.setItem(ACCESS_TOKEN_KEY, data.accessToken);
+  localStorage.setItem(REFRESH_TOKEN_KEY, data.refreshToken);
+  if (data.user) {
+    localStorage.setItem(USER_INFO_KEY, JSON.stringify(data.user));
   }
+  return data;
 }
 
-export async function getCurrentUser(): Promise<AuthUser> {
-  const response = await apiClient.get<AuthUser>('/api/Auth/me')
-  return response.data
-}
-
-export function restoreAuthSession(): Promise<AuthSession | null> {
-  // React StrictMode can run mount effects twice in development. Share the
-  // refresh request so one rotated refresh token is never submitted twice.
-  if (!sessionRestorePromise) {
-    sessionRestorePromise = restoreSessionOnce().finally(() => {
-      sessionRestorePromise = null
-    })
+export async function loginWithGoogle(request: GoogleLoginRequest): Promise<AuthResponseDto> {
+  const { data } = await apiClient.post<AuthResponseDto>('/api/Auth/google', request);
+  localStorage.setItem(ACCESS_TOKEN_KEY, data.accessToken);
+  localStorage.setItem(REFRESH_TOKEN_KEY, data.refreshToken);
+  if (data.user) {
+    localStorage.setItem(USER_INFO_KEY, JSON.stringify(data.user));
   }
-  return sessionRestorePromise
+  return data;
 }
 
-async function restoreSessionOnce(): Promise<AuthSession | null> {
-  const saved = readAuthSession()
-  if (!saved) return null
-
-  if (Date.parse(saved.expiresAtUtc) <= Date.now() + 30_000) {
-    return refreshAuthSession(saved.refreshToken)
+export async function register(request: RegisterRequest): Promise<AuthResponseDto> {
+  const { data } = await apiClient.post<AuthResponseDto>('/api/Auth/register', request);
+  localStorage.setItem(ACCESS_TOKEN_KEY, data.accessToken);
+  localStorage.setItem(REFRESH_TOKEN_KEY, data.refreshToken);
+  if (data.user) {
+    localStorage.setItem(USER_INFO_KEY, JSON.stringify(data.user));
   }
-
-  try {
-    const user = await getCurrentUser()
-    // A 401 from /me may have rotated tokens inside the response interceptor.
-    // Preserve the newest pair instead of writing the original refresh token back.
-    const current = readAuthSession() ?? saved
-    const restored = { ...current, user: { ...current.user, ...user } }
-    saveAuthSession(restored)
-    return restored
-  } catch (error) {
-    // Keep a still-valid tab session usable during a temporary network outage.
-    if (axios.isAxiosError(error) && !error.response) return saved
-    throw error
-  }
+  return data;
 }
 
-function storeAuthResponse(response: AuthResponse): AuthSession {
-  if (
-    !response?.accessToken ||
-    !response.refreshToken ||
-    !response.expiresAtUtc ||
-    !response.user?.id ||
-    !response.user.userName ||
-    !response.user.email ||
-    !response.user.role
-  ) {
-    throw new Error('Máy chủ trả về dữ liệu phiên đăng nhập không hợp lệ.')
-  }
-  saveAuthSession(response)
-  window.dispatchEvent(new Event(AUTH_SESSION_UPDATED_EVENT))
-  return response
-}
-
-export async function logout(refreshToken: string): Promise<void> {
-  try {
-    await apiClient.post('/api/Auth/logout', { refreshToken })
-  } finally {
-    clearAuthSession()
-  }
-}
-
-apiClient.interceptors.response.use(
-  (response) => response,
-  async (error: AxiosError) => {
-    const config = error.config as RetryableRequestConfig | undefined
-    if (
-      error.response?.status !== 401 ||
-      !config ||
-      config._authRetry ||
-      isAuthEndpoint(config.url)
-    ) {
-      return Promise.reject(error)
-    }
-
-    const saved = readAuthSession()
-    if (!saved) return Promise.reject(error)
-
-    config._authRetry = true
+export async function logout(): Promise<void> {
+  const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+  if (refreshToken) {
     try {
-      if (!refreshInProgress) {
-        refreshInProgress = refreshAuthSession(saved.refreshToken).finally(() => {
-          refreshInProgress = null
-        })
-      }
-      const refreshed = await refreshInProgress
-      config.headers.Authorization = `Bearer ${refreshed.accessToken}`
-      return apiClient.request(config)
-    } catch (refreshError) {
-      expireSession()
-      return Promise.reject(refreshError)
-    }
-  },
-)
-
-export function getAuthErrorMessage(error: unknown): string {
-  if (axios.isAxiosError(error)) {
-    if (error.response?.status === 401) {
-      return 'Tên đăng nhập hoặc email/mật khẩu không đúng. Vui lòng thử lại.'
-    }
-    if (!error.response) {
-      return 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối rồi thử lại.'
-    }
-
-    const responseBody = error.response.data as { message?: unknown; title?: unknown } | string | undefined
-    if (typeof responseBody === 'string' && responseBody.trim()) return responseBody
-    if (responseBody && typeof responseBody === 'object') {
-      if (typeof responseBody.message === 'string' && responseBody.message.trim()) return responseBody.message
-      if (typeof responseBody.title === 'string' && responseBody.title.trim()) return responseBody.title
+      await apiClient.post('/api/Auth/logout', { refreshToken });
+    } catch {
+      // Ignored: cleanup tokens locally regardless
     }
   }
-
-  return 'Không thể đăng nhập. Vui lòng thử lại.'
+  localStorage.removeItem(ACCESS_TOKEN_KEY);
+  localStorage.removeItem(REFRESH_TOKEN_KEY);
+  localStorage.removeItem(USER_INFO_KEY);
 }
 
-function isAuthEndpoint(url?: string): boolean {
-  return ['/api/Auth/login', '/api/Auth/refresh-token', '/api/Auth/logout'].some((path) => url?.includes(path))
+export async function getCurrentUserProfile(): Promise<UserProfileDto> {
+  try {
+    const { data } = await apiClient.get<UserProfileDto>('/api/Auth/me');
+    return data;
+  } catch {
+    const stored = getStoredUser();
+    if (stored) {
+      return {
+        id: stored.id,
+        userName: stored.userName,
+        email: stored.email,
+        displayName: stored.displayName,
+        role: stored.role,
+        authProvider: stored.authProvider || 'Local',
+        avatarUrl: stored.avatarUrl,
+        createdAtUtc: new Date().toISOString(),
+      };
+    }
+    throw new Error('Chưa đăng nhập');
+  }
 }
 
-function expireSession(): void {
-  clearAuthSession()
-  window.dispatchEvent(new Event(AUTH_SESSION_EXPIRED_EVENT))
+export async function updateProfile(request: UpdateProfileRequest): Promise<UserProfileDto> {
+  const { data } = await apiClient.put<UserProfileDto>('/api/Auth/profile', request);
+  const stored = getStoredUser();
+  if (stored) {
+    localStorage.setItem(
+      USER_INFO_KEY,
+      JSON.stringify({ ...stored, displayName: data.displayName })
+    );
+  }
+  return data;
+}
+
+export async function changePassword(request: ChangePasswordRequest): Promise<void> {
+  await apiClient.post('/api/Auth/change-password', request);
+}
+
+export function getStoredUser(): UserDto | null {
+  const raw = localStorage.getItem(USER_INFO_KEY);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as UserDto;
+  } catch {
+    return null;
+  }
+}
+
+export function isAuthenticated(): boolean {
+  return Boolean(localStorage.getItem(ACCESS_TOKEN_KEY));
+}
+
+// Backward-compatible loginDemo adapter for tests and quick login
+export async function loginDemo(credentials: LoginCredentials): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  await login({
+    userNameOrEmail: credentials.email,
+    password: credentials.password,
+  });
 }

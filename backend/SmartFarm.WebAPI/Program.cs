@@ -24,14 +24,22 @@ namespace SmartFarm.WebAPI
 
             builder.Services.PostConfigure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
             {
+                options.Events ??= new JwtBearerEvents();
                 var previousHandler = options.Events.OnMessageReceived;
                 options.Events.OnMessageReceived = async context =>
                 {
-                    await previousHandler(context);
+                    if (previousHandler != null)
+                    {
+                        await previousHandler(context);
+                    }
                     if (string.IsNullOrEmpty(context.Token) &&
                         context.Request.Path.StartsWithSegments("/hubs/sensors"))
                     {
-                        context.Token = context.Request.Query["access_token"];
+                        var accessToken = context.Request.Query["access_token"];
+                        if (!string.IsNullOrEmpty(accessToken))
+                        {
+                            context.Token = accessToken;
+                        }
                     }
                 };
             });
@@ -47,17 +55,17 @@ namespace SmartFarm.WebAPI
             // 4. Đăng ký Swagger UI / OpenAPI Documentation (hỗ trợ JWT Bearer)
             builder.Services.AddSwaggerDocumentation();
 
-            // 5. Đăng ký CORS cho Frontend React (Development)
+            // 5. Đăng ký CORS cho Frontend React (Development & SignalR Credentials)
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("DevelopmentCors", policy =>
                 {
-                policy.WithOrigins(
-        "http://127.0.0.1:5173",
-        "http://localhost:5173")
-      .AllowAnyMethod()
-      .AllowAnyHeader()
-      .AllowCredentials();
+                    policy.WithOrigins(
+                            "http://127.0.0.1:5173",
+                            "http://localhost:5173")
+                          .AllowAnyMethod()
+                          .AllowAnyHeader()
+                          .AllowCredentials();
                 });
             });
 

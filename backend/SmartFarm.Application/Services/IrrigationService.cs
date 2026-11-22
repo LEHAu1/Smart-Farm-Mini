@@ -248,10 +248,12 @@ namespace SmartFarm.Application.Services
             IrrigationMode? mode,
             int pageNumber,
             int pageSize,
+            DateTimeOffset? fromUtc = null,
+            DateTimeOffset? toUtc = null,
             CancellationToken cancellationToken = default)
         {
             var (items, totalCount) = await _logRepository.GetPagedAsync(
-                ownerId, deviceId, mode, pageNumber, pageSize, cancellationToken);
+                ownerId, deviceId, mode, pageNumber, pageSize, fromUtc, toUtc, cancellationToken);
 
             var dtos = items.Select(MapLogToDto).ToList();
             return new PageResult<IrrigationLogDto>(dtos, totalCount, pageNumber < 1 ? 1 : pageNumber, pageSize < 1 ? 20 : Math.Min(pageSize, 100));

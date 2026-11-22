@@ -1,167 +1,610 @@
-import { mockDashboardData } from './mock-data'
-import { getStoredAccessToken } from '../../services/auth-storage'
-import { useSensorHub } from '../../hooks/useSensorHub'
-import PumpControl from '../../components/devices/PumpControl'
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { useSensorHub } from '../../hooks/useSensorHub';
+import { apiClient } from '../../services/api-client';
+import type { DashboardSummaryDto } from '../../types/dashboard';
+import type { SensorTelemetryDto } from '../../types/sensor';
+import { StatusDot } from '../../components/common/StatusDot';
+import { Badge } from '../../components/common/Badge';
+import {
+  Sprout,
+  Droplets,
+  Thermometer,
+  Wind,
+  Waves,
+  Cpu,
+  Activity,
+  Radio,
+  Clock,
+  ArrowRight,
+  Server,
+  AlertTriangle,
+  History,
+  CheckCircle2,
+  Play,
+} from 'lucide-react';
 
-const sensorAccent: Record<(typeof mockDashboardData.sensors)[number]['accent'], string> = {
-  green: 'bg-[#e7f1e9] text-[#216348]',
-  blue: 'bg-[#e8f4fb] text-[#106493]',
-  amber: 'bg-[#fff5e6] text-[#a65300]',
+interface SystemHealthData {
+  backendStatus: string;
+  databaseStatus: string;
+  mqttBrokerStatus: string;
+  isMqttEnabled: boolean;
 }
 
 export default function DashboardPage() {
-  const { status: hubStatus, telemetry, devices: liveDevices, isTelemetryStale } = useSensorHub(Boolean(getStoredAccessToken()))
-  const hasLiveTelemetry = Boolean(telemetry && Object.values(telemetry).some((value) => typeof value === 'number'))
-  const isRealtimeTelemetry = telemetry?.source === 'signalr'
-  const liveSensors: Record<string, number | null | undefined> = {
-    'soil-moisture': telemetry?.soilMoisture,
-    'air-temperature': telemetry?.airTemperature,
-    'air-humidity': telemetry?.airHumidity,
-    'water-temperature': telemetry?.waterTemperature,
-    'water-level': telemetry?.waterLevel,
-  }
-  const visibleDevices = liveDevices.length > 0
-    ? liveDevices.map((device) => ({
-        id: device.deviceId,
-        name: device.name || device.deviceCode,
-        kind: device.deviceCode,
-        status: device.isOnline ? 'Online' : 'Ngoại tuyến',
-        detail: device.lastSeenAtUtc
-          ? `Lần cuối ghi nhận: ${new Date(device.lastSeenAtUtc).toLocaleString('vi-VN')}`
-          : 'Chưa có thời gian ghi nhận gần nhất',
-        initials: (device.name || device.deviceCode || 'D').slice(0, 1).toUpperCase(),
-        isLive: true,
-        isController: /esp32|controller|điều khiển/i.test(`${device.name} ${device.deviceCode}`),
-      }))
-    : mockDashboardData.devices.map((device) => ({ ...device, isLive: false, isController: false }))
+  const { t, language } = useLanguage();
+  const { isConnected, connectionStatus, transport, onTelemetry, onDeviceStatus } =
+    useSensorHub();
+
+  const [summary, setSummary] = useState<DashboardSummaryDto | null>(null);
+  const [systemHealth, setSystemHealth] = useState<SystemHealthData | null>(null);
+  const [latestTelemetry, setLatestTelemetry] = useState<SensorTelemetryDto | null>(null);
+  const [lastTelemetryTime, setLastTelemetryTime] = useState<Date | null>(null);
+  const [isTelemetryFlashing, setIsTelemetryFlashing] = useState<boolean>(false);
+
+  // 1. Initial REST API loading
+  useEffect(() => {
+    let isMounted = true;
+    async function loadData() {
+      try {
+        const [summaryRes, healthRes] = await Promise.all([
+          apiClient.get<DashboardSummaryDto>('/api/Dashboard/summary'),
+          apiClient.get<SystemHealthData>('/api/Dashboard/system-health').catch(() => null),
+        ]);
+        if (isMounted) {
+          if (summaryRes?.data) setSummary(summaryRes.data);
+          if (healthRes?.data) setSystemHealth(healthRes.data);
+        }
+      } catch {
+        // Fallback or empty state if API offline
+      }
+    }
+
+    loadData();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // 2. Real-time SignalR Event Listeners
+  useEffect(() => {
+    const unsubTelemetry = onTelemetry((telemetry) => {
+      setLatestTelemetry(telemetry);
+      setLastTelemetryTime(new Date());
+      setIsTelemetryFlashing(true);
+      setTimeout(() => setIsTelemetryFlashing(false), 1200);
+
+      setSummary((prev) => {
+        if (!prev) return prev;
+
+        return {
+          ...prev,
+          sensors: {
+            ...prev.sensors,
+            ...(telemetry.soilMoisture !== undefined && { averageSoilMoisture: telemetry.soilMoisture }),
+            ...(telemetry.airTemperature !== undefined && { averageAirTemperature: telemetry.airTemperature }),
+            ...(telemetry.airHumidity !== undefined && { averageAirHumidity: telemetry.airHumidity }),
+            ...(telemetry.waterTemperature !== undefined && { averageWaterTemperature: telemetry.waterTemperature }),
+            ...(telemetry.waterLevel !== undefined && { averageWaterLevel: telemetry.waterLevel }),
+          },
+        };
+      });
+    });
+
+    const unsubDeviceStatus = onDeviceStatus(() => {
+      void apiClient.get<DashboardSummaryDto>('/api/Dashboard/summary')
+        .then(({ data }) => setSummary(data))
+        .catch(() => undefined);
+    });
+
+    return () => {
+      unsubTelemetry();
+      unsubDeviceStatus();
+    };
+  }, [onTelemetry, onDeviceStatus]);
+
+  const formatTelemetryValue = (value: number | null | undefined, unit: string) => {
+    if (value === null || value === undefined) return '--';
+    return `${Number(value).toFixed(1)} ${unit}`;
+  };
+
+  const signalRStatusBadge = () => {
+    switch (connectionStatus) {
+      case 'connected':
+        return (
+          <Badge variant="success" showDot className="animate-in fade-in">
+            {t('signalr_connected', 'Thời gian thực: Đã kết nối')}
+          </Badge>
+        );
+      case 'connecting':
+      case 'reconnecting':
+        return (
+          <Badge variant="warning" showDot className="animate-pulse">
+            {t('signalr_connecting', 'Thời gian thực: Đang kết nối...')}
+          </Badge>
+        );
+      default:
+        return (
+          <Badge variant="default" showDot>
+            {t('signalr_disconnected', 'Thời gian thực: Mất kết nối')}
+          </Badge>
+        );
+    }
+  };
 
   return (
-    <main className="mx-auto max-w-6xl" aria-labelledby="dashboard-title">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div className="mx-auto max-w-6xl space-y-6">
+      {/* Header bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <p className="eyebrow">SMART FARM MINI · TỔNG QUAN</p>
-          <h1 id="dashboard-title" className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
-            Tổng quan khu vườn
+          <p className="eyebrow">{t('dashboard_eyebrow', 'SMART FARM MINI')}</p>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight md:text-3xl text-ink">
+            {t('dashboard_title', 'Tổng quan khu vườn')}
           </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted sm:text-base">
-            Theo dõi môi trường và tình trạng thiết bị trong khu vườn của bạn.
+          <p className="mt-1 text-xs sm:text-sm text-muted">
+            {t('dashboard_subtitle', 'Một không gian để theo dõi cây trồng và chăm sóc khu vườn mỗi ngày.')}
           </p>
         </div>
-        <div className="flex items-center gap-2 self-start rounded-full border border-[#e0e7e3] bg-white px-3 py-2 text-xs font-medium text-muted sm:self-auto">
-          <span aria-hidden="true" className={`size-2 rounded-full ${hubStatus === 'connected' ? 'bg-[#216348]' : hubStatus === 'reconnecting' || hubStatus === 'connecting' ? 'bg-[#d97706]' : 'bg-[#dc2626]'}`} />
-          {hubStatus === 'connected' ? 'SignalR đã kết nối' : hubStatus === 'reconnecting' ? 'Đang kết nối lại' : 'Bản xem trước'}
-        </div>
-      </header>
 
-      <aside
-        className={`mt-6 flex gap-3 rounded-[14px] border p-4 sm:p-5 ${hasLiveTelemetry ? 'border-[#b6dfc8] bg-[#eff9f2] text-[#164b34]' : 'border-[#f4d49e] bg-[#fff8eb] text-[#6e3900]'}`}
-        role="note"
-        aria-label={hasLiveTelemetry ? 'Trạng thái dữ liệu cảm biến' : 'Thông tin dữ liệu mô phỏng'}
-      >
-        <span aria-hidden="true" className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-white/70 text-sm font-bold">i</span>
-        <div>
-          <p className="text-sm font-semibold">{isRealtimeTelemetry ? 'Dữ liệu cảm biến trực tiếp' : hasLiveTelemetry ? 'Dữ liệu cảm biến đã lưu' : 'Dữ liệu mô phỏng'}</p>
-          <p className="mt-1 text-xs leading-5 sm:text-sm">
-            {hasLiveTelemetry
-              ? isRealtimeTelemetry
-                ? isTelemetryStale ? 'Đã nhận dữ liệu SignalR nhưng bản tin cuối đã cũ hoặc thiếu thời gian cập nhật.' : 'Số liệu cảm biến mới nhận qua SignalR.'
-                : 'Số liệu tổng hợp được tải từ backend/database; API hiện chưa cung cấp thời điểm của mẫu mới nhất.'
-              : 'Các số liệu và trạng thái thiết bị bên dưới là dữ liệu mẫu để xem giao diện, chưa được đọc từ cảm biến hay thiết bị thật.'}
-          </p>
-          <p className="mt-1 text-xs" role="status" aria-live="polite">
-            SignalR: {hubStatus === 'connected' ? 'Đã kết nối' : hubStatus === 'reconnecting' || hubStatus === 'connecting' ? 'Đang kết nối lại' : hubStatus === 'error' ? 'Lỗi kết nối' : 'Ngoại tuyến'}
-            {telemetry?.lastUpdatedAtUtc && ` · Nhận lúc ${new Date(telemetry.lastUpdatedAtUtc).toLocaleTimeString('vi-VN')}`}
-          </p>
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          {signalRStatusBadge()}
+          {lastTelemetryTime && (
+            <span className="hidden md:inline-flex items-center gap-1 text-[11px] text-muted">
+              <Clock className="size-3" />
+              {t('live_updated_at', 'Cập nhật lúc')}{' '}
+              {lastTelemetryTime.toLocaleTimeString(language === 'vi' ? 'vi-VN' : 'en-US')}
+            </span>
+          )}
         </div>
-      </aside>
+      </div>
 
-      <section className="mt-8" aria-labelledby="sensor-section-title">
-        <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h2 id="sensor-section-title" className="text-lg font-semibold sm:text-xl">Môi trường khu vườn</h2>
-            <p className="mt-1 text-sm text-muted">{isRealtimeTelemetry ? 'Bản tin cảm biến mới nhất' : hasLiveTelemetry ? 'Số liệu tổng hợp đã lưu' : 'Các chỉ số cảm biến mẫu'}</p>
+      {/* System Health Status Panel */}
+      <section className="panel p-4 bg-canvas/60">
+        <div className="flex items-center justify-between border-b border-line pb-2.5 mb-3">
+          <span className="text-xs font-bold uppercase tracking-wider text-muted flex items-center gap-1.5">
+            <Server className="size-3.5 text-primary" />
+            {language === 'vi' ? 'Hạ tầng hệ thống' : 'System Infrastructure Health'}
+          </span>
+          <span className="text-[11px] text-muted">
+            {language === 'vi' ? 'Phân biệt trạng thái thực tế' : 'Live Gateway Status'}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+          {/* Backend Health */}
+          <div className="flex items-center justify-between rounded-xl border border-line bg-surface p-3">
+            <span className="text-muted font-medium">ASP.NET Core WebAPI</span>
+            <Badge variant={systemHealth?.backendStatus === 'Healthy' ? 'success' : 'default'} showDot>
+              {systemHealth?.backendStatus || (language === 'vi' ? 'Chưa kiểm tra' : 'Unknown')}
+            </Badge>
           </div>
-          <p className="text-xs text-muted">
-            {isRealtimeTelemetry && telemetry?.lastUpdatedAtUtc
-              ? `Cập nhật: ${new Date(telemetry.lastUpdatedAtUtc).toLocaleString('vi-VN')}`
-              : hasLiveTelemetry ? 'Thời điểm mẫu: API chưa cung cấp' : `Cập nhật mô phỏng: ${mockDashboardData.updatedAt}`}
-          </p>
+
+          {/* MQTT Broker Health */}
+          <div className="flex items-center justify-between rounded-xl border border-line bg-surface p-3">
+            <span className="text-muted font-medium">MQTT Broker</span>
+            <Badge
+              variant={
+                systemHealth?.mqttBrokerStatus === 'Connected'
+                  ? 'success'
+                  : systemHealth?.mqttBrokerStatus === 'Disabled'
+                  ? 'default'
+                  : 'warning'
+              }
+              showDot
+            >
+              {systemHealth?.mqttBrokerStatus || (language === 'vi' ? 'Mất kết nối' : 'Disconnected')}
+            </Badge>
+          </div>
+
+          {/* SignalR Client Gateway */}
+          <div className="flex items-center justify-between rounded-xl border border-line bg-surface p-3">
+            <span className="text-muted font-medium">SignalR WebSocket</span>
+            <Badge variant={isConnected ? 'success' : 'default'} showDot>
+              {isConnected ? (transport !== 'Unknown' ? transport : 'Connected') : 'Disconnected'}
+            </Badge>
+          </div>
+        </div>
+      </section>
+
+      {/* Hero Banner with Quick Actions */}
+      <section
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-900 p-6 text-white md:p-8 shadow-md"
+        aria-labelledby="welcome-title"
+      >
+        <div className="pointer-events-none absolute -top-16 -right-16 size-64 rounded-full bg-white/10 blur-2xl" />
+
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+          <div className="max-w-xl">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold backdrop-blur-xs">
+              <Radio className={`size-3.5 ${isConnected ? 'text-emerald-300 animate-pulse' : 'text-slate-300'}`} />
+              <span>
+                {isConnected
+                  ? language === 'vi'
+                    ? 'DỮ LIỆU TỨC THỜI HOẠT ĐỘNG'
+                    : 'LIVE REAL-TIME STREAMING'
+                  : language === 'vi'
+                  ? 'CHỜ KẾT NỐI MÁY CHỦ'
+                  : 'CONNECTING TO SERVER'}
+              </span>
+            </div>
+            <h2 id="welcome-title" className="mt-3 text-xl font-bold md:text-2xl text-white">
+              {t('dashboard_banner_title', 'Bắt đầu từ một khu vườn nhỏ.')}
+            </h2>
+            <p className="mt-2 text-xs md:text-sm leading-relaxed text-emerald-100/90">
+              {t(
+                'dashboard_banner_desc',
+                'Hệ thống IoT cập nhật chỉ số đất, nước và không khí tức thời qua SignalR. Quản lý tưới tiêu chính xác cho từng chậu cây.'
+              )}
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-2 shrink-0">
+            <Link
+              to="/irrigation"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-emerald-900 hover:bg-emerald-50 transition-colors shadow-xs"
+            >
+              <Play className="size-4 fill-emerald-900" />
+              <span>{language === 'vi' ? 'Bật tưới nhanh' : 'Quick Irrigate'}</span>
+            </Link>
+            <Link
+              to="/sensors"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-white/15 hover:bg-white/25 px-4 py-2.5 text-xs sm:text-sm font-semibold text-white transition-colors"
+            >
+              <span>{language === 'vi' ? 'Xem cảm biến chi tiết' : 'View Sensor Telemetry'}</span>
+              <ArrowRight className="size-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Real-time Telemetry Metrics Grid */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-muted flex items-center gap-2">
+            <Activity className="size-4 text-primary" />
+            <span>{language === 'vi' ? 'Chỉ số môi trường thời gian thực' : 'Real-time Environmental Telemetry'}</span>
+          </h2>
+          {isTelemetryFlashing && (
+            <span className="flex items-center gap-1.5 text-xs font-semibold text-primary animate-pulse">
+              <span className="size-2 rounded-full bg-primary" />
+              <span>{t('live_badge', 'Trực tiếp')}</span>
+            </span>
+          )}
         </div>
 
-        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
-          {mockDashboardData.sensors.map((sensor) => {
-            const liveValue = liveSensors[sensor.id]
-            const isLiveValue = typeof liveValue === 'number'
-            return (
-              <article
-                key={sensor.id}
-                className="rounded-[14px] border border-[#e5e7eb] bg-white p-5 shadow-[0_1px_3px_rgba(31,41,55,0.05)]"
-                aria-labelledby={`${sensor.id}-title`}
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3.5">
+          {/* Soil Moisture */}
+          <div
+            className={`rounded-2xl border p-4 transition-all duration-300 ${
+              isTelemetryFlashing
+                ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20 shadow-sm'
+                : 'border-line bg-surface'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-muted">
+                {language === 'vi' ? 'Độ ẩm đất' : 'Soil Moisture'}
+              </span>
+              <span className="flex size-8 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                <Sprout className="size-4" />
+              </span>
+            </div>
+            <div className="mt-3">
+              <span className="text-xl sm:text-2xl font-bold tracking-tight text-ink">
+                {formatTelemetryValue(latestTelemetry?.soilMoisture ?? summary?.sensors?.averageSoilMoisture, '%')}
+              </span>
+            </div>
+            <p className="mt-1 text-[11px] text-muted">
+              {language === 'vi' ? 'Mức tối ưu: 60 - 80%' : 'Optimal: 60 - 80%'}
+            </p>
+          </div>
+
+          {/* Air Temperature */}
+          <div
+            className={`rounded-2xl border p-4 transition-all duration-300 ${
+              isTelemetryFlashing
+                ? 'border-amber-500 bg-amber-50/50 dark:bg-amber-950/20 shadow-sm'
+                : 'border-line bg-surface'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-muted">
+                {language === 'vi' ? 'Nhiệt độ không khí' : 'Air Temp'}
+              </span>
+              <span className="flex size-8 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                <Thermometer className="size-4" />
+              </span>
+            </div>
+            <div className="mt-3">
+              <span className="text-xl sm:text-2xl font-bold tracking-tight text-ink">
+                {formatTelemetryValue(latestTelemetry?.airTemperature ?? summary?.sensors?.averageAirTemperature, '°C')}
+              </span>
+            </div>
+            <p className="mt-1 text-[11px] text-muted">DHT11 Sensor</p>
+          </div>
+
+          {/* Air Humidity */}
+          <div
+            className={`rounded-2xl border p-4 transition-all duration-300 ${
+              isTelemetryFlashing
+                ? 'border-cyan-500 bg-cyan-50/50 dark:bg-cyan-950/20 shadow-sm'
+                : 'border-line bg-surface'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-muted">
+                {language === 'vi' ? 'Độ ẩm không khí' : 'Air Humidity'}
+              </span>
+              <span className="flex size-8 items-center justify-center rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400">
+                <Wind className="size-4" />
+              </span>
+            </div>
+            <div className="mt-3">
+              <span className="text-xl sm:text-2xl font-bold tracking-tight text-ink">
+                {formatTelemetryValue(latestTelemetry?.airHumidity ?? summary?.sensors?.averageAirHumidity, '%')}
+              </span>
+            </div>
+            <p className="mt-1 text-[11px] text-muted">Ambient humidity</p>
+          </div>
+
+          {/* Water Temperature */}
+          <div
+            className={`rounded-2xl border p-4 transition-all duration-300 ${
+              isTelemetryFlashing
+                ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/20 shadow-sm'
+                : 'border-line bg-surface'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-muted">
+                {language === 'vi' ? 'Nhiệt độ nước' : 'Water Temp'}
+              </span>
+              <span className="flex size-8 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                <Droplets className="size-4" />
+              </span>
+            </div>
+            <div className="mt-3">
+              <span className="text-xl sm:text-2xl font-bold tracking-tight text-ink">
+                {formatTelemetryValue(latestTelemetry?.waterTemperature ?? summary?.sensors?.averageWaterTemperature, '°C')}
+              </span>
+            </div>
+            <p className="mt-1 text-[11px] text-muted">DS18B20 Probe</p>
+          </div>
+
+          {/* Water Level */}
+          <div
+            className={`col-span-2 lg:col-span-1 rounded-2xl border p-4 transition-all duration-300 ${
+              isTelemetryFlashing
+                ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/20 shadow-sm'
+                : 'border-line bg-surface'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-muted">
+                {language === 'vi' ? 'Mực nước bồn' : 'Water Level'}
+              </span>
+              <span className="flex size-8 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+                <Waves className="size-4" />
+              </span>
+            </div>
+            <div className="mt-3">
+              <span className="text-xl sm:text-2xl font-bold tracking-tight text-ink">
+                {formatTelemetryValue(latestTelemetry?.waterLevel ?? summary?.sensors?.averageWaterLevel, '%')}
+              </span>
+            </div>
+            <p className="mt-1 text-[11px] text-muted">
+              {language === 'vi' ? 'Bình chứa tưới' : 'Reservoir status'}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Devices & Actuators Overview Cards */}
+      <div className="grid gap-5 md:grid-cols-3">
+        {/* Device Status Card */}
+        <section className="panel space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold text-ink flex items-center gap-2">
+              <Cpu className="size-4 text-primary" />
+              <span>{t('nav_devices', 'Thiết bị')}</span>
+            </h3>
+            <Link to="/devices" className="text-xs text-primary font-semibold hover:underline">
+              {language === 'vi' ? 'Quản lý' : 'Manage'} →
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 pt-1">
+            <div className="rounded-xl border border-line bg-canvas p-3">
+              <div className="flex items-center gap-2">
+                <StatusDot status="online" size="sm" />
+                <span className="text-xs text-muted">Online</span>
+              </div>
+              <p className="mt-2 text-2xl font-bold text-ink">
+                {summary ? (summary.devices?.onlineDevices ?? 0) : '--'}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-line bg-canvas p-3">
+              <div className="flex items-center gap-2">
+                <StatusDot status="offline" size="sm" />
+                <span className="text-xs text-muted">Offline</span>
+              </div>
+              <p className="mt-2 text-2xl font-bold text-ink">
+                {summary ? (summary.devices?.offlineDevices ?? 0) : '--'}
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Pump & Actuators Card */}
+        <section className="panel space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold text-ink flex items-center gap-2">
+              <Droplets className="size-4 text-primary" />
+              <span>{t('nav_irrigation', 'Tưới nước')}</span>
+            </h3>
+            <Link to="/irrigation" className="text-xs text-primary font-semibold hover:underline">
+              {language === 'vi' ? 'Điều khiển' : 'Controls'} →
+            </Link>
+          </div>
+
+          <div className="rounded-xl border border-line bg-canvas p-3 flex items-center justify-between">
+            <div>
+              <p className="text-xs text-muted">{language === 'vi' ? 'Trạng thái theo Backend' : 'Backend-reported pump status'}</p>
+              <p className="text-sm font-bold text-ink mt-1">
+                {summary?.isAnyPumpRunning
+                  ? language === 'vi' ? 'Backend ghi nhận đang tưới' : 'Backend reports irrigation active'
+                  : language === 'vi' ? 'Backend ghi nhận tạm dừng' : 'Backend reports irrigation idle'}
+              </p>
+              <p className="mt-1 text-[11px] text-muted">
+                {language === 'vi' ? 'Chưa có phản hồi trạng thái bơm vật lý từ firmware ESP32.' : 'The ESP32 firmware has not reported physical pump state.'}
+              </p>
+            </div>
+            <StatusDot
+              status={summary?.isAnyPumpRunning ? 'online' : 'offline'}
+              label={language === 'vi' ? 'Backend' : 'Backend'}
+              size="md"
+            />
+          </div>
+        </section>
+
+        {/* Real-time Gateway Hub Card */}
+        <section className="panel space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold text-ink flex items-center gap-2">
+              <Radio className="size-4 text-primary" />
+              <span>SignalR Gateway</span>
+            </h3>
+            <span className="text-[11px] font-mono text-muted">/hubs/sensors</span>
+          </div>
+
+          <div className="rounded-xl border border-line bg-canvas p-3 space-y-2.5">
+            {/* Connection status */}
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted">{language === 'vi' ? 'Kết nối:' : 'Connection:'}</span>
+              <span
+                className={`font-semibold capitalize ${
+                  connectionStatus === 'connected'
+                    ? 'text-emerald-600 dark:text-emerald-400'
+                    : connectionStatus === 'connecting' || connectionStatus === 'reconnecting'
+                    ? 'text-amber-600 dark:text-amber-400'
+                    : 'text-muted'
+                }`}
               >
-                <div className="flex items-start justify-between gap-3">
+                {connectionStatus}
+              </span>
+            </div>
+
+            {/* Transport – only show when actually connected */}
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted">{language === 'vi' ? 'Truyền tải:' : 'Transport:'}</span>
+              <span className="font-mono text-ink">
+                {connectionStatus === 'connected' && transport !== 'Unknown'
+                  ? transport
+                  : connectionStatus === 'connected'
+                  ? 'Negotiating…'
+                  : '--'}
+              </span>
+            </div>
+
+            {/* Authentication method */}
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted">{language === 'vi' ? 'Xác thực:' : 'Auth:'}</span>
+              <span className="font-mono text-ink">JWT Bearer</span>
+            </div>
+
+            {/* Auto-reconnect */}
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted">{language === 'vi' ? 'Tự kết nối lại:' : 'Auto Reconnect:'}</span>
+              <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                {language === 'vi' ? 'Bật' : 'Enabled'}
+              </span>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      {/* Recent Alerts & Recent Activities Section (Real Data from summary) */}
+      <div className="grid gap-5 md:grid-cols-2">
+        {/* Recent Alerts */}
+        <section className="panel space-y-3">
+          <div className="flex items-center justify-between border-b border-line pb-2.5">
+            <h3 className="text-sm font-bold text-ink flex items-center gap-2">
+              <AlertTriangle className="size-4 text-amber-500" />
+              <span>{language === 'vi' ? 'Cảnh báo gần đây' : 'Recent Alerts'}</span>
+            </h3>
+            <Link to="/alerts" className="text-xs text-primary font-semibold hover:underline">
+              {language === 'vi' ? 'Tất cả' : 'View all'} →
+            </Link>
+          </div>
+
+          {!summary?.recentAlerts || summary.recentAlerts.length === 0 ? (
+            <div className="py-6 text-center text-xs text-muted">
+              <CheckCircle2 className="mx-auto size-6 text-emerald-500 mb-1" />
+              <p>{language === 'vi' ? 'Không có cảnh báo bất thường nào' : 'No active alerts'}</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {summary.recentAlerts.slice(0, 4).map((alert) => (
+                <div
+                  key={alert.id}
+                  className="rounded-xl border border-line bg-canvas p-2.5 flex items-center justify-between text-xs"
+                >
                   <div>
-                    <h3 id={`${sensor.id}-title`} className="text-sm font-semibold text-[#1f2937]">{sensor.name}</h3>
-                    <p className="mt-1 text-[11px] font-medium uppercase tracking-wide text-muted">Cảm biến · {isLiveValue ? isRealtimeTelemetry ? 'SignalR' : 'CSDL' : 'Mô phỏng'}</p>
+                    <p className="font-bold text-ink">{alert.title}</p>
+                    <p className="text-[11px] text-muted">{alert.message}</p>
                   </div>
-                  <span aria-hidden="true" className={`flex size-10 shrink-0 items-center justify-center rounded-xl text-xl font-medium ${sensorAccent[sensor.accent]}`}>
-                    {sensor.icon}
+                  <span className="text-[10px] text-muted font-mono whitespace-nowrap">
+                    {new Date(alert.createdAtUtc).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
+              ))}
+            </div>
+          )}
+        </section>
 
-                <p className="mt-6 flex min-h-10 items-baseline gap-1.5 text-3xl font-bold tracking-tight text-[#121c2a] tabular-nums">
-                  <span>{isLiveValue ? liveValue : sensor.value}</span>
-                  {(sensor.unit || (sensor.id === 'water-level' && isLiveValue)) && (
-                    <span className="text-base font-semibold text-muted">
-                      {sensor.id === 'water-level' && isLiveValue ? '%' : sensor.unit}
+        {/* Recent Irrigation Activities */}
+        <section className="panel space-y-3">
+          <div className="flex items-center justify-between border-b border-line pb-2.5">
+            <h3 className="text-sm font-bold text-ink flex items-center gap-2">
+              <History className="size-4 text-primary" />
+              <span>{language === 'vi' ? 'Hoạt động tưới gần đây' : 'Recent Irrigation Activities'}</span>
+            </h3>
+            <Link to="/history" className="text-xs text-primary font-semibold hover:underline">
+              {language === 'vi' ? 'Nhật ký' : 'Full log'} →
+            </Link>
+          </div>
+
+          {!summary?.recentIrrigationLogs || summary.recentIrrigationLogs.length === 0 ? (
+            <div className="py-6 text-center text-xs text-muted">
+              <Droplets className="mx-auto size-6 text-muted/60 mb-1" />
+              <p>{language === 'vi' ? 'Chưa có hoạt động tưới nào' : 'No watering activities yet'}</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {summary.recentIrrigationLogs.slice(0, 4).map((log) => (
+                <div
+                  key={log.id}
+                  className="rounded-xl border border-line bg-canvas p-2.5 flex items-center justify-between text-xs"
+                >
+                  <div>
+                    <span className="font-semibold text-ink">
+                      {log.mode === 1 ? (language === 'vi' ? 'Tưới thủ công' : 'Manual') : (language === 'vi' ? 'Tưới tự động' : 'Automatic')}
                     </span>
-                  )}
-                </p>
-
-                <div className="mt-4 flex items-center justify-between gap-2 border-t border-[#edf0ee] pt-3">
-                  <span className="text-xs text-muted">{sensor.detail}</span>
-                  <span className="shrink-0 rounded-full bg-[#e7f1e9] px-2.5 py-1 text-[11px] font-semibold text-[#216348]">
-                    {isLiveValue ? isRealtimeTelemetry ? isTelemetryStale ? 'Dữ liệu cũ' : 'Realtime' : 'Đã lưu' : sensor.status}
-                  </span>
-                </div>
-              </article>
-            )
-          })}
-        </div>
-      </section>
-
-      <section className="mt-9" aria-labelledby="device-section-title">
-        <div>
-          <h2 id="device-section-title" className="text-lg font-semibold sm:text-xl">Thiết bị trong vườn</h2>
-          <p className="mt-1 text-sm text-muted">{liveDevices.length > 0 ? 'Trạng thái cập nhật qua SignalR' : 'Trạng thái kết nối mẫu · chưa phản ánh thiết bị thật'}</p>
-        </div>
-
-        <div className="mt-4 grid gap-4 lg:grid-cols-2">
-          {visibleDevices.map((device) => {
-            const isOnline = device.status === 'Online'
-            return (
-              <article key={device.id} className="rounded-[14px] border border-[#e5e7eb] bg-white p-5 shadow-[0_1px_3px_rgba(31,41,55,0.05)] sm:p-6">
-                <div className="flex items-center gap-4">
-                  <span aria-hidden="true" className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-[#e7f1e9] text-lg font-bold text-[#216348]">
-                    {device.initials}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <h3 className="truncate font-semibold text-[#1f2937]">{device.name}</h3>
-                    <p className="mt-1 text-xs text-muted">{device.kind}</p>
+                    <p className="text-[11px] text-muted">
+                      {log.durationSeconds ?? 0}s • {log.waterAmountMl ?? 0}ml
+                    </p>
                   </div>
-                  <span className={`inline-flex shrink-0 items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ${isOnline ? 'bg-[#e7f1e9] text-[#216348]' : 'bg-[#fff0ef] text-[#b42318]'}`}>
-                    <span aria-hidden="true" className={`size-2 rounded-full ${isOnline ? 'bg-[#216348]' : 'bg-[#dc2626]'}`} />
-                    {device.status} · {device.isLive ? 'SignalR' : 'mô phỏng'}
+                  <span className="text-[10px] text-muted font-mono whitespace-nowrap">
+                    {new Date(log.startedAtUtc).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
-                <p className="mt-4 border-t border-[#edf0ee] pt-3 text-sm text-muted">{device.detail}</p>
-                {device.isLive && device.isController && (
-                  <PumpControl deviceId={device.id} deviceName={device.name} isOnline={isOnline} />
-                )}
-              </article>
-            )
-          })}
-        </div>
-      </section>
-    </main>
-  )
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
+    </div>
+  );
 }

@@ -17,17 +17,20 @@ namespace SmartFarm.Infrastructure.Services
         private readonly UserManager<AppUser> _userManager;
         private readonly SmartFarmDbContext _context;
         private readonly ITokenService _tokenService;
+        private readonly IGoogleAuthService _googleAuthService;
         private readonly JwtSettings _jwtSettings;
 
         public AuthService(
             UserManager<AppUser> userManager,
             SmartFarmDbContext context,
             ITokenService tokenService,
+            IGoogleAuthService googleAuthService,
             IOptions<JwtSettings> jwtOptions)
         {
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
             _context = context ?? throw new ArgumentNullException(nameof(context));
             _tokenService = tokenService ?? throw new ArgumentNullException(nameof(tokenService));
+            _googleAuthService = googleAuthService ?? throw new ArgumentNullException(nameof(googleAuthService));
             _jwtSettings = jwtOptions?.Value ?? throw new ArgumentNullException(nameof(jwtOptions));
         }
 
@@ -63,6 +66,7 @@ namespace SmartFarm.Infrastructure.Services
                 UserName = request.UserName.Trim(),
                 Email = request.Email.Trim(),
                 DisplayName = string.IsNullOrWhiteSpace(request.DisplayName) ? request.UserName.Trim() : request.DisplayName.Trim(),
+                AuthProvider = "Local",
                 CreatedAtUtc = now,
                 EmailConfirmed = true
             };
@@ -137,6 +141,124 @@ namespace SmartFarm.Infrastructure.Services
             var role = claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value ?? "User";
 
             var now = DateTimeOffset.UtcNow;
+            var accessToken = _tokenService.GenerateAccessToken(user.Id, user.UserName!, user.Email!, role);
+            var (rawRefreshToken, tokenHash) = _tokenService.GenerateRefreshToken();
+            var tokenFamily = Guid.NewGuid();
+
+            var refreshTokenEntity = new RefreshToken(
+                user.Id,
+                tokenHash,
+                tokenFamily,
+                now.AddDays(_jwtSettings.RefreshTokenExpiryDays),
+                now);
+
+            _context.RefreshTokens.Add(refreshTokenEntity);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            return new AuthResponseDto
+            {
+                AccessToken = accessToken,
+                RefreshToken = rawRefreshToken,
+                ExpiresAtUtc = now.AddMinutes(_jwtSettings.AccessTokenExpiryMinutes),
+                User = MapToUserDto(user, role)
+            };
+        }
+
+        public async Task<AuthResponseDto> GoogleLoginAsync(GoogleLoginRequest request, CancellationToken cancellationToken = default)
+        {
+            if (request is null || string.IsNullOrWhiteSpace(request.IdToken))
+            {
+                throw new ArgumentException("Google ID Token không được để trống.", nameof(request.IdToken));
+            }
+
+            // 1. Xác minh Google ID Token qua Google Auth Service
+            var googleUser = await _googleAuthService.VerifyIdTokenAsync(request.IdToken, cancellationToken);
+
+            var now = DateTimeOffset.UtcNow;
+            AppUser? user = null;
+
+            // 2. Tìm tài khoản theo Google Subject ID
+            if (!string.IsNullOrWhiteSpace(googleUser.SubjectId))
+            {
+                user = await _context.Users.FirstOrDefaultAsync(u => u.GoogleSubjectId == googleUser.SubjectId, cancellationToken);
+            }
+
+            // 3. Nếu chưa tìm thấy theo GoogleSubjectId, tìm theo Email để liên kết tài khoản
+            if (user == null && !string.IsNullOrWhiteSpace(googleUser.Email))
+            {
+                user = await _userManager.FindByEmailAsync(googleUser.Email);
+
+                if (user != null)
+                {
+                    // Tài khoản đã đăng ký trước đó bằng Email/Password -> Liên kết tài khoản với Google
+                    user.GoogleSubjectId = googleUser.SubjectId;
+                    user.AvatarUrl ??= googleUser.Picture;
+                    if (!user.EmailConfirmed)
+                    {
+                        user.EmailConfirmed = true;
+                    }
+
+                    await _userManager.UpdateAsync(user);
+
+                    // Thêm thông tin login provider vào AspNetUserLogins
+                    var logins = await _userManager.GetLoginsAsync(user);
+                    if (!logins.Any(l => l.LoginProvider == "Google" && l.ProviderKey == googleUser.SubjectId))
+                    {
+                        await _userManager.AddLoginAsync(user, new UserLoginInfo("Google", googleUser.SubjectId, "Google"));
+                    }
+                }
+            }
+
+            // 4. Nếu tài khoản chưa tồn tại trong hệ thống -> Đăng ký người dùng mới
+            if (user == null)
+            {
+                var baseUserName = googleUser.Email.Split('@')[0].Replace(".", "_").Replace("-", "_");
+                var uniqueUserName = baseUserName;
+                var suffix = 1;
+
+                while (await _userManager.FindByNameAsync(uniqueUserName) != null)
+                {
+                    uniqueUserName = $"{baseUserName}_{suffix++}";
+                }
+
+                user = new AppUser
+                {
+                    Id = Guid.NewGuid(),
+                    UserName = uniqueUserName,
+                    Email = googleUser.Email,
+                    DisplayName = string.IsNullOrWhiteSpace(googleUser.Name) ? uniqueUserName : googleUser.Name.Trim(),
+                    GoogleSubjectId = googleUser.SubjectId,
+                    AuthProvider = "Google",
+                    AvatarUrl = googleUser.Picture,
+                    EmailConfirmed = true,
+                    CreatedAtUtc = now
+                };
+
+                var createResult = await _userManager.CreateAsync(user);
+                if (!createResult.Succeeded)
+                {
+                    var errors = string.Join("; ", createResult.Errors.Select(e => e.Description));
+                    throw new InvalidOperationException($"Tạo tài khoản Google thất bại: {errors}");
+                }
+
+                // QUY TẮC BẢO MẬT: Mặc định gán Role "User", TUYỆT ĐỐI không tự ý cấp quyền "Admin"
+                await _userManager.AddClaimAsync(user, new Claim(ClaimTypes.Role, "User"));
+
+                // Ghi nhận vào bảng AspNetUserLogins chuẩn Identity
+                await _userManager.AddLoginAsync(user, new UserLoginInfo("Google", googleUser.SubjectId, "Google"));
+            }
+
+            // 5. Kiểm tra trạng thái khóa tài khoản
+            if (await _userManager.IsLockedOutAsync(user))
+            {
+                throw new UnauthorizedAccessException("Tài khoản đã bị tạm khóa do vi phạm chính sách bảo mật hoặc bị vô hiệu hóa bởi quản trị viên.");
+            }
+
+            // 6. Lấy Role hiện tại của tài khoản (giữ nguyên quyền Admin nếu tài khoản đã được cấp trước đó)
+            var claims = await _userManager.GetClaimsAsync(user);
+            var role = claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value ?? "User";
+
+            // 7. Tạo JWT Access Token & Refresh Token của Smart Farm Mini
             var accessToken = _tokenService.GenerateAccessToken(user.Id, user.UserName!, user.Email!, role);
             var (rawRefreshToken, tokenHash) = _tokenService.GenerateRefreshToken();
             var tokenFamily = Guid.NewGuid();
@@ -265,6 +387,8 @@ namespace SmartFarm.Infrastructure.Services
                 DisplayName = user.DisplayName,
                 PhoneNumber = user.PhoneNumber,
                 Role = role,
+                AuthProvider = user.AuthProvider ?? "Local",
+                AvatarUrl = user.AvatarUrl,
                 CreatedAtUtc = user.CreatedAtUtc
             };
         }
@@ -306,6 +430,8 @@ namespace SmartFarm.Infrastructure.Services
                 DisplayName = user.DisplayName,
                 PhoneNumber = user.PhoneNumber,
                 Role = role,
+                AuthProvider = user.AuthProvider ?? "Local",
+                AvatarUrl = user.AvatarUrl,
                 CreatedAtUtc = user.CreatedAtUtc
             };
         }
@@ -348,6 +474,8 @@ namespace SmartFarm.Infrastructure.Services
                 Email = user.Email ?? string.Empty,
                 DisplayName = user.DisplayName,
                 Role = role,
+                AuthProvider = user.AuthProvider ?? "Local",
+                AvatarUrl = user.AvatarUrl,
                 CreatedAtUtc = user.CreatedAtUtc
             };
         }

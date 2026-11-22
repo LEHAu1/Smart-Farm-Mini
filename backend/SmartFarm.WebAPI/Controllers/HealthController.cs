@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using SmartFarm.Infrastructure.Mqtt;
 using SmartFarm.Infrastructure.Persistence.Data;
 
 namespace SmartFarm.WebAPI.Controllers
@@ -12,10 +13,12 @@ namespace SmartFarm.WebAPI.Controllers
     public class HealthController : ControllerBase
     {
         private readonly SmartFarmDbContext _dbContext;
+        private readonly MqttClientService? _mqttClient;
 
-        public HealthController(SmartFarmDbContext dbContext)
+        public HealthController(SmartFarmDbContext dbContext, MqttClientService? mqttClient = null)
         {
             _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+            _mqttClient = mqttClient;
         }
 
         /// <summary>
@@ -80,6 +83,15 @@ namespace SmartFarm.WebAPI.Controllers
                 checks["database"] = "Unhealthy";
                 isHealthy = false;
             }
+
+            var mqttStatus = _mqttClient == null
+                ? "NotConfigured"
+                : !_mqttClient.IsEnabled
+                    ? "Disabled"
+                    : _mqttClient.IsConnected
+                        ? "Connected"
+                        : "Disconnected";
+            checks["mqttBroker"] = mqttStatus;
 
             var response = new
             {

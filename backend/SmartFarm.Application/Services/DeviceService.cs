@@ -146,6 +146,22 @@ namespace SmartFarm.Application.Services
             await _deviceRepository.SaveChangesAsync(cancellationToken);
         }
 
+        public async Task DeleteAsync(Guid id, Guid currentUserId, bool isAdmin, CancellationToken cancellationToken = default)
+        {
+            var device = await _deviceRepository.GetByIdAsync(id, cancellationToken);
+            if (device is null)
+                throw new DeviceNotFoundException(id);
+
+            // Kiểm tra quyền sở hữu: chỉ chủ sở hữu hoặc Admin mới được xóa
+            if (!isAdmin && device.OwnerId != currentUserId)
+                throw new UnauthorizedAccessException("Bạn không có quyền xóa thiết bị của tài khoản khác.");
+
+            device.SoftDelete(DateTimeOffset.UtcNow);
+
+            await _deviceRepository.UpdateAsync(device, cancellationToken);
+            await _deviceRepository.SaveChangesAsync(cancellationToken);
+        }
+
         private static DeviceDto MapToDto(Device entity)
         {
             return new DeviceDto
