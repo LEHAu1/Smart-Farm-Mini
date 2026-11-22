@@ -1,4 +1,5 @@
 using SmartFarm.Application.DTOs.Device;
+using System.Text.RegularExpressions;
 
 namespace SmartFarm.Application.Validators
 {
@@ -15,8 +16,8 @@ namespace SmartFarm.Application.Validators
             if (string.IsNullOrWhiteSpace(request.DeviceCode))
                 return (false, "DeviceCode is required.");
 
-            if (request.DeviceCode.Length > 50)
-                return (false, "DeviceCode cannot exceed 50 characters.");
+            if (!Regex.IsMatch(request.DeviceCode, @"\A[A-Za-z0-9_-]{1,50}\z"))
+                return (false, "DeviceCode must contain 1 to 50 letters, digits, hyphens, or underscores.");
 
             if (string.IsNullOrWhiteSpace(request.Name))
                 return (false, "Device Name is required.");

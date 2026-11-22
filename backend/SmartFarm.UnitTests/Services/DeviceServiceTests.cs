@@ -111,7 +111,52 @@ namespace SmartFarm.UnitTests.Services
 
             // Act & Assert
             var ex = await Assert.ThrowsAsync<ArgumentException>(() => _deviceService.CreateAsync(request));
-            Assert.Contains("Owner ID không được để trống", ex.Message);
+            Assert.Contains("OwnerId cannot be empty", ex.Message);
+            _mockDeviceRepo.Verify(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        }
+
+        [Theory]
+        [InlineData("INVALID/CODE", "Tên", null)]
+        [InlineData("INVALID.CODE", "Tên", null)]
+        [InlineData("ESP32 WITH SPACE", "Tên", null)]
+        [InlineData("", "Tên", null)]
+        [InlineData("VALID-CODE", "", null)]
+        [InlineData("VALID-CODE", "   ", null)]
+        public async Task CreateAsync_WhenRequiredValuesAreInvalid_ShouldThrowArgumentException(
+            string deviceCode,
+            string name,
+            string? description)
+        {
+            var request = new CreateDeviceRequest
+            {
+                OwnerId = _testOwnerId,
+                DeviceCode = deviceCode,
+                Name = name,
+                Description = description
+            };
+
+            var exception = await Assert.ThrowsAsync<ArgumentException>(() => _deviceService.CreateAsync(request));
+
+            Assert.False(string.IsNullOrWhiteSpace(exception.Message));
+            _mockDeviceRepo.Verify(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+            _mockDeviceRepo.Verify(r => r.AddAsync(It.IsAny<Device>(), It.IsAny<CancellationToken>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task CreateAsync_WhenFieldsExceedMaximumLengths_ShouldThrowArgumentException()
+        {
+            var requests = new[]
+            {
+                new CreateDeviceRequest { OwnerId = _testOwnerId, DeviceCode = new string('A', 51), Name = "Tên" },
+                new CreateDeviceRequest { OwnerId = _testOwnerId, DeviceCode = "VALID-CODE", Name = new string('N', 101) },
+                new CreateDeviceRequest { OwnerId = _testOwnerId, DeviceCode = "VALID-CODE", Name = "Tên", Description = new string('D', 501) }
+            };
+
+            foreach (var request in requests)
+                await Assert.ThrowsAsync<ArgumentException>(() => _deviceService.CreateAsync(request));
+
+            _mockDeviceRepo.Verify(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+            _mockDeviceRepo.Verify(r => r.AddAsync(It.IsAny<Device>(), It.IsAny<CancellationToken>()), Times.Never);
         }
 
         [Fact]
@@ -160,6 +205,28 @@ namespace SmartFarm.UnitTests.Services
             Assert.Equal("Cây để bàn làm việc", result.Description);
             Assert.True(result.IsActive);
 
+            _mockDeviceRepo.Verify(r => r.AddAsync(It.IsAny<Device>(), It.IsAny<CancellationToken>()), Times.Once);
+            _mockDeviceRepo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task CreateAsync_WhenFieldsAreAtMaximumLengths_ShouldCreateDevice()
+        {
+            var request = new CreateDeviceRequest
+            {
+                OwnerId = _testOwnerId,
+                DeviceCode = new string('A', 50),
+                Name = new string('N', 100),
+                Description = new string('D', 500)
+            };
+            _mockDeviceRepo.Setup(r => r.ExistsAsync(request.DeviceCode, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(false);
+
+            var result = await _deviceService.CreateAsync(request);
+
+            Assert.Equal(50, result.DeviceCode.Length);
+            Assert.Equal(100, result.Name.Length);
+            Assert.Equal(500, result.Description!.Length);
             _mockDeviceRepo.Verify(r => r.AddAsync(It.IsAny<Device>(), It.IsAny<CancellationToken>()), Times.Once);
             _mockDeviceRepo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }

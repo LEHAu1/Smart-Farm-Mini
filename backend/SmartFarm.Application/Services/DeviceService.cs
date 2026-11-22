@@ -2,6 +2,7 @@ using SmartFarm.Application.Contracts.Persistence;
 using SmartFarm.Application.Contracts.Services;
 using SmartFarm.Application.DTOs.Common;
 using SmartFarm.Application.DTOs.Device;
+using SmartFarm.Application.Validators;
 using SmartFarm.Domain.Entities;
 using SmartFarm.Domain.Exceptions;
 
@@ -67,14 +68,9 @@ namespace SmartFarm.Application.Services
             if (request is null)
                 throw new ArgumentNullException(nameof(request));
 
-            if (request.OwnerId == Guid.Empty)
-                throw new ArgumentException("Owner ID không được để trống.", nameof(request.OwnerId));
-
-            if (string.IsNullOrWhiteSpace(request.DeviceCode))
-                throw new ArgumentException("Mã thiết bị không được để trống.", nameof(request.DeviceCode));
-
-            if (string.IsNullOrWhiteSpace(request.Name))
-                throw new ArgumentException("Tên thiết bị không được để trống.", nameof(request.Name));
+            var (isValid, errorMessage) = CreateDeviceValidator.Validate(request);
+            if (!isValid)
+                throw new ArgumentException(errorMessage, nameof(request));
 
             var exists = await _deviceRepository.ExistsAsync(request.DeviceCode, cancellationToken);
             if (exists)

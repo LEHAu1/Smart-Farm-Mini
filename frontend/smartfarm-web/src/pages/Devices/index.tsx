@@ -26,6 +26,30 @@ interface ActionFeedback {
   text: string;
 }
 
+function getAddDeviceErrorMessage(error: unknown, fallback: string): string {
+  if (error && typeof error === 'object') {
+    const apiError = error as {
+      message?: unknown;
+      response?: { data?: unknown };
+    };
+    const responseData = apiError.response?.data;
+
+    if (responseData && typeof responseData === 'object') {
+      const body = responseData as Record<string, unknown>;
+      for (const field of ['error', 'message', 'title', 'detail']) {
+        const value = body[field];
+        if (typeof value === 'string' && value.trim()) return value.trim();
+      }
+    }
+
+    if (typeof apiError.message === 'string' && apiError.message.trim()) {
+      return apiError.message;
+    }
+  }
+
+  return fallback;
+}
+
 // ─── Component ───────────────────────────────────────────
 export default function DevicesPage() {
   const { language } = useLanguage();
@@ -121,6 +145,14 @@ export default function DevicesPage() {
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!addCode.trim() || !addName.trim()) return;
+    if (!/^[A-Za-z0-9_-]{1,50}$/.test(addCode.trim())) {
+      setAddError(
+        language === 'vi'
+          ? 'Mã thiết bị chỉ được chứa chữ cái không dấu, chữ số, dấu gạch ngang và gạch dưới (tối đa 50 ký tự).'
+          : 'Device Code may contain only letters, numbers, hyphens, and underscores (up to 50 characters).'
+      );
+      return;
+    }
 
     setIsAddSubmitting(true);
     setAddError(null);
@@ -134,13 +166,12 @@ export default function DevicesPage() {
       setIsAddOpen(false);
       showFeedback('success', language === 'vi' ? 'Đăng ký thiết bị thành công!' : 'Device registered successfully!');
     } catch (err: unknown) {
-      const msg =
-        err instanceof Error
-          ? err.message
-          : language === 'vi'
-          ? 'Lỗi khi đăng ký thiết bị.'
-          : 'Failed to register device.';
-      setAddError(msg);
+      setAddError(
+        getAddDeviceErrorMessage(
+          err,
+          language === 'vi' ? 'Lỗi khi đăng ký thiết bị.' : 'Failed to register device.'
+        )
+      );
     } finally {
       setIsAddSubmitting(false);
     }
@@ -602,6 +633,9 @@ export default function DevicesPage() {
                 <input
                   type="text"
                   required
+                  maxLength={50}
+                  pattern="[A-Za-z0-9_-]{1,50}"
+                  title={language === 'vi' ? 'Chỉ dùng chữ cái không dấu, chữ số, dấu gạch ngang và gạch dưới (tối đa 50 ký tự).' : 'Use letters, numbers, hyphens, or underscores (up to 50 characters).'}
                   placeholder={language === 'vi' ? 'Ví dụ: SF-NODE-01' : 'e.g. SF-NODE-01'}
                   value={addCode}
                   onChange={(e) => setAddCode(e.target.value)}
@@ -620,6 +654,7 @@ export default function DevicesPage() {
                 <input
                   type="text"
                   required
+                  maxLength={100}
                   placeholder={language === 'vi' ? 'Ví dụ: Chậu hoa hồng ban công' : 'e.g. Balcony Rose Pot'}
                   value={addName}
                   onChange={(e) => setAddName(e.target.value)}
@@ -632,6 +667,7 @@ export default function DevicesPage() {
                 </label>
                 <textarea
                   rows={2}
+                  maxLength={500}
                   placeholder={language === 'vi' ? 'Ví dụ: Góc vườn hướng Đông' : 'e.g. East-facing garden corner'}
                   value={addDesc}
                   onChange={(e) => setAddDesc(e.target.value)}
