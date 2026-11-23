@@ -48,14 +48,3 @@ Next software step is compiling the ESP32 telemetry project, then configuring a 
 | Browser UI | NOT VERIFIED | Browser bridge unavailable; local HTTP socket check was blocked/timed out |
 | SQL/MQTT/firmware E2E | BLOCKED | Local SQL Server and MQTT broker unavailable; telemetry source not compiled/flashed/configured |
 | Physical command | NOT RUN | No relay or pump command was activated |
-
-## Latest develop integration — 2026-11-22
-
-- Merged `origin/develop` (`56a1937`) into `feature/iot-end-to-end-integration` after resolving backend CORS, frontend architecture, and firmware telemetry conflicts.
-- Independent read-only verifier found and confirmed the dashboard's DHT label mismatch, obsolete frontend modules/tests from the previous SignalR architecture, and unsafe pump-state inference from command delivery. These were addressed; no physical command was issued.
-- Backend unit tests: **147/147 PASS**. Frontend tests: **9/9 PASS** in the clean lockfile-based copy. Frontend typecheck and production build: **PASS**; Vite reports a non-blocking >500 kB main-chunk warning.
-- HTTP smoke of the temporary build: `/login` returned **200**. Interactive browser test: **NOT VERIFIED**; Browser MCP reports Chrome disconnected and requests extension update to 2.0, while the requested port 9011 refused the connection.
-- Firmware compile: **PASS** with isolated PlatformIO core; ESP32 image built (47,072 bytes RAM; 911,017 bytes flash). No upload occurred.
-- Database scripts `03_AddGoogleAuth_v2_2.sql` and `04_SoftDelete_Devices_v2_3.sql` were not applied. Live SQL/MQTT/SignalR/hardware E2E remains unverified.
-- Full evidence: `.ai/MQTT_FIRMWARE_INTEGRATION_REPORT.md`.
-- Change control: local merge/commit only; no push.

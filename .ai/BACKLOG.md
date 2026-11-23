@@ -57,15 +57,6 @@ Baseline: `develop` (`772cfef`). Current work is on `feature/iot-end-to-end-inte
 | SF-35..36 | GitHub #35–36 | Run end-to-end and failure-mode verification | SQL, broker, firmware, camera, safe hardware rig | High | QA/Verifier Agent | Login→telemetry→realtime→command→ACK, camera and fail-safe scenarios recorded | BLOCKED | Frontend tests/build and backend unit tests pass; live SQL/MQTT/firmware/browser E2E cannot run in this environment. |
 | SF-37..38 | GitHub #37–38 | Complete verified assembly documentation and final demo | Verified wiring/firmware and working model | Medium/High | Documentation/QA Agents | New contributor follows setup; live demo evidence exists | BLOCKED | README files exist; no verified model/video |
 
-## Develop integration update — 2026-11-22
-
-- `feature/iot-end-to-end-integration` now contains the local `develop` integration. Conflict resolution preserved the MQTT telemetry contract and strict local CORS allowlist.
-- SF-15 remains **PARTIAL**: firmware source compiles successfully with isolated PlatformIO core and withholds uncalibrated soil percentages; it was not flashed to an ESP32 in this run.
-- SF-18 remains **DONE at local code/test scope**; the frontend now retries a failed initial SignalR connection. Interactive browser verification is still **NOT VERIFIED** because Browser MCP is disconnected and localhost:9011 refused connection.
-- SF-22 remains **PARTIAL**: frontend/backend command acceptance is represented accurately, but firmware has no command/relay path and no physical state confirmation. No actuator was triggered.
-- New Google Auth/soft-delete SQL scripts are present but not applied. SQL/MQTT end-to-end and physical safety checks remain blocked pending a disposable DB, reachable broker, connected browser and controlled hardware verification.
-- Detailed evidence and exact commands: `.ai/MQTT_FIRMWARE_INTEGRATION_REPORT.md`.
-
 ## Other documented work
 
 The remaining issue-linked work is tracked in `.ai/REQUIREMENTS.md`. Sensor-only MQTT telemetry source now exists but is not compiled/flashed; pump-control firmware is still missing. SF-14, SF-20, SF-29 and physical portions of SF-35..38 still need broker/device/hardware work. SF-17/21/23/24/28 are implemented partially or at API/unit-test level and need integration/database evidence. SF-30/31/32/34 and future SF-39/40/41 have not been implemented. Do not mark any task DONE solely because its unit-level simulation passes.
