@@ -25,7 +25,8 @@ namespace SmartFarm.Infrastructure.Persistence.Configurations
                 .HasDatabaseName("IX_AspNetUsers_GoogleSubjectId");
 
             builder.Property(u => u.AuthProvider)
-                .HasMaxLength(50);
+                .HasMaxLength(50)
+                .HasDefaultValue("Local");
 
             builder.Property(u => u.AvatarUrl)
                 .HasMaxLength(500);

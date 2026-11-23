@@ -5,6 +5,13 @@ export const ACCESS_TOKEN_KEY = 'smartfarm_access_token';
 export const REFRESH_TOKEN_KEY = 'smartfarm_refresh_token';
 export const USER_INFO_KEY = 'smartfarm_user';
 
+// Remove auth values written by earlier versions. User preferences remain untouched.
+if (typeof window !== 'undefined') {
+  localStorage.removeItem(ACCESS_TOKEN_KEY);
+  localStorage.removeItem(REFRESH_TOKEN_KEY);
+  localStorage.removeItem(USER_INFO_KEY);
+}
+
 export const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5205',
   timeout: 15_000,
@@ -17,7 +24,7 @@ export const apiClient = axios.create({
 // Request interceptor: attach bearer token
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem(ACCESS_TOKEN_KEY);
+    const token = sessionStorage.getItem(ACCESS_TOKEN_KEY);
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -71,7 +78,7 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true;
       isRefreshing = true;
 
-      const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+      const refreshToken = sessionStorage.getItem(REFRESH_TOKEN_KEY);
       if (!refreshToken) {
         isRefreshing = false;
         return Promise.reject(error);
@@ -83,10 +90,10 @@ apiClient.interceptors.response.use(
           { refreshToken }
         );
 
-        localStorage.setItem(ACCESS_TOKEN_KEY, data.accessToken);
-        localStorage.setItem(REFRESH_TOKEN_KEY, data.refreshToken);
+        sessionStorage.setItem(ACCESS_TOKEN_KEY, data.accessToken);
+        sessionStorage.setItem(REFRESH_TOKEN_KEY, data.refreshToken);
         if (data.user) {
-          localStorage.setItem(USER_INFO_KEY, JSON.stringify(data.user));
+          sessionStorage.setItem(USER_INFO_KEY, JSON.stringify(data.user));
         }
 
         apiClient.defaults.headers.common.Authorization = `Bearer ${data.accessToken}`;
@@ -96,9 +103,9 @@ apiClient.interceptors.response.use(
         return apiClient(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
-        localStorage.removeItem(ACCESS_TOKEN_KEY);
-        localStorage.removeItem(REFRESH_TOKEN_KEY);
-        localStorage.removeItem(USER_INFO_KEY);
+        sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+        sessionStorage.removeItem(REFRESH_TOKEN_KEY);
+        sessionStorage.removeItem(USER_INFO_KEY);
         window.dispatchEvent(new Event('auth:unauthorized'));
         return Promise.reject(refreshError);
       } finally {

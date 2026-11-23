@@ -24,36 +24,36 @@ export const demoCredentials: LoginCredentials = {
 
 export async function login(request: LoginRequest): Promise<AuthResponseDto> {
   const { data } = await apiClient.post<AuthResponseDto>('/api/Auth/login', request);
-  localStorage.setItem(ACCESS_TOKEN_KEY, data.accessToken);
-  localStorage.setItem(REFRESH_TOKEN_KEY, data.refreshToken);
+  sessionStorage.setItem(ACCESS_TOKEN_KEY, data.accessToken);
+  sessionStorage.setItem(REFRESH_TOKEN_KEY, data.refreshToken);
   if (data.user) {
-    localStorage.setItem(USER_INFO_KEY, JSON.stringify(data.user));
+    sessionStorage.setItem(USER_INFO_KEY, JSON.stringify(data.user));
   }
   return data;
 }
 
 export async function loginWithGoogle(request: GoogleLoginRequest): Promise<AuthResponseDto> {
   const { data } = await apiClient.post<AuthResponseDto>('/api/Auth/google', request);
-  localStorage.setItem(ACCESS_TOKEN_KEY, data.accessToken);
-  localStorage.setItem(REFRESH_TOKEN_KEY, data.refreshToken);
+  sessionStorage.setItem(ACCESS_TOKEN_KEY, data.accessToken);
+  sessionStorage.setItem(REFRESH_TOKEN_KEY, data.refreshToken);
   if (data.user) {
-    localStorage.setItem(USER_INFO_KEY, JSON.stringify(data.user));
+    sessionStorage.setItem(USER_INFO_KEY, JSON.stringify(data.user));
   }
   return data;
 }
 
 export async function register(request: RegisterRequest): Promise<AuthResponseDto> {
   const { data } = await apiClient.post<AuthResponseDto>('/api/Auth/register', request);
-  localStorage.setItem(ACCESS_TOKEN_KEY, data.accessToken);
-  localStorage.setItem(REFRESH_TOKEN_KEY, data.refreshToken);
+  sessionStorage.setItem(ACCESS_TOKEN_KEY, data.accessToken);
+  sessionStorage.setItem(REFRESH_TOKEN_KEY, data.refreshToken);
   if (data.user) {
-    localStorage.setItem(USER_INFO_KEY, JSON.stringify(data.user));
+    sessionStorage.setItem(USER_INFO_KEY, JSON.stringify(data.user));
   }
   return data;
 }
 
 export async function logout(): Promise<void> {
-  const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+  const refreshToken = sessionStorage.getItem(REFRESH_TOKEN_KEY);
   if (refreshToken) {
     try {
       await apiClient.post('/api/Auth/logout', { refreshToken });
@@ -61,38 +61,21 @@ export async function logout(): Promise<void> {
       // Ignored: cleanup tokens locally regardless
     }
   }
-  localStorage.removeItem(ACCESS_TOKEN_KEY);
-  localStorage.removeItem(REFRESH_TOKEN_KEY);
-  localStorage.removeItem(USER_INFO_KEY);
+  sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+  sessionStorage.removeItem(REFRESH_TOKEN_KEY);
+  sessionStorage.removeItem(USER_INFO_KEY);
 }
 
 export async function getCurrentUserProfile(): Promise<UserProfileDto> {
-  try {
-    const { data } = await apiClient.get<UserProfileDto>('/api/Auth/me');
-    return data;
-  } catch {
-    const stored = getStoredUser();
-    if (stored) {
-      return {
-        id: stored.id,
-        userName: stored.userName,
-        email: stored.email,
-        displayName: stored.displayName,
-        role: stored.role,
-        authProvider: stored.authProvider || 'Local',
-        avatarUrl: stored.avatarUrl,
-        createdAtUtc: new Date().toISOString(),
-      };
-    }
-    throw new Error('Chưa đăng nhập');
-  }
+  const { data } = await apiClient.get<UserProfileDto>('/api/Auth/me');
+  return data;
 }
 
 export async function updateProfile(request: UpdateProfileRequest): Promise<UserProfileDto> {
   const { data } = await apiClient.put<UserProfileDto>('/api/Auth/profile', request);
   const stored = getStoredUser();
   if (stored) {
-    localStorage.setItem(
+    sessionStorage.setItem(
       USER_INFO_KEY,
       JSON.stringify({ ...stored, displayName: data.displayName })
     );
@@ -105,7 +88,7 @@ export async function changePassword(request: ChangePasswordRequest): Promise<vo
 }
 
 export function getStoredUser(): UserDto | null {
-  const raw = localStorage.getItem(USER_INFO_KEY);
+  const raw = sessionStorage.getItem(USER_INFO_KEY);
   if (!raw) return null;
   try {
     return JSON.parse(raw) as UserDto;
@@ -115,7 +98,7 @@ export function getStoredUser(): UserDto | null {
 }
 
 export function isAuthenticated(): boolean {
-  return Boolean(localStorage.getItem(ACCESS_TOKEN_KEY));
+  return Boolean(sessionStorage.getItem(ACCESS_TOKEN_KEY));
 }
 
 // Backward-compatible loginDemo adapter for tests and quick login

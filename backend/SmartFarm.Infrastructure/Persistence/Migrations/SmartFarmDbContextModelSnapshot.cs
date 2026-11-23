@@ -554,6 +554,15 @@ namespace SmartFarm.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset>("CreatedAtUtc")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<string>("AuthProvider")
+                        .HasMaxLength(50)
+                        .HasDefaultValue("Local")
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("AvatarUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<string>("DisplayName")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -561,6 +570,10 @@ namespace SmartFarm.Infrastructure.Persistence.Migrations
                     b.Property<string>("Email")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("GoogleSubjectId")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
@@ -607,6 +620,11 @@ namespace SmartFarm.Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasDatabaseName("UserNameIndex")
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
+
+                    b.HasIndex("GoogleSubjectId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_AspNetUsers_GoogleSubjectId")
+                        .HasFilter("[GoogleSubjectId] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
                 });

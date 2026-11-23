@@ -122,9 +122,9 @@ export enum CommandStatus {
     email: string;        // Bắt buộc, định dạng email, không trùng
     password: string;     // Bắt buộc, tối thiểu 8 ký tự, có chữ và số
     displayName?: string; // Tùy chọn (mặc định lấy theo userName)
-    role?: string;        // "User" | "Admin" (mặc định: "User")
   }
   ```
+- Vai trò được backend gán cố định là `User`; request đăng ký không nhận trường `role`.
 - **Response DTO (200 OK — `AuthResponseDto`):**
   ```typescript
   interface AuthResponseDto {

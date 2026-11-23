@@ -101,7 +101,7 @@ class SignalRService {
   }
 
   public async connect(): Promise<void> {
-    const token = localStorage.getItem(ACCESS_TOKEN_KEY);
+    const token = sessionStorage.getItem(ACCESS_TOKEN_KEY);
     if (!token) {
       this.notifyStateChange('disconnected');
       return;
@@ -125,7 +125,7 @@ class SignalRService {
           const hubUrl = this.getHubUrl();
           this.connection = new HubConnectionBuilder()
             .withUrl(hubUrl, {
-              accessTokenFactory: () => localStorage.getItem(ACCESS_TOKEN_KEY) || '',
+              accessTokenFactory: () => sessionStorage.getItem(ACCESS_TOKEN_KEY) || '',
             })
             .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
             .configureLogging(import.meta.env.DEV ? LogLevel.Information : LogLevel.Warning)

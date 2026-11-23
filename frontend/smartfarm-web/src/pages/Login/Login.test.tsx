@@ -4,12 +4,38 @@ import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import LoginPage from './index'
+import { AuthProvider } from '../../contexts/AuthContext'
+import PublicRoute from '../../components/routing/PublicRoute'
 
-const { loginDemoMock } = vi.hoisted(() => ({ loginDemoMock: vi.fn() }))
+const {
+  loginDemoMock,
+  apiLoginMock,
+  isAuthenticatedMock,
+  getStoredUserMock,
+  getCurrentUserProfileMock,
+  apiGoogleLoginMock,
+  apiRegisterMock,
+  apiLogoutMock,
+} = vi.hoisted(() => ({
+  loginDemoMock: vi.fn(),
+  apiLoginMock: vi.fn(),
+  isAuthenticatedMock: vi.fn(),
+  getStoredUserMock: vi.fn(),
+  getCurrentUserProfileMock: vi.fn(),
+  apiGoogleLoginMock: vi.fn(),
+  apiRegisterMock: vi.fn(),
+  apiLogoutMock: vi.fn(),
+}))
 
 vi.mock('../../services/auth-service', () => ({
   loginDemo: loginDemoMock,
-  loginWithGoogle: vi.fn(),
+  login: apiLoginMock,
+  isAuthenticated: isAuthenticatedMock,
+  getStoredUser: getStoredUserMock,
+  getCurrentUserProfile: getCurrentUserProfileMock,
+  loginWithGoogle: apiGoogleLoginMock,
+  register: apiRegisterMock,
+  logout: apiLogoutMock,
 }))
 
 afterEach(cleanup)
@@ -21,6 +47,13 @@ beforeEach(() => {
       throw new Error('Email hoặc mật khẩu không đúng. Vui lòng thử lại.')
     }
   })
+  apiLoginMock.mockReset()
+  isAuthenticatedMock.mockReset().mockReturnValue(false)
+  getStoredUserMock.mockReset().mockReturnValue(null)
+  getCurrentUserProfileMock.mockReset()
+  apiGoogleLoginMock.mockReset()
+  apiRegisterMock.mockReset()
+  apiLogoutMock.mockReset()
 })
 
 function renderLogin() {
@@ -31,6 +64,20 @@ function renderLogin() {
         <Route path="/dashboard" element={<h1>Dashboard đích</h1>} />
       </Routes>
     </MemoryRouter>,
+  )
+  return userEvent.setup()
+}
+
+function renderLoginInAppAuthTree() {
+  render(
+    <AuthProvider>
+      <MemoryRouter initialEntries={['/login']}>
+        <Routes>
+          <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
+          <Route path="/dashboard" element={<h1>Dashboard đích</h1>} />
+        </Routes>
+      </MemoryRouter>
+    </AuthProvider>,
   )
   return userEvent.setup()
 }
@@ -89,5 +136,54 @@ describe('Login acceptance criteria', () => {
     await user.type(screen.getByLabelText('Mật khẩu', { exact: true }), 'SmartFarm123!')
     await user.click(screen.getByRole('button', { name: 'Đăng nhập' }))
     await waitFor(() => expect(screen.getByText('Dashboard đích')).toBeTruthy())
+  })
+
+  it('shows a visible server error when login returns a 500 response', async () => {
+    const user = renderLogin()
+    loginDemoMock.mockRejectedValueOnce(Object.assign(new Error(''), {
+      response: {
+        status: 500,
+        data: {
+          error: 'Đã có lỗi hệ thống xảy ra.',
+          details: 'SENSITIVE_STACK_TRACE_MUST_NOT_BE_SHOWN',
+        },
+      },
+    }))
+
+    await user.type(screen.getByLabelText('Email'), 'farmer@example.com')
+    await user.type(screen.getByLabelText('Mật khẩu', { exact: true }), 'oldpass')
+    await user.click(screen.getByRole('button', { name: 'Đăng nhập' }))
+
+    expect(await screen.findByRole('alert')).toHaveProperty(
+      'textContent',
+      'Đã có lỗi hệ thống xảy ra.',
+    )
+    expect(screen.queryByText('SENSITIVE_STACK_TRACE_MUST_NOT_BE_SHOWN')).toBeNull()
+    expect(screen.queryByText('Dashboard đích')).toBeNull()
+  })
+
+  it('keeps the login form mounted and displays a 500 error through AuthProvider and PublicRoute', async () => {
+    apiLoginMock.mockRejectedValueOnce(Object.assign(new Error(''), {
+      response: {
+        status: 500,
+        data: {
+          error: 'Đã có lỗi hệ thống xảy ra.',
+          details: 'SENSITIVE_STACK_TRACE_MUST_NOT_BE_SHOWN',
+        },
+      },
+    }))
+    const user = renderLoginInAppAuthTree()
+
+    await user.type(await screen.findByLabelText('Email'), 'farmer@example.com')
+    await user.type(screen.getByLabelText('Mật khẩu', { exact: true }), 'oldpass')
+    await user.click(screen.getByRole('button', { name: 'Đăng nhập' }))
+
+    expect(await screen.findByRole('alert')).toHaveProperty(
+      'textContent',
+      'Đã có lỗi hệ thống xảy ra.',
+    )
+    expect(screen.queryByText('SENSITIVE_STACK_TRACE_MUST_NOT_BE_SHOWN')).toBeNull()
+    expect(screen.getByLabelText('Email')).toHaveProperty('value', 'farmer@example.com')
+    expect(screen.getByLabelText('Mật khẩu', { exact: true })).toHaveProperty('value', 'oldpass')
   })
 })

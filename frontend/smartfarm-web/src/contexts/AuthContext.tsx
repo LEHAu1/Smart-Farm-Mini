@@ -30,6 +30,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
+    const handleUnauthorized = () => {
+      setUser(null);
+      setIsAuthenticated(false);
+      setIsLoading(false);
+    };
+
+    window.addEventListener('auth:unauthorized', handleUnauthorized);
+
     async function initAuth() {
       if (checkAuth()) {
         try {
@@ -45,14 +53,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           });
           setIsAuthenticated(true);
         } catch {
-          // Token expired or server unreachable, fallback to stored user if any
-          const stored = getStoredUser();
-          if (stored) {
-            setUser(stored);
-            setIsAuthenticated(true);
-          } else {
-            setIsAuthenticated(false);
-          }
+          // A cached profile is not proof that the server still accepts this session.
+          setUser(null);
+          setIsAuthenticated(false);
         }
       } else {
         setUser(null);
@@ -62,50 +65,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     initAuth();
+
+    return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
   }, []);
 
   const login = async (request: LoginRequest) => {
-    setIsLoading(true);
-    try {
-      const result = await apiLogin(request);
-      setUser(result.user);
-      setIsAuthenticated(true);
-    } finally {
-      setIsLoading(false);
-    }
+    const result = await apiLogin(request);
+    setUser(result.user);
+    setIsAuthenticated(true);
   };
 
   const loginWithGoogle = async (idToken: string) => {
-    setIsLoading(true);
-    try {
-      const result = await apiGoogleLogin({ idToken });
-      setUser(result.user);
-      setIsAuthenticated(true);
-    } finally {
-      setIsLoading(false);
-    }
+    const result = await apiGoogleLogin({ idToken });
+    setUser(result.user);
+    setIsAuthenticated(true);
   };
 
   const register = async (request: RegisterRequest) => {
-    setIsLoading(true);
-    try {
-      const result = await apiRegister(request);
-      setUser(result.user);
-      setIsAuthenticated(true);
-    } finally {
-      setIsLoading(false);
-    }
+    const result = await apiRegister(request);
+    setUser(result.user);
+    setIsAuthenticated(true);
   };
 
   const logout = async () => {
-    setIsLoading(true);
-    try {
-      await apiLogout();
-      setUser(null);
-      setIsAuthenticated(false);
-    } finally {
-      setIsLoading(false);
-    }
+    await apiLogout();
+    setUser(null);
+    setIsAuthenticated(false);
   };
 
   const refreshProfile = async () => {

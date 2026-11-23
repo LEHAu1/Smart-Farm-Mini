@@ -18,6 +18,24 @@ const isRealGoogleClientId = Boolean(
   GOOGLE_CLIENT_ID.endsWith('.apps.googleusercontent.com')
 );
 
+function getSubmitErrorMessage(error: unknown, fallback = 'Không thể đăng nhập. Vui lòng thử lại.'): string {
+  if (error && typeof error === 'object') {
+    const candidate = error as {
+      message?: unknown;
+      response?: { data?: unknown };
+    };
+    const responseData = candidate.response?.data;
+    if (responseData && typeof responseData === 'object') {
+      const serverError = (responseData as { error?: unknown }).error;
+      if (typeof serverError === 'string' && serverError.trim()) return serverError;
+    }
+    if (typeof candidate.message === 'string' && candidate.message.trim()) {
+      return candidate.message;
+    }
+  }
+  return fallback;
+}
+
 export default function LoginPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -76,7 +94,7 @@ export default function LoginPage() {
       const returnUrl = searchParams.get('returnUrl') || '/dashboard';
       navigate(returnUrl, { replace: true });
     } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : 'Đăng nhập Google thất bại. Vui lòng thử lại.');
+      setSubmitError(getSubmitErrorMessage(error, 'Đăng nhập Google thất bại. Vui lòng thử lại.'));
     } finally {
       setIsGoogleSubmitting(false);
     }
@@ -123,7 +141,7 @@ export default function LoginPage() {
       const returnUrl = searchParams.get('returnUrl') || '/dashboard';
       navigate(returnUrl, { replace: true });
     } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : 'Không thể đăng nhập. Vui lòng thử lại.');
+      setSubmitError(getSubmitErrorMessage(error));
     } finally {
       submitting.current = false;
       setIsSubmitting(false);

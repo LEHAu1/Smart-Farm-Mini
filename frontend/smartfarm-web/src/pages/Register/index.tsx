@@ -6,6 +6,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { register as apiRegister } from '../../services/auth-service';
 import { useToast } from '../../contexts/ToastContext';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { getPasswordPolicyError } from '../../utils/validate-password';
 import { User, Mail, Lock, Eye, EyeOff, UserPlus, AlertCircle, ArrowRight } from 'lucide-react';
 
 export default function RegisterPage() {
@@ -60,10 +61,15 @@ export default function RegisterPage() {
     }
 
     // 3. Validate Password
-    if (!formData.password) {
+    const passwordError = getPasswordPolicyError(formData.password);
+    if (passwordError === 'required') {
       nextErrors.password = t('auth_error_password_required', 'Vui lòng nhập mật khẩu.');
-    } else if (formData.password.length < 8) {
+    } else if (passwordError === 'minLength') {
       nextErrors.password = t('auth_error_password_length', 'Mật khẩu phải có tối thiểu 8 ký tự.');
+    } else if (passwordError === 'lowercase') {
+      nextErrors.password = t('auth_error_password_lowercase', 'Mật khẩu phải có ít nhất một chữ cái viết thường.');
+    } else if (passwordError === 'digit') {
+      nextErrors.password = t('auth_error_password_digit', 'Mật khẩu phải có ít nhất một chữ số.');
     }
 
     // 4. Validate Confirm Password
