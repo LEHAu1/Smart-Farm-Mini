@@ -129,14 +129,24 @@ namespace SmartFarm.Infrastructure.Persistence.Repositories
                 return Array.Empty<IrrigationLog>();
             }
 
-            return await _context.IrrigationLogs
-                .AsNoTracking()
-                .Where(log => deviceIds.Contains(log.DeviceId))
-                .GroupBy(log => log.DeviceId)
-                .SelectMany(group => group
+            // SQL Server cannot translate the GroupBy/SelectMany/Take-per-group
+            // shape consistently. Query each device's bounded page separately;
+            // this keeps the limit semantics in SQL and avoids loading full history.
+            var recentLogs = new List<IrrigationLog>(deviceIds.Count * limitPerDevice);
+            foreach (var deviceId in deviceIds.Distinct())
+            {
+                var deviceLogs = await _context.IrrigationLogs
+                    .AsNoTracking()
+                    .Where(log => log.DeviceId == deviceId)
                     .OrderByDescending(log => log.StartedAtUtc)
-                    .Take(limitPerDevice))
-                .ToListAsync(cancellationToken);
+                    .ThenByDescending(log => log.Id)
+                    .Take(limitPerDevice)
+                    .ToListAsync(cancellationToken);
+
+                recentLogs.AddRange(deviceLogs);
+            }
+
+            return recentLogs;
         }
 
         public async Task AddAsync(IrrigationLog log, CancellationToken cancellationToken = default)

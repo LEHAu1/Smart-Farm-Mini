@@ -47,14 +47,24 @@ namespace SmartFarm.Infrastructure.Persistence.Repositories
                 return Array.Empty<SensorReading>();
             }
 
-            return await _context.SensorReadings
-                .AsNoTracking()
-                .Where(reading => deviceIds.Contains(reading.DeviceId))
-                .GroupBy(reading => reading.DeviceId)
-                .SelectMany(group => group
+            // SQL Server does not translate GroupBy/SelectMany/Take-per-group
+            // consistently. Keep each device's bounded result in SQL instead of
+            // loading the full telemetry history for client-side grouping.
+            var latestReadings = new List<SensorReading>(deviceIds.Count * countPerDevice);
+            foreach (var deviceId in deviceIds.Distinct())
+            {
+                var deviceReadings = await _context.SensorReadings
+                    .AsNoTracking()
+                    .Where(reading => reading.DeviceId == deviceId)
                     .OrderByDescending(reading => reading.RecordedAtUtc)
-                    .Take(countPerDevice))
-                .ToListAsync(cancellationToken);
+                    .ThenByDescending(reading => reading.Id)
+                    .Take(countPerDevice)
+                    .ToListAsync(cancellationToken);
+
+                latestReadings.AddRange(deviceReadings);
+            }
+
+            return latestReadings;
         }
 
         public async Task<IReadOnlyList<SensorReading>> GetByDeviceIdAndRangeAsync(

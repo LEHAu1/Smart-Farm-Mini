@@ -1,0 +1,8 @@
+DBCC execution completed. If DBCC printed error messages, contact your system administrator.
+SmartFarmMini_DeployRehearsal_20261124_01|PREFLIGHT_PASS_NO_CHANGES|C29B18EA5DC8D5EFBE06E4E1008CB2CAE325D4FD78C984F9F4AC84E6C4248275
+AspNetUsers|3
+DeviceCommands|5
+Devices|3
+RefreshTokens|26
+SensorReadings|7827
+No schema or data changes made; set @ApplyAdoption=1 only under an approved deployment plan.

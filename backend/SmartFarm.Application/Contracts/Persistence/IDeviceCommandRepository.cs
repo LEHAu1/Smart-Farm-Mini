@@ -13,6 +13,8 @@ namespace SmartFarm.Application.Contracts.Persistence
         Task<DeviceCommand?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
         Task<DeviceCommand?> GetByCommandCodeAsync(string commandCode, CancellationToken cancellationToken = default);
         Task<IReadOnlyList<DeviceCommand>> GetPendingCommandsByDeviceIdAsync(Guid deviceId, CancellationToken cancellationToken = default);
+        Task<bool> TryAcquireDispatchLeaseAsync(Guid commandId, Guid leaseOwnerId, TimeSpan leaseDuration, TimeSpan deviceOfflineAfter, int maxAttempts, CancellationToken cancellationToken = default);
+        Task<bool> ReleaseDispatchLeaseAsync(Guid commandId, Guid leaseOwnerId, CancellationToken cancellationToken = default);
         Task<IReadOnlyList<DeviceCommand>> GetRecentByDeviceIdAsync(Guid deviceId, int limit = 20, CancellationToken cancellationToken = default);
         Task AddAsync(DeviceCommand command, CancellationToken cancellationToken = default);
         Task UpdateAsync(DeviceCommand command, CancellationToken cancellationToken = default);

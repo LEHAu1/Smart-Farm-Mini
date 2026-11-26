@@ -36,6 +36,35 @@ public sealed class MqttMessageHandlerTests
     }
 
     [Fact]
+    public async Task InvalidAirHumidity_IsRejectedButStillRefreshesTransportHeartbeat()
+    {
+        var device = CreateDevice(Guid.NewGuid());
+        var (handler, devices, sensors, notifier, _) = CreateHandler(device);
+        sensors.Setup(service => service.RecordReadingAsync(
+                It.Is<CreateSensorReadingRequest>(request =>
+                    request.SensorType == SensorType.AirHumidity && request.Value == 120m),
+                It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new ArgumentOutOfRangeException("value"));
+
+        var payload = $$"""{"messageId":"{{Guid.NewGuid()}}","sensorType":"AirHumidity","value":120,"unit":"%","recordedAtUtc":"2026-11-25T12:00:00Z"}""";
+        await handler.HandleAsync($"smartfarm/device/{device.DeviceCode}/telemetry",
+            System.Text.Encoding.UTF8.GetBytes(payload), CancellationToken.None);
+
+        Assert.True(device.IsOnline);
+        Assert.NotNull(device.LastSeenAtUtc);
+        devices.Verify(repository => repository.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        sensors.Verify(service => service.RecordReadingAsync(It.IsAny<CreateSensorReadingRequest>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+        sensors.Verify(service => service.GetCurrentTelemetryAsync(It.IsAny<Guid>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        notifier.Verify(service => service.NotifyConnectionStatusAsync(device.OwnerId,
+            It.Is<SmartFarm.Application.DTOs.Device.DeviceConnectionStatusDto>(status =>
+                status.DeviceId == device.Id && status.IsOnline), It.IsAny<CancellationToken>()), Times.Once);
+        notifier.Verify(service => service.NotifyTelemetryAsync(It.IsAny<Guid>(),
+            It.IsAny<SensorTelemetryDto>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task DuplicateConcurrentAcknowledgement_IsAppliedOnce()
     {
         var device = CreateDevice(Guid.NewGuid());

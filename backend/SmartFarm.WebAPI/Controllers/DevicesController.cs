@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using SmartFarm.Application.Contracts.Services;
 using SmartFarm.Application.DTOs.Common;
 using SmartFarm.Application.DTOs.Device;
+using SmartFarm.Domain.Exceptions;
 using System.Security.Claims;
 
 namespace SmartFarm.WebAPI.Controllers
@@ -143,6 +144,49 @@ namespace SmartFarm.WebAPI.Controllers
 
             var updated = await _deviceService.UpdateAsync(id, userId, isAdmin, request, cancellationToken);
             return Ok(updated);
+        }
+
+        /// <summary>
+        /// Chuyển thiết bị sang tài khoản đã xác minh. Chỉ chủ sở hữu hiện tại được khởi tạo.
+        /// </summary>
+        [HttpPost("{id:guid}/ownership-transfer")]
+        [ProducesResponseType(typeof(DeviceDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        public async Task<IActionResult> TransferOwnership(
+            Guid id,
+            [FromBody] TransferDeviceOwnershipRequest request,
+            CancellationToken cancellationToken)
+        {
+            var (userId, _) = GetCurrentUserContext();
+            if (userId == Guid.Empty)
+                return Unauthorized();
+
+            try
+            {
+                var transferred = await _deviceService.TransferOwnershipAsync(
+                    id, userId, request.TargetOwnerId, cancellationToken);
+                return Ok(transferred);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
+            catch (DeviceNotFoundException)
+            {
+                return NotFound();
+            }
+            catch (KeyNotFoundException exception)
+            {
+                return NotFound(new { message = exception.Message });
+            }
+            catch (InvalidOperationException exception)
+            {
+                return Conflict(new { message = exception.Message });
+            }
         }
 
         /// <summary>

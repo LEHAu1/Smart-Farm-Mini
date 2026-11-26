@@ -28,14 +28,14 @@ GPIO34 là ngõ vào-only và không có pull-up/pull-down nội, phù hợp đ�
 
 ### Firmware telemetry MQTT
 
-Project PlatformIO tại `telemetry/` gửi DHT11 thành `AirTemperature`/`AirHumidity` và phao thành `WaterLevel` nhị phân 0/100 qua MQTT QoS 1. Sao chép `telemetry/include/config.example.h` thành `config.h` trong cùng thư mục (file này được Git bỏ qua), nhập Wi-Fi, device code đã đăng ký, thông tin broker theo từng thiết bị và CA broker, rồi build từ thư mục `telemetry/` bằng `pio run`. TLS bật mặc định và kết nối bị từ chối nếu CA còn placeholder. Sketch chưa gửi YL-69 vì chưa có hiệu chuẩn trong đất; cũng không có subscribe lệnh, ACK hay điều khiển relay/bơm. Môi trường hiện tại chưa có PlatformIO nên source chưa được biên dịch.
+Project PlatformIO tại `telemetry/` gửi DHT11 thành `AirTemperature`/`AirHumidity` và phao thành `WaterLevel` nhị phân 0/100 qua MQTT QoS 1. Nó subscribe topic lệnh của thiết bị để có thể từ chối an toàn, lưu `commandId` và gửi ACK `Failed`; build này tuyệt đối không điều khiển relay/bơm và không báo `Acknowledged`/`Completed`. Bộ nhớ NVS giữ 32 ACK gần nhất trong 10 phút mặc định; nếu thời gian UTC không tin cậy hoặc NVS không dùng được thì lệnh bị từ chối. Giữ `CommandMaxAgeSeconds` trong `telemetry/src/main.cpp` đồng bộ với `Mqtt:PendingCommandExpiryMinutes` ở backend (mặc định 10 phút). Sao chép `telemetry/include/config.example.h` thành `config.h` trong cùng thư mục (file này được Git bỏ qua), nhập Wi-Fi, device code đã đăng ký, thông tin broker theo từng thiết bị và CA broker, rồi build từ thư mục `telemetry/` bằng `pio run`. TLS bật mặc định và kết nối bị từ chối nếu CA còn placeholder. Sketch chưa gửi YL-69 vì chưa có hiệu chuẩn trong đất. Lần build PlatformIO compile-only mới nhất đã thành công; host parser/ledger tests chưa chạy vì thiếu C++ host compiler. Chưa nạp firmware.
 
 Người dùng đã báo kiểm thử phần cứng thực tế và chạy ổn định, đồng thời cung cấp serial JSON từ ESP32. DHT11 đọc khoảng 22.5–23.1°C và 76.3–78.9% RH; trạng thái tiếp điểm phao thay đổi. Khi nhúng trực tiếp đầu dò YL-69 vào nước, `soilAdcRaw` chuyển từ 4095 qua khoảng 2736–2885 rồi xuống 1298–1459 (4 mẫu cuối trung bình khoảng 1409). Số đo cho thấy ADC có phản ứng, nhưng nhúng nước không thay thế hiệu chuẩn trong đất; cần lấy mốc đất khô và đất ẩm/bão hòa với cùng loại đất và độ sâu cắm đầu dò. Đây là kết quả người dùng báo cáo, chưa được lặp lại trong workspace này.
 
 > YL-69 là đầu dò điện trở: nên hạn chế thời gian cấp điện khi đo để giảm điện hóa/ăn mòn điện cực. Nghiên cứu đánh giá YL-69 khuyến nghị hiệu chuẩn theo loại đất và lưu ý ảnh hưởng của ion/độ mặn ([nghiên cứu](https://pmc.ncbi.nlm.nih.gov/articles/PMC7014303/)); phương pháp chỉ cấp điện trong thời gian đo giúp giảm suy giảm điện cực ở cảm biến điện trở ([Campbell Scientific CR6 manual](https://s.campbellsci.com/documents/br/manuals/cr6.pdf)).
 
 ## 3. An toàn tại biên (Edge Safety)
-ESP32 tự bảo vệ độc lập:
+Yêu cầu thiết kế cho firmware điều khiển tương lai (chưa được triển khai trong telemetry firmware hiện tại):
 - Tự ngắt bơm ngay lập tức nếu phao báo cạn nước.
 - Tự ngắt bơm nếu nhiệt độ nước quá cao hoặc bơm chạy quá thời gian tối đa (Watchdog timeout).
 
@@ -58,9 +58,9 @@ Mỗi mẫu đo gửi thành một bản tin riêng, dùng QoS 1. `messageId` l�
 `sensorType` nhận một trong `SoilMoisture`, `AirTemperature`, `AirHumidity`, `WaterTemperature`, `WaterLevel`. `recordedAtUtc` có thể bỏ qua; nếu có, phải là thời gian UTC.
 
 ### Lệnh và phản hồi
-Backend gửi lệnh QoS 1 lên topic `.../command`. Payload gồm `commandId`, `commandCode`, `action`, `payload`, `createdAtUtc`. `action` hiện hỗ trợ `START_PUMP`, `STOP_PUMP`, `PUMP_ON`, `PUMP_OFF`, `EMERGENCY_STOP`, `RESET_SYSTEM`. ESP32 chỉ thực thi lệnh trong allowlist và vẫn phải áp dụng kiểm tra an toàn tại biên trước khi bật relay.
+Backend gửi lệnh QoS 1 lên topic `.../command`. Payload gồm `commandId`, `commandCode`, `action`, `payload`, `createdAtUtc`. `action` trong hợp đồng backend gồm `START_PUMP`, `STOP_PUMP`, `PUMP_ON`, `PUMP_OFF`, `EMERGENCY_STOP`, `RESET_SYSTEM`. Telemetry firmware hiện kiểm tra envelope/action/time, nhưng trả `Failed` cho mọi lệnh vì không có relay/actuator path; nó không thực thi allowlist và không thể báo `Completed`.
 
-Khi broker không xác nhận được kết quả publish, backend giữ trạng thái lệnh `Pending` và mặc định thử lại tối đa 5 lần cho mỗi process đang chạy, với backoff tăng dần. Số lần thử lại và thời hạn có thể cấu hình; giới hạn hiện tại là 1–20 lần thử lại và 1–1440 phút. Bộ đếm thử lại chỉ lưu trong RAM nên được đặt lại khi Web API khởi động lại; thời hạn mặc định 10 phút được tính từ `createdAtUtc` trong database và vẫn áp dụng qua lần khởi động lại. ESP32 phải lưu/khử lặp `commandId` ít nhất bằng thời hạn được cấu hình (mặc định 10 phút) để lệnh QoS 1 gửi lại không làm bơm chạy lặp. Hết cửa sổ thử lại, backend vẫn giữ `Pending` (không khẳng định lệnh thất bại); cần đối soát trạng thái thiết bị.
+Khi broker không xác nhận được kết quả publish, backend giữ trạng thái lệnh `Pending`. Dispatcher là nơi duy nhất publish; claim lease, thời hạn và số lần thử được lưu trong DB để phối hợp giữa nhiều instance. Mặc định mỗi lệnh được claim tối đa 5 lần, với khoảng chờ tăng dần; claim đã hết hạn có thể được instance khác tiếp tục sau khi lease hết hạn. Thời hạn lệnh mặc định 10 phút tính từ `createdAtUtc`. Firmware hiện lưu ACK `Failed` cùng `commandId` trong NVS, tối đa 32 mục và giữ 10 phút kể từ lúc nhận để replay ACK khi QoS 1 gửi lặp; nếu đổi `PendingCommandExpiryMinutes`, phải đồng bộ `CommandMaxAgeSeconds` trong firmware. Khi hết cửa sổ retry, backend vẫn giữ `Pending` vì trạng thái giao nhận có thể mơ hồ; cần đối soát thủ công.
 
 Sau khi nhận lệnh, ESP32 gửi trạng thái QoS 1 lên topic `.../ack`:
 
@@ -71,7 +71,7 @@ Sau khi nhận lệnh, ESP32 gửi trạng thái QoS 1 lên topic `.../ack`:
 }
 ```
 
-Các trạng thái phản hồi là `Acknowledged`, `Completed` hoặc `Failed`; khi thất bại có thể thêm `errorMessage`. Dùng cùng `commandId` trong mọi phản hồi của lệnh đó.
+Backend chấp nhận trạng thái phản hồi `Acknowledged`, `Completed` hoặc `Failed`; dùng cùng `commandId` trong mọi phản hồi. Firmware telemetry hiện tại chỉ gửi `Failed` kèm `errorMessage` giải thích chưa có điều khiển relay. ACK là QoS 1; broker PUBACK riêng không đồng nghĩa lệnh đã thực thi.
 
 ### Xác thực broker
 Backend chỉ bật MQTT khi `Mqtt:Enabled=true` và có username/password của broker. MQTT client này không thể xác thực danh tính publisher riêng từ nội dung bản tin; broker phải bật xác thực từng ESP32 và ACL theo topic: mỗi thiết bị chỉ publish telemetry/ack của chính nó và subscribe command của chính nó. Backend cần quyền subscribe wildcard telemetry/ack và publish command. Bật TLS trong môi trường triển khai. Các yêu cầu broker/ACL này phải được cấu hình và kiểm tra riêng; repo không chứa cấu hình broker.
@@ -81,5 +81,5 @@ Backend đọc cấu hình qua .NET configuration, ví dụ biến môi trườn
 ### Giới hạn triển khai nhiều instance
 Hiện chỉ hỗ trợ một instance Web API. MQTT client mặc định dùng client ID `SmartFarm-WebAPI`; nhiều instance dùng chung ID có thể làm broker ngắt kết nối lẫn nhau. Bộ đếm retry và khóa đồng bộ ACK/trạng thái thiết bị cũng chỉ nằm trong RAM của process. Muốn chạy nhiều instance cần client ID riêng cho từng instance cùng cơ chế phối hợp dùng chung (ví dụ outbox/retry state và distributed lock); hiện chưa triển khai.
 
-> Firmware telemetry hiện có là bản gửi cảm biến qua MQTT, chưa triển khai điều khiển bơm, watchdog hoặc các yêu cầu fail-safe. Người dùng báo phần cứng đã chạy ổn định, nhưng phạm vi kiểm thử relay/bơm và phép đo dòng chưa được ghi lại. Chưa biên dịch/nạp firmware telemetry từ workspace này.
+> Firmware telemetry hiện có chưa triển khai điều khiển bơm, watchdog hoặc fail-safe vật lý. Người dùng báo phần cứng đã chạy ổn định, nhưng phạm vi kiểm thử relay/bơm và phép đo dòng chưa được ghi lại. Chưa biên dịch/nạp firmware telemetry từ workspace này; firmware hiện chỉ từ chối lệnh, không điều khiển thiết bị.
 

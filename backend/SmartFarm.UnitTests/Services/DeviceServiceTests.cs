@@ -334,6 +334,87 @@ namespace SmartFarm.UnitTests.Services
         }
 
         [Fact]
+        public async Task TransferOwnershipAsync_WhenCurrentOwnerTransfersToEligibleUser_PreservesDeviceIdentity()
+        {
+            var device = new Device(_testOwnerId, "FARM-TRANSFER-001", "Vườn", DateTimeOffset.UtcNow);
+            var targetOwnerId = Guid.NewGuid();
+            _mockDeviceRepo.Setup(r => r.GetByIdAsync(device.Id, It.IsAny<CancellationToken>())).ReturnsAsync(device);
+            _mockDeviceRepo.Setup(r => r.IsEligibleOwnerAsync(targetOwnerId, It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
+            _mockDeviceRepo.Setup(r => r.TryTransferOwnershipAsync(device.Id, _testOwnerId, targetOwnerId,
+                It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+            var result = await _deviceService.TransferOwnershipAsync(device.Id, _testOwnerId, targetOwnerId);
+
+            Assert.Equal(device.Id, result.Id);
+            Assert.Equal("FARM-TRANSFER-001", result.DeviceCode);
+            Assert.Equal(targetOwnerId, result.OwnerId);
+            _mockDeviceRepo.Verify(r => r.TryTransferOwnershipAsync(device.Id, _testOwnerId, targetOwnerId,
+                It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task TransferOwnershipAsync_WhenCallerIsNotOwner_DeniesWithoutCheckingTarget()
+        {
+            var device = new Device(_testOwnerId, "FARM-TRANSFER-002", "Vườn", DateTimeOffset.UtcNow);
+            _mockDeviceRepo.Setup(r => r.GetByIdAsync(device.Id, It.IsAny<CancellationToken>())).ReturnsAsync(device);
+
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+                _deviceService.TransferOwnershipAsync(device.Id, Guid.NewGuid(), Guid.NewGuid()));
+
+            _mockDeviceRepo.Verify(r => r.IsEligibleOwnerAsync(It.IsAny<Guid>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Never);
+            _mockDeviceRepo.Verify(r => r.TryTransferOwnershipAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<Guid>(),
+                It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task TransferOwnershipAsync_WhenDeviceMissing_ThrowsNotFound()
+        {
+            var id = Guid.NewGuid();
+            _mockDeviceRepo.Setup(r => r.GetByIdAsync(id, It.IsAny<CancellationToken>())).ReturnsAsync((Device?)null);
+            await Assert.ThrowsAsync<DeviceNotFoundException>(() =>
+                _deviceService.TransferOwnershipAsync(id, _testOwnerId, Guid.NewGuid()));
+        }
+
+        [Fact]
+        public async Task TransferOwnershipAsync_WhenTargetMissingOrInactive_RejectsTransfer()
+        {
+            var device = new Device(_testOwnerId, "FARM-TRANSFER-003", "Vườn", DateTimeOffset.UtcNow);
+            var target = Guid.NewGuid();
+            _mockDeviceRepo.Setup(r => r.GetByIdAsync(device.Id, It.IsAny<CancellationToken>())).ReturnsAsync(device);
+            _mockDeviceRepo.Setup(r => r.IsEligibleOwnerAsync(target, It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
+
+            await Assert.ThrowsAsync<KeyNotFoundException>(() =>
+                _deviceService.TransferOwnershipAsync(device.Id, _testOwnerId, target));
+            _mockDeviceRepo.Verify(r => r.TryTransferOwnershipAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<Guid>(),
+                It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task TransferOwnershipAsync_WhenTargetIsCurrentOwner_RejectsNoOp()
+        {
+            var device = new Device(_testOwnerId, "FARM-TRANSFER-004", "Vườn", DateTimeOffset.UtcNow);
+            _mockDeviceRepo.Setup(r => r.GetByIdAsync(device.Id, It.IsAny<CancellationToken>())).ReturnsAsync(device);
+
+            await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                _deviceService.TransferOwnershipAsync(device.Id, _testOwnerId, _testOwnerId));
+            _mockDeviceRepo.Verify(r => r.IsEligibleOwnerAsync(It.IsAny<Guid>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task TransferOwnershipAsync_WhenCompareAndSwapLosesRace_ReturnsConflict()
+        {
+            var device = new Device(_testOwnerId, "FARM-TRANSFER-005", "Vườn", DateTimeOffset.UtcNow);
+            var target = Guid.NewGuid();
+            _mockDeviceRepo.Setup(r => r.GetByIdAsync(device.Id, It.IsAny<CancellationToken>())).ReturnsAsync(device);
+            _mockDeviceRepo.Setup(r => r.IsEligibleOwnerAsync(target, It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
+            _mockDeviceRepo.Setup(r => r.TryTransferOwnershipAsync(device.Id, _testOwnerId, target,
+                It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
+
+            await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                _deviceService.TransferOwnershipAsync(device.Id, _testOwnerId, target));
+        }
+
+        [Fact]
         public async Task GetByOwnerIdAsync_ShouldReturnOwnerDevices()
         {
             // Arrange

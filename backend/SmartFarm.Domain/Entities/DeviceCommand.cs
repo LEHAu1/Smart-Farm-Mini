@@ -26,6 +26,14 @@ namespace SmartFarm.Domain.Entities
         // Thời điểm tạo lệnh
         public DateTimeOffset CreatedAtUtc { get; private set; }
 
+        // Hạn cuối để dispatcher gửi lệnh. Quá hạn thì lệnh không được replay.
+        public DateTimeOffset ExpiresAtUtc { get; private set; }
+
+        // Lease phân phối bền vững giữa nhiều instance Web API.
+        public Guid? DispatchLeaseOwnerId { get; private set; }
+        public DateTimeOffset? DispatchLeaseUntilUtc { get; private set; }
+        public int DispatchAttemptCount { get; private set; }
+
         // Thời điểm thiết bị nhận lệnh
         public DateTimeOffset? AcknowledgedAtUtc { get; private set; }
 
@@ -40,7 +48,8 @@ namespace SmartFarm.Domain.Entities
             string commandCode,
             string action,
             DateTimeOffset createdAtUtc,
-            string? payload = null)
+            string? payload = null,
+            DateTimeOffset expiresAtUtc = default)
         {
             if (deviceId == Guid.Empty)
                 throw new ArgumentException(
@@ -55,6 +64,12 @@ namespace SmartFarm.Domain.Entities
                     "Command action cannot be empty.", nameof(action));
 
             ValidateUtc(createdAtUtc, nameof(createdAtUtc));
+            var expiry = expiresAtUtc == default
+                ? createdAtUtc.AddMinutes(10)
+                : expiresAtUtc;
+            ValidateUtc(expiry, nameof(expiresAtUtc));
+            if (expiry <= createdAtUtc)
+                throw new ArgumentException("Expiry must be later than creation time.", nameof(expiresAtUtc));
 
             Id = Guid.NewGuid();
             DeviceId = deviceId;
@@ -64,6 +79,7 @@ namespace SmartFarm.Domain.Entities
 
             Status = CommandStatus.Pending;
             CreatedAtUtc = createdAtUtc;
+            ExpiresAtUtc = expiry;
         }
 
         // ESP32 xác nhận đã nhận lệnh
@@ -78,6 +94,7 @@ namespace SmartFarm.Domain.Entities
 
             Status = CommandStatus.Acknowledged;
             AcknowledgedAtUtc = acknowledgedAtUtc;
+            ClearDispatchLease();
         }
 
         // Lệnh thực hiện thành công
@@ -92,6 +109,7 @@ namespace SmartFarm.Domain.Entities
 
             Status = CommandStatus.Completed;
             CompletedAtUtc = completedAtUtc;
+            ClearDispatchLease();
         }
 
         // Lệnh thực hiện thất bại
@@ -116,6 +134,13 @@ namespace SmartFarm.Domain.Entities
             Status = CommandStatus.Failed;
             ErrorMessage = errorMessage.Trim();
             CompletedAtUtc = failedAtUtc;
+            ClearDispatchLease();
+        }
+
+        private void ClearDispatchLease()
+        {
+            DispatchLeaseOwnerId = null;
+            DispatchLeaseUntilUtc = null;
         }
 
         private void ValidateTimestamp(DateTimeOffset value)

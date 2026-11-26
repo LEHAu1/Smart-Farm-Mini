@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SmartFarm.Domain.Entities;
 using SmartFarm.Infrastructure.Identity;
@@ -34,6 +35,20 @@ namespace SmartFarm.Infrastructure.Persistence.Data
         {
             // Gọi base để tạo 4 bảng Identity chuẩn
             base.OnModelCreating(modelBuilder);
+
+            // Keep the composite Identity keys within SQL Server's clustered
+            // index key limit and aligned with the existing SQL bootstrap.
+            modelBuilder.Entity<IdentityUserLogin<Guid>>(entity =>
+            {
+                entity.Property(login => login.LoginProvider).HasMaxLength(128);
+                entity.Property(login => login.ProviderKey).HasMaxLength(128);
+            });
+
+            modelBuilder.Entity<IdentityUserToken<Guid>>(entity =>
+            {
+                entity.Property(token => token.LoginProvider).HasMaxLength(128);
+                entity.Property(token => token.Name).HasMaxLength(128);
+            });
 
             // Tự động quét và nạp toàn bộ cấu hình Fluent API trong Assembly Infrastructure
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(SmartFarmDbContext).Assembly);

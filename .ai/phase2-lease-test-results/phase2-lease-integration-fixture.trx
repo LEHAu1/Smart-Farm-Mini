@@ -1,0 +1,109 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="6fa39a69-5f00-49d3-a69f-273315b8a82e" name="Lenovo@LAPTOP-UKV16E8V 2026-11-25 10:25:31" runUser="LAPTOP-UKV16E8V\Lenovo" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-25T10:25:31.0052718+07:00" queuing="2026-11-25T10:25:31.0052724+07:00" start="2026-11-25T10:25:27.1000429+07:00" finish="2026-11-25T10:25:34.3975624+07:00" />
+  <TestSettings name="default" id="3d1cbf77-854f-420b-99cd-ceb5357c3e39">
+    <Deployment runDeploymentRoot="Lenovo_LAPTOP-UKV16E8V_2026-11-25_10_25_31" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="23103d8e-eba4-4c96-ba20-bdde929eff30" testId="ca4b3d0d-63fb-b291-a80a-2587165e1d5e" testName="SmartFarm.UnitTests.Integration.MqttCommandLeaseSqlServerIntegrationTests.ApiService_PersistsPendingWithoutPublishing" computerName="LAPTOP-UKV16E8V" duration="00:00:00.0402573" startTime="2026-11-25T10:25:32.9310776+07:00" endTime="2026-11-25T10:25:32.9714180+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="23103d8e-eba4-4c96-ba20-bdde929eff30">
+      <Output>
+        <StdOut>Disposable SQL lease integration database: SmartFarmLeaseIT_ace5eecb050048c3a22d50467b860ad3</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="15abc317-0d25-4985-ac5f-d96422456773" testId="12bd023c-384a-6f66-53ab-bb7327b99650" testName="SmartFarm.UnitTests.Integration.MqttCommandLeaseSqlServerIntegrationTests.TwoRepositoryInstances_OnlyOneCanClaimSameCommand" computerName="LAPTOP-UKV16E8V" duration="00:00:00.0305714" startTime="2026-11-25T10:25:32.8568813+07:00" endTime="2026-11-25T10:25:32.8881728+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="15abc317-0d25-4985-ac5f-d96422456773">
+      <Output>
+        <StdOut>Disposable SQL lease integration database: SmartFarmLeaseIT_ace5eecb050048c3a22d50467b860ad3</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="31123238-0635-458d-8818-683309de8e4c" testId="1b8b8a91-5c6c-4896-c874-14dad9768751" testName="SmartFarm.UnitTests.Integration.MqttCommandLeaseSqlServerIntegrationTests.AmbiguousPublish_LeaseIsRetainedAndRetryReusesSameCommandId" computerName="LAPTOP-UKV16E8V" duration="00:00:01.3700564" startTime="2026-11-25T10:25:31.4883845+07:00" endTime="2026-11-25T10:25:32.8563620+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="31123238-0635-458d-8818-683309de8e4c">
+      <Output>
+        <StdOut>Disposable SQL lease integration database: SmartFarmLeaseIT_ace5eecb050048c3a22d50467b860ad3</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="ce088076-8116-47dc-8d24-fe9076149e7f" testId="9082cf7b-2949-ee1c-10d8-b650e14ca50e" testName="SmartFarm.UnitTests.Integration.MqttCommandLeaseSqlServerIntegrationTests.RepeatedDuplicateDelivery_RetryLimitStopsFurtherClaimsForStableId" computerName="LAPTOP-UKV16E8V" duration="00:00:01.3953247" startTime="2026-11-25T10:25:30.0981830+07:00" endTime="2026-11-25T10:25:31.4856679+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ce088076-8116-47dc-8d24-fe9076149e7f">
+      <Output>
+        <StdOut>Disposable SQL lease integration database: SmartFarmLeaseIT_ace5eecb050048c3a22d50467b860ad3</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="c99d615d-0bed-4837-b668-def126ffde51" testId="574f8603-3988-2ac6-bd82-f499707b7e33" testName="SmartFarm.UnitTests.Integration.MqttCommandLeaseSqlServerIntegrationTests.LateAcknowledgement_MakesPendingCommandUnclaimableAndClearsLease" computerName="LAPTOP-UKV16E8V" duration="00:00:00.0329130" startTime="2026-11-25T10:25:32.8889763+07:00" endTime="2026-11-25T10:25:32.9215698+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c99d615d-0bed-4837-b668-def126ffde51">
+      <Output>
+        <StdOut>Disposable SQL lease integration database: SmartFarmLeaseIT_ace5eecb050048c3a22d50467b860ad3</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="b1f861ae-be58-4e98-ae64-10b4f68b58fd" testId="243098b5-8b48-5e1e-421d-6a1bdd2b40e4" testName="SmartFarm.UnitTests.Integration.MqttCommandLeaseSqlServerIntegrationTests.StaleHeartbeat_IsNotClaimed" computerName="LAPTOP-UKV16E8V" duration="00:00:00.0082420" startTime="2026-11-25T10:25:32.9219577+07:00" endTime="2026-11-25T10:25:32.9306740+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b1f861ae-be58-4e98-ae64-10b4f68b58fd">
+      <Output>
+        <StdOut>Disposable SQL lease integration database: SmartFarmLeaseIT_ace5eecb050048c3a22d50467b860ad3</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="967657c2-c27e-4b59-8a92-2bf5c1091e43" testId="2fab7bf5-b085-c286-f7a9-4fda34a793e1" testName="SmartFarm.UnitTests.Integration.MqttCommandLeaseSqlServerIntegrationTests.ExpiredCommand_IsNotClaimed" computerName="LAPTOP-UKV16E8V" duration="00:00:00.6279739" startTime="2026-11-25T10:25:29.4766911+07:00" endTime="2026-11-25T10:25:30.0873020+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="967657c2-c27e-4b59-8a92-2bf5c1091e43">
+      <Output>
+        <StdOut>Disposable SQL lease integration database: SmartFarmLeaseIT_ace5eecb050048c3a22d50467b860ad3</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="a7116233-acf8-44ec-9657-e96be45ae6eb" testId="40fed880-8322-de59-b4f2-cd162f2ce687" testName="SmartFarm.UnitTests.Integration.MqttCommandLeaseSqlServerIntegrationTests.CrashAfterClaim_LeaseBlocksOtherInstanceUntilExpiryThenAllowsRecovery" computerName="LAPTOP-UKV16E8V" duration="00:00:01.3301192" startTime="2026-11-25T10:25:32.9718387+07:00" endTime="2026-11-25T10:25:34.3024155+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a7116233-acf8-44ec-9657-e96be45ae6eb">
+      <Output>
+        <StdOut>Disposable SQL lease integration database: SmartFarmLeaseIT_ace5eecb050048c3a22d50467b860ad3</StdOut>
+      </Output>
+    </UnitTestResult>
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="SmartFarm.UnitTests.Integration.MqttCommandLeaseSqlServerIntegrationTests.LateAcknowledgement_MakesPendingCommandUnclaimableAndClearsLease" storage="d:\github\smart farm mini\smart-farm-mini\backend\smartfarm.unittests\bin\debug\net10.0\smartfarm.unittests.dll" id="574f8603-3988-2ac6-bd82-f499707b7e33">
+      <Execution id="c99d615d-0bed-4837-b668-def126ffde51" />
+      <TestMethod codeBase="D:\GitHub\Smart Farm mini\Smart-Farm-Mini\backend\SmartFarm.UnitTests\bin\Debug\net10.0\SmartFarm.UnitTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="SmartFarm.UnitTests.Integration.MqttCommandLeaseSqlServerIntegrationTests" name="LateAcknowledgement_MakesPendingCommandUnclaimableAndClearsLease" />
+    </UnitTest>
+    <UnitTest name="SmartFarm.UnitTests.Integration.MqttCommandLeaseSqlServerIntegrationTests.TwoRepositoryInstances_OnlyOneCanClaimSameCommand" storage="d:\github\smart farm mini\smart-farm-mini\backend\smartfarm.unittests\bin\debug\net10.0\smartfarm.unittests.dll" id="12bd023c-384a-6f66-53ab-bb7327b99650">
+      <Execution id="15abc317-0d25-4985-ac5f-d96422456773" />
+      <TestMethod codeBase="D:\GitHub\Smart Farm mini\Smart-Farm-Mini\backend\SmartFarm.UnitTests\bin\Debug\net10.0\SmartFarm.UnitTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="SmartFarm.UnitTests.Integration.MqttCommandLeaseSqlServerIntegrationTests" name="TwoRepositoryInstances_OnlyOneCanClaimSameCommand" />
+    </UnitTest>
+    <UnitTest name="SmartFarm.UnitTests.Integration.MqttCommandLeaseSqlServerIntegrationTests.AmbiguousPublish_LeaseIsRetainedAndRetryReusesSameCommandId" storage="d:\github\smart farm mini\smart-farm-mini\backend\smartfarm.unittests\bin\debug\net10.0\smartfarm.unittests.dll" id="1b8b8a91-5c6c-4896-c874-14dad9768751">
+      <Execution id="31123238-0635-458d-8818-683309de8e4c" />
+      <TestMethod codeBase="D:\GitHub\Smart Farm mini\Smart-Farm-Mini\backend\SmartFarm.UnitTests\bin\Debug\net10.0\SmartFarm.UnitTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="SmartFarm.UnitTests.Integration.MqttCommandLeaseSqlServerIntegrationTests" name="AmbiguousPublish_LeaseIsRetainedAndRetryReusesSameCommandId" />
+    </UnitTest>
+    <UnitTest name="SmartFarm.UnitTests.Integration.MqttCommandLeaseSqlServerIntegrationTests.ExpiredCommand_IsNotClaimed" storage="d:\github\smart farm mini\smart-farm-mini\backend\smartfarm.unittests\bin\debug\net10.0\smartfarm.unittests.dll" id="2fab7bf5-b085-c286-f7a9-4fda34a793e1">
+      <Execution id="967657c2-c27e-4b59-8a92-2bf5c1091e43" />
+      <TestMethod codeBase="D:\GitHub\Smart Farm mini\Smart-Farm-Mini\backend\SmartFarm.UnitTests\bin\Debug\net10.0\SmartFarm.UnitTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="SmartFarm.UnitTests.Integration.MqttCommandLeaseSqlServerIntegrationTests" name="ExpiredCommand_IsNotClaimed" />
+    </UnitTest>
+    <UnitTest name="SmartFarm.UnitTests.Integration.MqttCommandLeaseSqlServerIntegrationTests.StaleHeartbeat_IsNotClaimed" storage="d:\github\smart farm mini\smart-farm-mini\backend\smartfarm.unittests\bin\debug\net10.0\smartfarm.unittests.dll" id="243098b5-8b48-5e1e-421d-6a1bdd2b40e4">
+      <Execution id="b1f861ae-be58-4e98-ae64-10b4f68b58fd" />
+      <TestMethod codeBase="D:\GitHub\Smart Farm mini\Smart-Farm-Mini\backend\SmartFarm.UnitTests\bin\Debug\net10.0\SmartFarm.UnitTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="SmartFarm.UnitTests.Integration.MqttCommandLeaseSqlServerIntegrationTests" name="StaleHeartbeat_IsNotClaimed" />
+    </UnitTest>
+    <UnitTest name="SmartFarm.UnitTests.Integration.MqttCommandLeaseSqlServerIntegrationTests.ApiService_PersistsPendingWithoutPublishing" storage="d:\github\smart farm mini\smart-farm-mini\backend\smartfarm.unittests\bin\debug\net10.0\smartfarm.unittests.dll" id="ca4b3d0d-63fb-b291-a80a-2587165e1d5e">
+      <Execution id="23103d8e-eba4-4c96-ba20-bdde929eff30" />
+      <TestMethod codeBase="D:\GitHub\Smart Farm mini\Smart-Farm-Mini\backend\SmartFarm.UnitTests\bin\Debug\net10.0\SmartFarm.UnitTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="SmartFarm.UnitTests.Integration.MqttCommandLeaseSqlServerIntegrationTests" name="ApiService_PersistsPendingWithoutPublishing" />
+    </UnitTest>
+    <UnitTest name="SmartFarm.UnitTests.Integration.MqttCommandLeaseSqlServerIntegrationTests.CrashAfterClaim_LeaseBlocksOtherInstanceUntilExpiryThenAllowsRecovery" storage="d:\github\smart farm mini\smart-farm-mini\backend\smartfarm.unittests\bin\debug\net10.0\smartfarm.unittests.dll" id="40fed880-8322-de59-b4f2-cd162f2ce687">
+      <Execution id="a7116233-acf8-44ec-9657-e96be45ae6eb" />
+      <TestMethod codeBase="D:\GitHub\Smart Farm mini\Smart-Farm-Mini\backend\SmartFarm.UnitTests\bin\Debug\net10.0\SmartFarm.UnitTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="SmartFarm.UnitTests.Integration.MqttCommandLeaseSqlServerIntegrationTests" name="CrashAfterClaim_LeaseBlocksOtherInstanceUntilExpiryThenAllowsRecovery" />
+    </UnitTest>
+    <UnitTest name="SmartFarm.UnitTests.Integration.MqttCommandLeaseSqlServerIntegrationTests.RepeatedDuplicateDelivery_RetryLimitStopsFurtherClaimsForStableId" storage="d:\github\smart farm mini\smart-farm-mini\backend\smartfarm.unittests\bin\debug\net10.0\smartfarm.unittests.dll" id="9082cf7b-2949-ee1c-10d8-b650e14ca50e">
+      <Execution id="ce088076-8116-47dc-8d24-fe9076149e7f" />
+      <TestMethod codeBase="D:\GitHub\Smart Farm mini\Smart-Farm-Mini\backend\SmartFarm.UnitTests\bin\Debug\net10.0\SmartFarm.UnitTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="SmartFarm.UnitTests.Integration.MqttCommandLeaseSqlServerIntegrationTests" name="RepeatedDuplicateDelivery_RetryLimitStopsFurtherClaimsForStableId" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="ca4b3d0d-63fb-b291-a80a-2587165e1d5e" executionId="23103d8e-eba4-4c96-ba20-bdde929eff30" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="12bd023c-384a-6f66-53ab-bb7327b99650" executionId="15abc317-0d25-4985-ac5f-d96422456773" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1b8b8a91-5c6c-4896-c874-14dad9768751" executionId="31123238-0635-458d-8818-683309de8e4c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="9082cf7b-2949-ee1c-10d8-b650e14ca50e" executionId="ce088076-8116-47dc-8d24-fe9076149e7f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="574f8603-3988-2ac6-bd82-f499707b7e33" executionId="c99d615d-0bed-4837-b668-def126ffde51" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="243098b5-8b48-5e1e-421d-6a1bdd2b40e4" executionId="b1f861ae-be58-4e98-ae64-10b4f68b58fd" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="2fab7bf5-b085-c286-f7a9-4fda34a793e1" executionId="967657c2-c27e-4b59-8a92-2bf5c1091e43" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="40fed880-8322-de59-b4f2-cd162f2ce687" executionId="a7116233-acf8-44ec-9657-e96be45ae6eb" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="8" executed="8" passed="8" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>Logging TestHost Diagnostics in file: D:\GitHub\Smart Farm mini\Smart-Farm-Mini\.ai\phase2-lease-vstest-fixture.host.26-11-25_10-25-27_12339_5.diag&#xD;
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.4+50e68bbb8b (64-bit .NET 10.0.15)&#xD;
+[xUnit.net 00:00:00.07]   Discovering: SmartFarm.UnitTests&#xD;
+[xUnit.net 00:00:00.13]   Discovered:  SmartFarm.UnitTests&#xD;
+[xUnit.net 00:00:00.15]   Starting:    SmartFarm.UnitTests&#xD;
+[xUnit.net 00:00:06.80]   Finished:    SmartFarm.UnitTests&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

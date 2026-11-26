@@ -26,6 +26,8 @@ namespace SmartFarm.Application.Contracts.Persistence
         Task UpdateAsync(Device device, CancellationToken cancellationToken = default);
         Task DeleteAsync(Device device, CancellationToken cancellationToken = default);
         Task<bool> ExistsAsync(string deviceCode, CancellationToken cancellationToken = default);
+        Task<bool> IsEligibleOwnerAsync(Guid userId, DateTimeOffset nowUtc, CancellationToken cancellationToken = default);
+        Task<bool> TryTransferOwnershipAsync(Guid deviceId, Guid currentOwnerId, Guid targetOwnerId, DateTimeOffset updatedAtUtc, CancellationToken cancellationToken = default);
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     }
 }

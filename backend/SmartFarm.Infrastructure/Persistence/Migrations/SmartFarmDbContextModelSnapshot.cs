@@ -49,10 +49,12 @@ namespace SmartFarm.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<System.Guid>", b =>
                 {
                     b.Property<string>("LoginProvider")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("ProviderKey")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("ProviderDisplayName")
                         .HasColumnType("nvarchar(max)");
@@ -73,10 +75,12 @@ namespace SmartFarm.Infrastructure.Persistence.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("LoginProvider")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("Value")
                         .HasColumnType("nvarchar(max)");
@@ -141,6 +145,9 @@ namespace SmartFarm.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset>("CreatedAtUtc")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<DateTimeOffset?>("DeletedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
                     b.Property<string>("Description")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
@@ -154,6 +161,11 @@ namespace SmartFarm.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
                     b.Property<bool>("IsOnline")
                         .ValueGeneratedOnAdd()
@@ -179,6 +191,9 @@ namespace SmartFarm.Infrastructure.Persistence.Migrations
                     b.HasIndex("DeviceCode")
                         .IsUnique()
                         .HasDatabaseName("IX_Devices_DeviceCode");
+
+                    b.HasIndex("IsDeleted")
+                        .HasDatabaseName("IX_Devices_IsDeleted");
 
                     b.HasIndex("OwnerId")
                         .HasDatabaseName("IX_Devices_OwnerId");
@@ -214,9 +229,23 @@ namespace SmartFarm.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("DeviceId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int>("DispatchAttemptCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<Guid?>("DispatchLeaseOwnerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DispatchLeaseUntilUtc")
+                        .HasColumnType("datetimeoffset");
+
                     b.Property<string>("ErrorMessage")
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTimeOffset>("ExpiresAtUtc")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("Payload")
                         .HasColumnType("nvarchar(max)");
@@ -235,7 +264,13 @@ namespace SmartFarm.Infrastructure.Persistence.Migrations
                     b.HasIndex("DeviceId", "Status")
                         .HasDatabaseName("IX_DevCmds_DeviceId_Status");
 
-                    b.ToTable("DeviceCommands", (string)null);
+                    b.HasIndex("DeviceId", "Status", "DispatchLeaseUntilUtc", "CreatedAtUtc")
+                        .HasDatabaseName("IX_DevCmds_DispatchLease");
+
+                    b.ToTable("DeviceCommands", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_DevCmds_Status", "[Status] BETWEEN 1 AND 4");
+                        });
                 });
 
             modelBuilder.Entity("SmartFarm.Domain.Entities.IrrigationLog", b =>
@@ -280,6 +315,11 @@ namespace SmartFarm.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("DeviceId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_IrrigLogs_OneRunningPerDevice")
+                        .HasFilter("[Status] = 1");
+
                     b.HasIndex("Status")
                         .HasDatabaseName("IX_IrrigLogs_InProgress")
                         .HasFilter("[Status] = 1");
@@ -287,7 +327,14 @@ namespace SmartFarm.Infrastructure.Persistence.Migrations
                     b.HasIndex("DeviceId", "StartedAtUtc")
                         .HasDatabaseName("IX_IrrigLogs_DeviceId_StartedAt");
 
-                    b.ToTable("IrrigationLogs", (string)null);
+                    b.ToTable("IrrigationLogs", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_IrrigLogs_CompletedAfterStarted", "[CompletedAtUtc] IS NULL OR [CompletedAtUtc] >= [StartedAtUtc]");
+
+                            t.HasCheckConstraint("CK_IrrigLogs_DurationNonNegative", "[DurationSeconds] IS NULL OR [DurationSeconds] >= 0");
+
+                            t.HasCheckConstraint("CK_IrrigLogs_InProgressNoCompleted", "([Status] = 1 AND [CompletedAtUtc] IS NULL) OR ([Status] != 1)");
+                        });
                 });
 
             modelBuilder.Entity("SmartFarm.Domain.Entities.IrrigationRule", b =>
@@ -334,14 +381,21 @@ namespace SmartFarm.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("DeviceId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_IrrigRules_OneActivePerDevice")
+                        .HasFilter("[IsEnabled] = 1");
+
                     b.HasIndex("DeviceId", "IsEnabled")
                         .HasDatabaseName("IX_IrrigRules_DeviceId_IsEnabled");
 
                     b.ToTable("IrrigationRules", null, t =>
                         {
-                            t.HasCheckConstraint("CK_IrrigRules_MaxDuration", "[MaxDurationSeconds] > 0");
+                            t.HasCheckConstraint("CK_IrrigRules_MaxDuration", "[MaxDurationSeconds] > 0 AND [MaxDurationSeconds] <= 300");
 
                             t.HasCheckConstraint("CK_IrrigRules_MinInterval", "[MinIntervalMinutes] >= 0");
+
+                            t.HasCheckConstraint("CK_IrrigRules_MoistureRange", "[MoistureThreshold] >= 0 AND [MoistureThreshold] <= 100 AND [TargetMoisture] >= 0 AND [TargetMoisture] <= 100");
 
                             t.HasCheckConstraint("CK_IrrigRules_TargetGtThreshold", "[TargetMoisture] > [MoistureThreshold]");
                         });
@@ -397,7 +451,10 @@ namespace SmartFarm.Infrastructure.Persistence.Migrations
                     b.HasIndex("UserId")
                         .HasDatabaseName("IX_RefreshTokens_UserId");
 
-                    b.ToTable("RefreshTokens", (string)null);
+                    b.ToTable("RefreshTokens", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_RefreshTokens_Expiry", "[ExpiresAtUtc] > [CreatedAtUtc]");
+                        });
                 });
 
             modelBuilder.Entity("SmartFarm.Domain.Entities.SensorReading", b =>
@@ -432,18 +489,18 @@ namespace SmartFarm.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("DeviceId", "RecordedAtUtc")
+                        .HasDatabaseName("IX_SensorReadings_DeviceId_RecordedAt");
+
                     b.HasIndex("MessageId", "SensorType")
                         .IsUnique()
                         .HasDatabaseName("IX_SensorReadings_MessageId_SensorType")
                         .HasFilter("[MessageId] IS NOT NULL");
 
-                    b.HasIndex("DeviceId", "RecordedAtUtc")
-                        .HasDatabaseName("IX_SensorReadings_DeviceId_RecordedAt");
-
                     b.HasIndex("SensorType", "RecordedAtUtc")
                         .HasDatabaseName("IX_SensorReadings_SensorType_RecordedAt");
 
-                    b.ToTable("SensorReadings", (string)null, t =>
+                    b.ToTable("SensorReadings", null, t =>
                         {
                             t.HasCheckConstraint("CK_SensorReadings_ReceivedAfterRecorded", "[ReceivedAtUtc] >= [RecordedAtUtc]");
                         });
@@ -493,7 +550,14 @@ namespace SmartFarm.Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasDatabaseName("IX_SensorAgg_Device_Type_Hour");
 
-                    b.ToTable("SensorReadingAggregates", (string)null);
+                    b.ToTable("SensorReadingAggregates", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_SensorAgg_SampleCount", "[SampleCount] > 0");
+
+                            t.HasCheckConstraint("CK_SensorAgg_SensorType", "[SensorType] BETWEEN 1 AND 5");
+
+                            t.HasCheckConstraint("CK_SensorAgg_Values", "[MinValue] <= [AvgValue] AND [AvgValue] <= [MaxValue]");
+                        });
                 });
 
             modelBuilder.Entity("SmartFarm.Domain.Entities.SystemLog", b =>
@@ -547,21 +611,22 @@ namespace SmartFarm.Infrastructure.Persistence.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
+                    b.Property<string>("AuthProvider")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasDefaultValue("Local");
+
+                    b.Property<string>("AvatarUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTimeOffset>("CreatedAtUtc")
                         .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("AuthProvider")
-                        .HasMaxLength(50)
-                        .HasDefaultValue("Local")
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("AvatarUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("DisplayName")
                         .HasMaxLength(100)
@@ -571,12 +636,12 @@ namespace SmartFarm.Infrastructure.Persistence.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("bit");
+
                     b.Property<string>("GoogleSubjectId")
                         .HasMaxLength(128)
                         .HasColumnType("nvarchar(128)");
-
-                    b.Property<bool>("EmailConfirmed")
-                        .HasColumnType("bit");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");
@@ -613,6 +678,11 @@ namespace SmartFarm.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("GoogleSubjectId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_AspNetUsers_GoogleSubjectId")
+                        .HasFilter("[GoogleSubjectId] IS NOT NULL");
+
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
 
@@ -620,11 +690,6 @@ namespace SmartFarm.Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasDatabaseName("UserNameIndex")
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
-
-                    b.HasIndex("GoogleSubjectId")
-                        .IsUnique()
-                        .HasDatabaseName("IX_AspNetUsers_GoogleSubjectId")
-                        .HasFilter("[GoogleSubjectId] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
                 });
@@ -661,7 +726,7 @@ namespace SmartFarm.Infrastructure.Persistence.Migrations
                     b.HasOne("SmartFarm.Domain.Entities.Device", null)
                         .WithMany()
                         .HasForeignKey("DeviceId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
@@ -679,7 +744,7 @@ namespace SmartFarm.Infrastructure.Persistence.Migrations
                     b.HasOne("SmartFarm.Domain.Entities.Device", null)
                         .WithMany()
                         .HasForeignKey("DeviceId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
@@ -688,7 +753,7 @@ namespace SmartFarm.Infrastructure.Persistence.Migrations
                     b.HasOne("SmartFarm.Domain.Entities.Device", null)
                         .WithMany()
                         .HasForeignKey("DeviceId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
@@ -697,7 +762,7 @@ namespace SmartFarm.Infrastructure.Persistence.Migrations
                     b.HasOne("SmartFarm.Domain.Entities.Device", null)
                         .WithMany()
                         .HasForeignKey("DeviceId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
@@ -724,7 +789,7 @@ namespace SmartFarm.Infrastructure.Persistence.Migrations
                     b.HasOne("SmartFarm.Domain.Entities.Device", null)
                         .WithMany()
                         .HasForeignKey("DeviceId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 

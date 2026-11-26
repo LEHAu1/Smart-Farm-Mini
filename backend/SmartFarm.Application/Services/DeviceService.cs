@@ -118,6 +118,40 @@ namespace SmartFarm.Application.Services
             return MapToDto(device);
         }
 
+        public async Task<DeviceDto> TransferOwnershipAsync(
+            Guid id,
+            Guid currentOwnerId,
+            Guid targetOwnerId,
+            CancellationToken cancellationToken = default)
+        {
+            if (currentOwnerId == Guid.Empty)
+                throw new UnauthorizedAccessException("Cần đăng nhập bằng tài khoản chủ sở hữu thiết bị.");
+            if (targetOwnerId == Guid.Empty)
+                throw new ArgumentException("Tài khoản nhận thiết bị không hợp lệ.", nameof(targetOwnerId));
+
+            var device = await _deviceRepository.GetByIdAsync(id, cancellationToken);
+            if (device is null)
+                throw new DeviceNotFoundException(id);
+            if (device.OwnerId != currentOwnerId)
+                throw new UnauthorizedAccessException("Chỉ chủ sở hữu hiện tại mới được chuyển quyền thiết bị.");
+            if (targetOwnerId == currentOwnerId)
+                throw new InvalidOperationException("Thiết bị hiện đã thuộc tài khoản nhận.");
+
+            var nowUtc = DateTimeOffset.UtcNow;
+            if (!await _deviceRepository.IsEligibleOwnerAsync(targetOwnerId, nowUtc, cancellationToken))
+                throw new KeyNotFoundException("Không tìm thấy tài khoản nhận đang hoạt động.");
+
+            if (!await _deviceRepository.TryTransferOwnershipAsync(
+                    id, currentOwnerId, targetOwnerId, nowUtc, cancellationToken))
+                throw new InvalidOperationException("Quyền sở hữu đã thay đổi đồng thời. Hãy tải lại thiết bị rồi thử lại.");
+
+            // Only OwnerId and UpdatedAtUtc change; the device identity and all related history remain intact.
+            var result = MapToDto(device);
+            result.OwnerId = targetOwnerId;
+            result.UpdatedAtUtc = nowUtc;
+            return result;
+        }
+
         public async Task DeactivateAsync(Guid id, CancellationToken cancellationToken = default)
         {
             var device = await _deviceRepository.GetByIdAsync(id, cancellationToken);

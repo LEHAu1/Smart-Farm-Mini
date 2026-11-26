@@ -1,4 +1,6 @@
+using System.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using SmartFarm.Application.DTOs.Common;
 using SmartFarm.Application.Contracts.Persistence;
 using SmartFarm.Domain.Entities;
@@ -71,6 +73,105 @@ namespace SmartFarm.Infrastructure.Persistence.Repositories
                 .ToListAsync(cancellationToken);
         }
 
+        public async Task<bool> TryAcquireDispatchLeaseAsync(
+            Guid commandId,
+            Guid leaseOwnerId,
+            TimeSpan leaseDuration,
+            TimeSpan deviceOfflineAfter,
+            int maxAttempts,
+            CancellationToken cancellationToken = default)
+        {
+            if (commandId == Guid.Empty)
+                throw new ArgumentException("Command ID cannot be empty.", nameof(commandId));
+            if (leaseOwnerId == Guid.Empty)
+                throw new ArgumentException("Lease owner ID cannot be empty.", nameof(leaseOwnerId));
+            if (leaseDuration <= TimeSpan.Zero)
+                throw new ArgumentOutOfRangeException(nameof(leaseDuration), "Lease duration must be positive.");
+            if (deviceOfflineAfter <= TimeSpan.Zero)
+                throw new ArgumentOutOfRangeException(nameof(deviceOfflineAfter), "Offline window must be positive.");
+            if (maxAttempts is < 1 or > 20)
+                throw new ArgumentOutOfRangeException(nameof(maxAttempts), "Dispatch attempts must be between 1 and 20.");
+
+            var leaseSeconds = Math.Clamp((int)Math.Ceiling(leaseDuration.TotalSeconds), 1, 600);
+            var offlineSeconds = Math.Clamp((int)Math.Ceiling(deviceOfflineAfter.TotalSeconds), 15, 86400);
+
+            // A single conditional UPDATE obtains the lease atomically across API instances.
+            // Device eligibility is checked in the same statement to avoid relying on a stale
+            // caller-side online snapshot. Device state can still change after this statement
+            // and before MQTT publish; the lease prevents concurrent dispatch, not that race.
+            await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+            await using var command = _context.Database.GetDbConnection().CreateCommand();
+            command.Transaction = transaction.GetDbTransaction();
+            command.CommandText = """
+                DECLARE @DatabaseNowUtc datetimeoffset(7) = TODATETIMEOFFSET(SYSUTCDATETIME(), '+00:00');
+
+                UPDATE [command] WITH (UPDLOCK, ROWLOCK)
+                SET [DispatchLeaseOwnerId] = @LeaseOwnerId,
+                    [DispatchLeaseUntilUtc] = DATEADD(SECOND, @LeaseSeconds, @DatabaseNowUtc),
+                    [DispatchAttemptCount] = [DispatchAttemptCount] + 1
+                FROM [dbo].[DeviceCommands] AS [command]
+                INNER JOIN [dbo].[Devices] AS [device]
+                    ON [device].[Id] = [command].[DeviceId]
+                WHERE [command].[Id] = @CommandId
+                  AND [command].[Status] = @PendingStatus
+                  AND [command].[ExpiresAtUtc] > @DatabaseNowUtc
+                  AND [command].[DispatchAttemptCount] < @MaxAttempts
+                  AND ([command].[DispatchLeaseUntilUtc] IS NULL
+                       OR [command].[DispatchLeaseUntilUtc] <= @DatabaseNowUtc)
+                  AND [device].[IsActive] = 1
+                  AND [device].[IsOnline] = 1
+                  AND [device].[IsDeleted] = 0
+                  AND [device].[LastSeenAtUtc] IS NOT NULL
+                  AND [device].[LastSeenAtUtc] >= DATEADD(SECOND, -@OfflineSeconds, @DatabaseNowUtc)
+                  AND [device].[LastSeenAtUtc] <= @DatabaseNowUtc;
+                """;
+
+            AddParameter(command, "@CommandId", DbType.Guid, commandId);
+            AddParameter(command, "@LeaseOwnerId", DbType.Guid, leaseOwnerId);
+            AddParameter(command, "@LeaseSeconds", DbType.Int32, leaseSeconds);
+            AddParameter(command, "@OfflineSeconds", DbType.Int32, offlineSeconds);
+            AddParameter(command, "@MaxAttempts", DbType.Int32, maxAttempts);
+            AddParameter(command, "@PendingStatus", DbType.Byte, (byte)CommandStatus.Pending);
+
+            var affectedRows = await command.ExecuteNonQueryAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+            return affectedRows == 1;
+        }
+
+        public async Task<bool> ReleaseDispatchLeaseAsync(
+            Guid commandId,
+            Guid leaseOwnerId,
+            CancellationToken cancellationToken = default)
+        {
+            if (commandId == Guid.Empty)
+                throw new ArgumentException("Command ID cannot be empty.", nameof(commandId));
+            if (leaseOwnerId == Guid.Empty)
+                throw new ArgumentException("Lease owner ID cannot be empty.", nameof(leaseOwnerId));
+
+            await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+            await using var command = _context.Database.GetDbConnection().CreateCommand();
+            command.Transaction = transaction.GetDbTransaction();
+            command.CommandText = """
+                UPDATE [dbo].[DeviceCommands]
+                SET [DispatchLeaseOwnerId] = NULL,
+                    [DispatchLeaseUntilUtc] = NULL,
+                    [DispatchAttemptCount] = CASE
+                        WHEN [DispatchAttemptCount] > 0 THEN [DispatchAttemptCount] - 1
+                        ELSE 0
+                    END
+                WHERE [Id] = @CommandId
+                  AND [DispatchLeaseOwnerId] = @LeaseOwnerId
+                  AND [Status] = @PendingStatus;
+                """;
+            AddParameter(command, "@CommandId", DbType.Guid, commandId);
+            AddParameter(command, "@LeaseOwnerId", DbType.Guid, leaseOwnerId);
+            AddParameter(command, "@PendingStatus", DbType.Byte, (byte)CommandStatus.Pending);
+
+            var released = await command.ExecuteNonQueryAsync(cancellationToken) == 1;
+            await transaction.CommitAsync(cancellationToken);
+            return released;
+        }
+
         public async Task<IReadOnlyList<DeviceCommand>> GetRecentByDeviceIdAsync(
             Guid deviceId,
             int limit = 20,
@@ -99,5 +200,15 @@ namespace SmartFarm.Infrastructure.Persistence.Repositories
         {
             return await _context.SaveChangesAsync(cancellationToken);
         }
+
+        private static void AddParameter(System.Data.Common.DbCommand command, string name, DbType type, object value)
+        {
+            var parameter = command.CreateParameter();
+            parameter.ParameterName = name;
+            parameter.DbType = type;
+            parameter.Value = value;
+            command.Parameters.Add(parameter);
+        }
+
     }
 }

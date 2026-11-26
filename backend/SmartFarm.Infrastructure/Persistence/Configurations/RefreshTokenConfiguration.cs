@@ -65,6 +65,11 @@ namespace SmartFarm.Infrastructure.Persistence.Configurations
             builder.HasIndex(t => t.ExpiresAtUtc)
                 .HasFilter("[RevokedAtUtc] IS NULL")
                 .HasDatabaseName("IX_RefreshTokens_ExpiresAtUtc_Active");
+
+            builder.ToTable(table =>
+                table.HasCheckConstraint(
+                    "CK_RefreshTokens_Expiry",
+                    "[ExpiresAtUtc] > [CreatedAtUtc]"));
         }
     }
 }

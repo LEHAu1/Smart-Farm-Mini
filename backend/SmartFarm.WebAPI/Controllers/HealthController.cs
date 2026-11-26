@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using SmartFarm.Infrastructure.Mqtt;
 using SmartFarm.Infrastructure.Persistence.Data;
 
@@ -14,10 +16,15 @@ namespace SmartFarm.WebAPI.Controllers
     {
         private readonly SmartFarmDbContext _dbContext;
         private readonly MqttClientService? _mqttClient;
+        private readonly MqttBrokerSettings _mqttSettings;
 
-        public HealthController(SmartFarmDbContext dbContext, MqttClientService? mqttClient = null)
+        public HealthController(
+            SmartFarmDbContext dbContext,
+            IOptions<MqttBrokerSettings> mqttSettings,
+            MqttClientService? mqttClient = null)
         {
             _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+            _mqttSettings = mqttSettings?.Value ?? throw new ArgumentNullException(nameof(mqttSettings));
             _mqttClient = mqttClient;
         }
 
@@ -61,16 +68,23 @@ namespace SmartFarm.WebAPI.Controllers
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         public async Task<IActionResult> Ready(CancellationToken cancellationToken)
         {
-            var checks = new Dictionary<string, string>();
-            var isHealthy = true;
+            var databaseReady = false;
+            var databaseName = (string?)null;
+            var deviceRegisteredAndActive = false;
 
             try
             {
-                var canConnectDb = await _dbContext.Database.CanConnectAsync(cancellationToken);
-                checks["database"] = canConnectDb ? "Ready" : "Unhealthy";
-                if (!canConnectDb)
+                databaseReady = await _dbContext.Database.CanConnectAsync(cancellationToken);
+                if (databaseReady)
                 {
-                    isHealthy = false;
+                    databaseName = _dbContext.Database.GetDbConnection().Database;
+                    if (!string.IsNullOrWhiteSpace(_mqttSettings.TelemetryDeviceCode))
+                    {
+                        deviceRegisteredAndActive = await _dbContext.Devices
+                            .AsNoTracking()
+                            .AnyAsync(device => device.DeviceCode == _mqttSettings.TelemetryDeviceCode && device.IsActive,
+                                cancellationToken);
+                    }
                 }
             }
             catch (OperationCanceledException) when (IsClientRequestAborted(cancellationToken))
@@ -80,8 +94,7 @@ namespace SmartFarm.WebAPI.Controllers
             catch (Exception)
             {
                 // Readiness is unauthenticated; keep connection details out of the response.
-                checks["database"] = "Unhealthy";
-                isHealthy = false;
+                databaseReady = false;
             }
 
             var mqttStatus = _mqttClient == null
@@ -91,12 +104,40 @@ namespace SmartFarm.WebAPI.Controllers
                     : _mqttClient.IsConnected
                         ? "Connected"
                         : "Disconnected";
-            checks["mqttBroker"] = mqttStatus;
+            var mqttEnabled = _mqttClient?.IsEnabled == true;
+            var mqttSubscriptionGranted = _mqttClient?.IsTelemetrySubscriptionGranted == true;
+            var mqttReady = !mqttEnabled || (_mqttClient?.IsConnected == true && mqttSubscriptionGranted);
+            var isHealthy = databaseReady && mqttReady;
+            var telemetryReady = databaseReady && mqttEnabled && _mqttClient?.IsConnected == true &&
+                mqttSubscriptionGranted && deviceRegisteredAndActive && !_mqttSettings.CommandDispatchEnabled &&
+                string.IsNullOrWhiteSpace(_mqttSettings.AcknowledgementTopicFilter);
+            var checks = new Dictionary<string, string>
+            {
+                ["database"] = databaseReady ? "Ready" : "Unhealthy",
+                ["mqttBroker"] = mqttStatus,
+                ["telemetrySubscription"] = !mqttEnabled
+                    ? "Disabled"
+                    : _mqttClient?.TelemetrySubscriptionResult ?? "Pending"
+            };
 
             var response = new
             {
                 status = isHealthy ? "Ready" : "Degraded",
                 timestampUtc = DateTimeOffset.UtcNow,
+                mode = mqttEnabled ? "Operational" : "Bootstrap",
+                database = databaseReady ? "Ready" : "NotReady",
+                databaseName,
+                mqttBroker = mqttStatus,
+                mqttHost = _mqttSettings.Host,
+                mqttPort = _mqttSettings.Port,
+                mqttUseTls = _mqttSettings.UseTls,
+                mqttUsernameIsBackend = string.Equals(_mqttSettings.Username, "smartfarm_backend", StringComparison.Ordinal),
+                commandDispatchEnabled = _mqttSettings.CommandDispatchEnabled,
+                telemetryTopicFilter = _mqttSettings.TelemetryTopicFilter,
+                telemetrySubscription = checks["telemetrySubscription"],
+                acknowledgementSubscriptionEnabled = !string.IsNullOrWhiteSpace(_mqttSettings.AcknowledgementTopicFilter),
+                deviceRegisteredAndActive,
+                telemetryReady,
                 checks
             };
 

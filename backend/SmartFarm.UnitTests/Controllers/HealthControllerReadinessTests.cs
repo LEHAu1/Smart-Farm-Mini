@@ -2,6 +2,8 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using SmartFarm.Infrastructure.Mqtt;
 using SmartFarm.Infrastructure.Persistence.Data;
 using SmartFarm.WebAPI.Controllers;
 
@@ -16,7 +18,7 @@ public class HealthControllerReadinessTests
             .UseSqlServer("Server=127.0.0.1,1;Database=private-db;User Id=private-user;Password=private-password;TrustServerCertificate=True;Connect Timeout=1;")
             .Options;
         await using var db = new SmartFarmDbContext(options);
-        var controller = new HealthController(db);
+        var controller = new HealthController(db, Options.Create(new MqttBrokerSettings()));
         using var cts = new CancellationTokenSource();
         cts.Cancel();
 
@@ -37,7 +39,7 @@ public class HealthControllerReadinessTests
             .UseSqlServer("Server=127.0.0.1,1;Database=private-db;User Id=private-user;Password=private-password;TrustServerCertificate=True;Connect Timeout=1;")
             .Options;
         await using var db = new SmartFarmDbContext(options);
-        var controller = new HealthController(db);
+        var controller = new HealthController(db, Options.Create(new MqttBrokerSettings()));
         using var cts = new CancellationTokenSource();
         cts.Cancel();
         controller.ControllerContext = new ControllerContext
@@ -56,7 +58,7 @@ public class HealthControllerReadinessTests
             .UseSqlServer("Server=127.0.0.1,1;Database=private-db;User Id=private-user;Password=private-password;TrustServerCertificate=True;Connect Timeout=1;")
             .Options;
         await using var db = new SmartFarmDbContext(options);
-        var controller = new HealthController(db);
+        var controller = new HealthController(db, Options.Create(new MqttBrokerSettings()));
 
         var result = await controller.Ready(CancellationToken.None);
 

@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Moq;
 using SmartFarm.Application.Contracts.Services;
 using SmartFarm.Application.DTOs.Alert;
@@ -12,6 +13,7 @@ using SmartFarm.Application.DTOs.DeviceCommand;
 using SmartFarm.Application.DTOs.Irrigation;
 using SmartFarm.Domain.Enums;
 using SmartFarm.Infrastructure.Persistence.Data;
+using SmartFarm.Infrastructure.Mqtt;
 using SmartFarm.WebAPI.Controllers;
 
 namespace SmartFarm.UnitTests.Controllers;
@@ -312,6 +314,55 @@ public class BackendEndpointsTests
     }
 
     [Fact]
+    public async Task TransferDeviceOwnership_UsesAuthenticatedOwnerAndTargetFromBody()
+    {
+        var targetOwnerId = Guid.NewGuid();
+        var expected = new DeviceDto { Id = _deviceId, OwnerId = targetOwnerId, DeviceCode = "FARM-TRANSFER-TEST" };
+        _devices.Setup(service => service.TransferOwnershipAsync(
+                _deviceId, _userId, targetOwnerId, CancellationToken.None))
+            .ReturnsAsync(expected);
+        var controller = WithUser(new DevicesController(_devices.Object), role: "Admin");
+
+        var result = await controller.TransferOwnership(
+            _deviceId, new TransferDeviceOwnershipRequest { TargetOwnerId = targetOwnerId }, CancellationToken.None);
+
+        Assert.Same(expected, Assert.IsType<OkObjectResult>(result).Value);
+        // Even an Admin claim does not bypass current-owner authorization in the service.
+        _devices.Verify(service => service.TransferOwnershipAsync(
+            _deviceId, _userId, targetOwnerId, CancellationToken.None), Times.Once);
+    }
+
+    [Fact]
+    public async Task TransferDeviceOwnership_WhenServiceDeniesCaller_ReturnsForbidden()
+    {
+        _devices.Setup(service => service.TransferOwnershipAsync(
+                _deviceId, _userId, It.IsAny<Guid>(), CancellationToken.None))
+            .ThrowsAsync(new UnauthorizedAccessException());
+        var controller = WithUser(new DevicesController(_devices.Object));
+
+        var result = await controller.TransferOwnership(
+            _deviceId, new TransferDeviceOwnershipRequest { TargetOwnerId = Guid.NewGuid() }, CancellationToken.None);
+
+        Assert.IsType<ForbidResult>(result);
+    }
+
+    [Fact]
+    public async Task DeviceAccess_AfterTransfer_DeniesPreviousOwnerAndAllowsNewOwner()
+    {
+        var newOwnerId = Guid.NewGuid();
+        _devices.Setup(service => service.GetByIdAsync(_deviceId, CancellationToken.None))
+            .ReturnsAsync(new DeviceDto { Id = _deviceId, OwnerId = newOwnerId, DeviceCode = "FARM-TRANSFER-TEST" });
+
+        var previousOwnerController = WithUser(new DevicesController(_devices.Object));
+        var previousOwnerResult = await previousOwnerController.GetById(_deviceId, CancellationToken.None);
+        Assert.Equal(StatusCodes.Status403Forbidden, Assert.IsType<ObjectResult>(previousOwnerResult).StatusCode);
+
+        var newOwnerController = WithUser(new DevicesController(_devices.Object), subject: newOwnerId.ToString());
+        var newOwnerResult = await newOwnerController.GetById(_deviceId, CancellationToken.None);
+        Assert.Equal(_deviceId, Assert.IsType<DeviceDto>(Assert.IsType<OkObjectResult>(newOwnerResult).Value).Id);
+    }
+
+    [Fact]
     public async Task GetDeviceConnectionStatus_WhenMissingOrForbidden_ReturnsCorrectStatusCode()
     {
         _devices.Setup(s => s.GetByIdAsync(_deviceId, CancellationToken.None)).ReturnsAsync((DeviceDto?)null);
@@ -333,7 +384,7 @@ public class BackendEndpointsTests
             .UseSqlServer("Server=dummy;Database=dummy;Connect Timeout=1;")
             .Options;
         var db = new SmartFarmDbContext(options);
-        var controller = new HealthController(db);
+        var controller = new HealthController(db, Options.Create(new MqttBrokerSettings()));
 
         var result = controller.Live();
 
@@ -348,7 +399,7 @@ public class BackendEndpointsTests
             .UseSqlServer("Server=dummy;Database=dummy;Connect Timeout=1;")
             .Options;
         var db = new SmartFarmDbContext(options);
-        var controller = new HealthController(db);
+        var controller = new HealthController(db, Options.Create(new MqttBrokerSettings()));
 
         var result = controller.CheckHealth();
 
@@ -363,7 +414,7 @@ public class BackendEndpointsTests
             .UseSqlServer("Server=dummy;Database=dummy;Connect Timeout=1;")
             .Options;
         var db = new SmartFarmDbContext(options);
-        var controller = new HealthController(db);
+        var controller = new HealthController(db, Options.Create(new MqttBrokerSettings()));
 
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(2));
         var result = await controller.Ready(cts.Token);

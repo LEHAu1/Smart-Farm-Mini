@@ -21,17 +21,19 @@ public partial class AddGoogleAuthColumns : Migration
             IF COL_LENGTH(N'dbo.AspNetUsers', N'AvatarUrl') IS NULL
                 ALTER TABLE [dbo].[AspNetUsers] ADD [AvatarUrl] nvarchar(500) NULL;
 
-            UPDATE [dbo].[AspNetUsers]
-            SET [AuthProvider] = N'Local'
-            WHERE [AuthProvider] IS NULL;
+            EXEC sys.sp_executesql N'
+                UPDATE [dbo].[AspNetUsers]
+                SET [AuthProvider] = N''Local''
+                WHERE [AuthProvider] IS NULL;';
 
             IF NOT EXISTS (
                 SELECT 1 FROM sys.indexes
                 WHERE [name] = N'IX_AspNetUsers_GoogleSubjectId'
                   AND [object_id] = OBJECT_ID(N'[dbo].[AspNetUsers]'))
-                CREATE UNIQUE NONCLUSTERED INDEX [IX_AspNetUsers_GoogleSubjectId]
-                    ON [dbo].[AspNetUsers] ([GoogleSubjectId] ASC)
-                    WHERE [GoogleSubjectId] IS NOT NULL;
+                EXEC sys.sp_executesql N'
+                    CREATE UNIQUE NONCLUSTERED INDEX [IX_AspNetUsers_GoogleSubjectId]
+                        ON [dbo].[AspNetUsers] ([GoogleSubjectId] ASC)
+                        WHERE [GoogleSubjectId] IS NOT NULL;';
             """);
     }
 

@@ -40,6 +40,17 @@ namespace SmartFarm.Infrastructure.Persistence.Configurations
             builder.Property(c => c.CreatedAtUtc)
                 .IsRequired();
 
+            builder.Property(c => c.ExpiresAtUtc)
+                .IsRequired();
+
+            builder.Property(c => c.DispatchLeaseOwnerId);
+
+            builder.Property(c => c.DispatchLeaseUntilUtc);
+
+            builder.Property(c => c.DispatchAttemptCount)
+                .IsRequired()
+                .HasDefaultValue(0);
+
             builder.Property(c => c.AcknowledgedAtUtc);
 
             builder.Property(c => c.CompletedAtUtc);
@@ -55,6 +66,10 @@ namespace SmartFarm.Infrastructure.Persistence.Configurations
             // Index tra lệnh đang Pending của thiết bị
             builder.HasIndex(c => new { c.DeviceId, c.Status })
                 .HasDatabaseName("IX_DevCmds_DeviceId_Status");
+
+            // Supports per-command lease acquisition while scanning pending commands.
+            builder.HasIndex(c => new { c.DeviceId, c.Status, c.DispatchLeaseUntilUtc, c.CreatedAtUtc })
+                .HasDatabaseName("IX_DevCmds_DispatchLease");
 
             // Filtered index cho cleanup lệnh cũ Completed/Failed
             builder.HasIndex(c => c.CreatedAtUtc)

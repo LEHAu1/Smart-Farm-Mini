@@ -1,0 +1,58 @@
+DatabaseName|ServerName
+------------|----------
+SmartFarmMini_PostReadiness_20261125_7A2F|LAPTOP-UKV16E8V\LOCALDB#01127BD7
+
+(1 rows affected)
+name|physical_name
+----|-------------
+SmartFarmMiniDb|C:\Users\Lenovo\SmartFarmMini_PostReadiness_20261125_7A2F.mdf
+SmartFarmMiniDb_log|C:\Users\Lenovo\SmartFarmMini_PostReadiness_20261125_7A2F_log.ldf
+
+(2 rows affected)
+TableName|RowsCount
+---------|---------
+Users|3
+Devices|3
+SensorReadings|7827
+DeviceCommands|5
+RefreshTokens|26
+
+(5 rows affected)
+Status|RowsCount
+------|---------
+1|5
+
+(1 rows affected)
+Id|DeviceCode|CommandCode|Action|Status|CreatedAtUtc|ExpiresAtUtc|ExpectedExpiry|DispatchAttemptCount|DispatchLeaseOwnerId|DispatchLeaseUntilUtc
+--|----------|-----------|------|------|------------|------------|--------------|--------------------|--------------------|---------------------
+4D8200E7-7FA6-4322-926F-A7897BECFF24|FARM-ESP32-001|CMD-1795099037654-3604F4|START_PUMP|1|2026-11-19 14:37:17.6544437 +00:00|2026-11-19 14:47:17.6544437 +00:00|2026-11-19 14:47:17.6544437 +00:00|0|NULL|NULL
+2720B869-80E3-42E6-83D0-8CACD5C27330|FARM-ESP32-001|CMD-1795099219930-5F7F97|START_PUMP|1|2026-11-19 14:40:19.9301116 +00:00|2026-11-19 14:50:19.9301116 +00:00|2026-11-19 14:50:19.9301116 +00:00|0|NULL|NULL
+8171C834-74FA-4DD4-B7D8-DD2B20B4CCBE|FARM-ESP32-001|CMD-1795099545447-FA9641|START_PUMP|1|2026-11-19 14:45:45.4474210 +00:00|2026-11-19 14:55:45.4474210 +00:00|2026-11-19 14:55:45.4474210 +00:00|0|NULL|NULL
+F0BC059D-C824-4EAF-9F63-0F4E90E2A195|FARM-ESP32-001|CMD-1795100204478-9F3F41|START_PUMP|1|2026-11-19 14:56:44.4781972 +00:00|2026-11-19 15:06:44.4781972 +00:00|2026-11-19 15:06:44.4781972 +00:00|0|NULL|NULL
+744EFB87-A69B-4779-8ADC-741227A6246E|FARM-ESP32-001|CMD-1795100325525-5CEFFC|START_PUMP|1|2026-11-19 14:58:45.5259705 +00:00|2026-11-19 15:08:45.5259705 +00:00|2026-11-19 15:08:45.5259705 +00:00|0|NULL|NULL
+
+(5 rows affected)
+TotalMigrationHistory|LeaseMigrationHistory
+---------------------|---------------------
+7|1
+
+(1 rows affected)
+LeaseColumn
+-----------
+DispatchAttemptCount
+DispatchLeaseOwnerId
+DispatchLeaseUntilUtc
+ExpiresAtUtc
+
+(4 rows affected)
+LeaseIndex|is_disabled
+----------|-----------
+IX_DevCmds_DispatchLease|0
+
+(1 rows affected)
+NonmatchingExpiryRows
+---------------------
+0
+
+(1 rows affected)
+DBCC execution completed. If DBCC printed error messages, contact your system administrator.

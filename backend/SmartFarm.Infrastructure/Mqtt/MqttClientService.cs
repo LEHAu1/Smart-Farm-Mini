@@ -15,6 +15,8 @@ namespace SmartFarm.Infrastructure.Mqtt
         private Func<string, ReadOnlyMemory<byte>, CancellationToken, Task>? _messageHandler;
         private CancellationToken _messageCancellationToken;
         private TaskCompletionSource _disconnected = CompletedSignal();
+        private volatile bool _telemetrySubscriptionGranted;
+        private string? _telemetrySubscriptionResult;
 
         public MqttClientService(
             IOptions<MqttBrokerSettings> settings,
@@ -29,6 +31,8 @@ namespace SmartFarm.Infrastructure.Mqtt
 
         public bool IsEnabled => _settings.Enabled;
         public bool IsConnected => _client.IsConnected;
+        public bool IsTelemetrySubscriptionGranted => _telemetrySubscriptionGranted;
+        public string? TelemetrySubscriptionResult => _telemetrySubscriptionResult;
 
         public async Task ConnectAndSubscribeAsync(
             Func<string, ReadOnlyMemory<byte>, CancellationToken, Task> messageHandler,
@@ -48,6 +52,8 @@ namespace SmartFarm.Infrastructure.Mqtt
                 throw new InvalidOperationException("MQTT requires broker credentials when enabled.");
 
             _disconnected = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            _telemetrySubscriptionGranted = false;
+            _telemetrySubscriptionResult = null;
 
             var optionsBuilder = new MqttClientOptionsBuilder()
                 .WithClientId(_settings.ClientId)
@@ -60,22 +66,51 @@ namespace SmartFarm.Infrastructure.Mqtt
 
             await _client.ConnectAsync(optionsBuilder.Build(), cancellationToken);
 
-            var subscriptions = new MqttClientSubscribeOptionsBuilder()
-                .WithTopicFilter(filter => filter
-                    .WithTopic(MqttTopicConstants.TelemetryPattern)
-                    .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce))
-                .WithTopicFilter(filter => filter
-                    .WithTopic(MqttTopicConstants.AcknowledgementPattern)
-                    .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce))
-                .Build();
+            var configuredFilters = new[]
+            {
+                _settings.TelemetryTopicFilter,
+                _settings.AcknowledgementTopicFilter
+            }.Where(filter => !string.IsNullOrWhiteSpace(filter)).ToArray();
+            if (configuredFilters.Length == 0)
+                throw new InvalidOperationException("MQTT requires at least one configured subscription topic filter.");
 
-            await _client.SubscribeAsync(subscriptions, cancellationToken);
-            _logger.LogInformation("Connected to MQTT broker {Host}:{Port} and subscribed to telemetry and acknowledgements.",
+            var subscriptionsBuilder = new MqttClientSubscribeOptionsBuilder();
+            foreach (var topicFilter in configuredFilters)
+            {
+                subscriptionsBuilder.WithTopicFilter(filter => filter
+                    .WithTopic(topicFilter)
+                    .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce));
+            }
+
+            var subscriptions = subscriptionsBuilder.Build();
+
+            var subscribeResult = await _client.SubscribeAsync(subscriptions, cancellationToken);
+            foreach (var item in subscribeResult.Items)
+            {
+                _logger.LogInformation("MQTT SUBACK for {TopicFilter}: {ResultCode}.",
+                    item.TopicFilter.Topic, item.ResultCode);
+
+                if (string.Equals(item.TopicFilter.Topic, _settings.TelemetryTopicFilter, StringComparison.Ordinal))
+                {
+                    _telemetrySubscriptionResult = item.ResultCode.ToString();
+                    _telemetrySubscriptionGranted = item.ResultCode is
+                        MqttClientSubscribeResultCode.GrantedQoS0 or
+                        MqttClientSubscribeResultCode.GrantedQoS1;
+                }
+            }
+
+            if (!_telemetrySubscriptionGranted)
+                throw new InvalidOperationException("MQTT broker did not grant the configured telemetry subscription.");
+
+            _logger.LogInformation("Connected to MQTT broker {Host}:{Port}; telemetry subscription granted.",
                 _settings.Host, _settings.Port);
         }
 
         public async Task PublishAsync(string topic, ReadOnlyMemory<byte> payload, CancellationToken cancellationToken)
         {
+            if (!_settings.CommandDispatchEnabled && IsCommandTopic(topic))
+                throw new MqttPublishNotStartedException("MQTT command dispatch is disabled; command publish was not started.");
+
             if (!_settings.Enabled || !_client.IsConnected)
                 throw new MqttPublishNotStartedException("MQTT broker is currently unavailable; publish was not started.");
 
@@ -86,6 +121,16 @@ namespace SmartFarm.Infrastructure.Mqtt
                 .Build();
 
             await _client.PublishAsync(message, cancellationToken);
+        }
+
+        private static bool IsCommandTopic(string topic)
+        {
+            var segments = topic.Split('/');
+            return segments.Length == 4
+                && segments[0] == "smartfarm"
+                && segments[1] == "device"
+                && !string.IsNullOrWhiteSpace(segments[2])
+                && segments[3] == MqttTopicConstants.CommandSuffix;
         }
 
         public async Task WaitForDisconnectAsync(CancellationToken cancellationToken)
@@ -112,6 +157,7 @@ namespace SmartFarm.Infrastructure.Mqtt
 
         private Task OnDisconnectedAsync(MqttClientDisconnectedEventArgs eventArgs)
         {
+            _telemetrySubscriptionGranted = false;
             _disconnected.TrySetResult();
             _logger.LogWarning("MQTT broker disconnected the Web API client. Reason: {Reason}", eventArgs.ReasonString);
             return Task.CompletedTask;

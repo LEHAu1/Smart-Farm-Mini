@@ -1,0 +1,101 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="b783044d-5a11-4cb7-a40c-8888ca69f3dc" name="Lenovo@LAPTOP-UKV16E8V 2026-11-25 08:44:27" runUser="LAPTOP-UKV16E8V\Lenovo" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-25T08:44:27.1009407+07:00" queuing="2026-11-25T08:44:27.1009414+07:00" start="2026-11-25T08:44:26.3882021+07:00" finish="2026-11-25T08:44:27.1488372+07:00" />
+  <TestSettings name="default" id="d6b2b4be-e5c9-4cec-af81-0f2f36cbff62">
+    <Deployment runDeploymentRoot="Lenovo_LAPTOP-UKV16E8V_2026-11-25_08_44_27" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="05d117d3-010f-442d-89f9-0cddaf21a1f5" testId="d5ede265-99a4-e461-2fa3-48cd4943452c" testName="SmartFarm.UnitTests.Services.MqttPendingCommandDispatcherTests.DispatchAsync_FreshOnlineDevice_ClaimsThenPublishesOnce" computerName="LAPTOP-UKV16E8V" duration="00:00:00.0021985" startTime="2026-11-25T08:44:27.0848514+07:00" endTime="2026-11-25T08:44:27.0848969+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="05d117d3-010f-442d-89f9-0cddaf21a1f5" />
+    <UnitTestResult executionId="5c211b24-564e-4321-87eb-acafbccced47" testId="1bb7f623-b6e5-9107-c276-86e5345e4967" testName="SmartFarm.UnitTests.Services.DeviceCommandDispatchTests.CreateCommandAsync_PersistsPendingCommandWithoutPublishing" computerName="LAPTOP-UKV16E8V" duration="00:00:00.0158152" startTime="2026-11-25T08:44:27.0267640+07:00" endTime="2026-11-25T08:44:27.0327118+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="5c211b24-564e-4321-87eb-acafbccced47" />
+    <UnitTestResult executionId="1bd2fe39-3b8f-4874-b737-88a9338956f0" testId="38c24230-9937-463d-c701-cba22b6ee046" testName="SmartFarm.UnitTests.Services.MqttPendingCommandDispatcherTests.DispatchAsync_OfflineDevice_DoesNotClaimOrPublish" computerName="LAPTOP-UKV16E8V" duration="00:00:00.0019323" startTime="2026-11-25T08:44:27.0456706+07:00" endTime="2026-11-25T08:44:27.0472388+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1bd2fe39-3b8f-4874-b737-88a9338956f0" />
+    <UnitTestResult executionId="d28be50c-9bc7-4d64-89f6-3029875621ad" testId="68ae6514-36ce-8524-40ca-55efa2923c73" testName="SmartFarm.UnitTests.Services.MqttPendingCommandDispatcherTests.DispatchAsync_StaleHeartbeat_DoesNotClaimOrPublish" computerName="LAPTOP-UKV16E8V" duration="00:00:00.0034979" startTime="2026-11-25T08:44:27.0294924+07:00" endTime="2026-11-25T08:44:27.0322838+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d28be50c-9bc7-4d64-89f6-3029875621ad" />
+    <UnitTestResult executionId="b8724c74-855e-4d3e-9000-ca0eec7ecc64" testId="16b42b36-682e-7bfe-9aac-d9ce6e04f987" testName="SmartFarm.UnitTests.Services.MqttPendingCommandDispatcherTests.DispatchAsync_ReconnectTick_DoesNotRepublishWhileLeaseIsActive" computerName="LAPTOP-UKV16E8V" duration="00:00:00.0731046" startTime="2026-11-25T08:44:26.9523862+07:00" endTime="2026-11-25T08:44:27.0287544+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b8724c74-855e-4d3e-9000-ca0eec7ecc64" />
+    <UnitTestResult executionId="326ba53b-210b-4e65-abdd-62da5f4a0671" testId="b79f56be-70b2-69e3-12e7-03ffb6c1a5e8" testName="SmartFarm.UnitTests.Services.MqttPendingCommandDispatcherTests.DispatchAsync_AmbiguousPublish_LeaseSurvivesAndRetryReusesStableCommandId" computerName="LAPTOP-UKV16E8V" duration="00:00:00.0083148" startTime="2026-11-25T08:44:27.0371320+07:00" endTime="2026-11-25T08:44:27.0452901+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="326ba53b-210b-4e65-abdd-62da5f4a0671" />
+    <UnitTestResult executionId="183a8e0c-d91c-4506-bb6c-167f27b95e1e" testId="a8ae493d-35c9-097e-26dd-7b9804266fc9" testName="SmartFarm.UnitTests.Services.MqttPendingCommandDispatcherTests.DispatchAsync_DelayedAcknowledgementRemovesCommandFromPendingQueue" computerName="LAPTOP-UKV16E8V" duration="00:00:00.0022543" startTime="2026-11-25T08:44:27.0602231+07:00" endTime="2026-11-25T08:44:27.0624173+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="183a8e0c-d91c-4506-bb6c-167f27b95e1e" />
+    <UnitTestResult executionId="410cfc44-096a-4b30-9a66-87676c384836" testId="39ad998c-32b3-492c-0950-9e3bece6e2c3" testName="SmartFarm.UnitTests.Services.DeviceCommandDispatchTests.CreateCommandAsync_RejectsUnknownActionBeforePersistence" computerName="LAPTOP-UKV16E8V" duration="00:00:00.0591056" startTime="2026-11-25T08:44:26.9509673+07:00" endTime="2026-11-25T08:44:27.0166101+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="410cfc44-096a-4b30-9a66-87676c384836" />
+    <UnitTestResult executionId="ef9f34db-9e37-4bd5-8912-eb6f5b4bb0be" testId="6b50eaf9-a1bd-f6f3-375d-c5e50f19b437" testName="SmartFarm.UnitTests.Services.MqttPendingCommandDispatcherTests.DispatchAsync_CompetingInstances_AtomicLeaseAllowsOnePublisher" computerName="LAPTOP-UKV16E8V" duration="00:00:00.0066892" startTime="2026-11-25T08:44:27.0474006+07:00" endTime="2026-11-25T08:44:27.0583955+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ef9f34db-9e37-4bd5-8912-eb6f5b4bb0be" />
+    <UnitTestResult executionId="029db75b-cb05-4a28-833f-d720f97bbac5" testId="dc1a0255-af7c-0012-1830-b7b940c2f43b" testName="SmartFarm.UnitTests.Services.MqttPendingCommandDispatcherTests.DispatchAsync_ExpiredCommand_IsNeverPublishedAfterReconnect" computerName="LAPTOP-UKV16E8V" duration="00:00:00.0045183" startTime="2026-11-25T08:44:27.0325102+07:00" endTime="2026-11-25T08:44:27.0368531+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="029db75b-cb05-4a28-833f-d720f97bbac5" />
+    <UnitTestResult executionId="ea95180c-20c9-4ab2-b9f5-d3d6c4255804" testId="9a058562-d0c7-ee0c-544e-758b8b0b6b07" testName="SmartFarm.UnitTests.Services.MqttPendingCommandDispatcherTests.DispatchAsync_PublishDefinitelyNotStarted_ReleasesLeaseForNextTick" computerName="LAPTOP-UKV16E8V" duration="00:00:00.0044665" startTime="2026-11-25T08:44:27.0852709+07:00" endTime="2026-11-25T08:44:27.0852989+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ea95180c-20c9-4ab2-b9f5-d3d6c4255804" />
+    <UnitTestResult executionId="2eba002c-1743-4fc2-a7a3-b77cff4a5645" testId="174b265a-5fee-ea9d-32df-e7f3e703d5f1" testName="SmartFarm.UnitTests.Services.MqttPendingCommandDispatcherTests.DispatchAsync_ProcessCrashAfterClaim_LeaseExpiryAllowsRecovery" computerName="LAPTOP-UKV16E8V" duration="00:00:00.0046647" startTime="2026-11-25T08:44:27.0856458+07:00" endTime="2026-11-25T08:44:27.0856771+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="2eba002c-1743-4fc2-a7a3-b77cff4a5645" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="SmartFarm.UnitTests.Services.MqttPendingCommandDispatcherTests.DispatchAsync_ExpiredCommand_IsNeverPublishedAfterReconnect" storage="d:\github\smart farm mini\smart-farm-mini\backend\smartfarm.unittests\bin\debug\net10.0\smartfarm.unittests.dll" id="dc1a0255-af7c-0012-1830-b7b940c2f43b">
+      <Execution id="029db75b-cb05-4a28-833f-d720f97bbac5" />
+      <TestMethod codeBase="D:\GitHub\Smart Farm mini\Smart-Farm-Mini\backend\SmartFarm.UnitTests\bin\Debug\net10.0\SmartFarm.UnitTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="SmartFarm.UnitTests.Services.MqttPendingCommandDispatcherTests" name="DispatchAsync_ExpiredCommand_IsNeverPublishedAfterReconnect" />
+    </UnitTest>
+    <UnitTest name="SmartFarm.UnitTests.Services.MqttPendingCommandDispatcherTests.DispatchAsync_DelayedAcknowledgementRemovesCommandFromPendingQueue" storage="d:\github\smart farm mini\smart-farm-mini\backend\smartfarm.unittests\bin\debug\net10.0\smartfarm.unittests.dll" id="a8ae493d-35c9-097e-26dd-7b9804266fc9">
+      <Execution id="183a8e0c-d91c-4506-bb6c-167f27b95e1e" />
+      <TestMethod codeBase="D:\GitHub\Smart Farm mini\Smart-Farm-Mini\backend\SmartFarm.UnitTests\bin\Debug\net10.0\SmartFarm.UnitTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="SmartFarm.UnitTests.Services.MqttPendingCommandDispatcherTests" name="DispatchAsync_DelayedAcknowledgementRemovesCommandFromPendingQueue" />
+    </UnitTest>
+    <UnitTest name="SmartFarm.UnitTests.Services.MqttPendingCommandDispatcherTests.DispatchAsync_StaleHeartbeat_DoesNotClaimOrPublish" storage="d:\github\smart farm mini\smart-farm-mini\backend\smartfarm.unittests\bin\debug\net10.0\smartfarm.unittests.dll" id="68ae6514-36ce-8524-40ca-55efa2923c73">
+      <Execution id="d28be50c-9bc7-4d64-89f6-3029875621ad" />
+      <TestMethod codeBase="D:\GitHub\Smart Farm mini\Smart-Farm-Mini\backend\SmartFarm.UnitTests\bin\Debug\net10.0\SmartFarm.UnitTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="SmartFarm.UnitTests.Services.MqttPendingCommandDispatcherTests" name="DispatchAsync_StaleHeartbeat_DoesNotClaimOrPublish" />
+    </UnitTest>
+    <UnitTest name="SmartFarm.UnitTests.Services.MqttPendingCommandDispatcherTests.DispatchAsync_FreshOnlineDevice_ClaimsThenPublishesOnce" storage="d:\github\smart farm mini\smart-farm-mini\backend\smartfarm.unittests\bin\debug\net10.0\smartfarm.unittests.dll" id="d5ede265-99a4-e461-2fa3-48cd4943452c">
+      <Execution id="05d117d3-010f-442d-89f9-0cddaf21a1f5" />
+      <TestMethod codeBase="D:\GitHub\Smart Farm mini\Smart-Farm-Mini\backend\SmartFarm.UnitTests\bin\Debug\net10.0\SmartFarm.UnitTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="SmartFarm.UnitTests.Services.MqttPendingCommandDispatcherTests" name="DispatchAsync_FreshOnlineDevice_ClaimsThenPublishesOnce" />
+    </UnitTest>
+    <UnitTest name="SmartFarm.UnitTests.Services.MqttPendingCommandDispatcherTests.DispatchAsync_CompetingInstances_AtomicLeaseAllowsOnePublisher" storage="d:\github\smart farm mini\smart-farm-mini\backend\smartfarm.unittests\bin\debug\net10.0\smartfarm.unittests.dll" id="6b50eaf9-a1bd-f6f3-375d-c5e50f19b437">
+      <Execution id="ef9f34db-9e37-4bd5-8912-eb6f5b4bb0be" />
+      <TestMethod codeBase="D:\GitHub\Smart Farm mini\Smart-Farm-Mini\backend\SmartFarm.UnitTests\bin\Debug\net10.0\SmartFarm.UnitTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="SmartFarm.UnitTests.Services.MqttPendingCommandDispatcherTests" name="DispatchAsync_CompetingInstances_AtomicLeaseAllowsOnePublisher" />
+    </UnitTest>
+    <UnitTest name="SmartFarm.UnitTests.Services.MqttPendingCommandDispatcherTests.DispatchAsync_ProcessCrashAfterClaim_LeaseExpiryAllowsRecovery" storage="d:\github\smart farm mini\smart-farm-mini\backend\smartfarm.unittests\bin\debug\net10.0\smartfarm.unittests.dll" id="174b265a-5fee-ea9d-32df-e7f3e703d5f1">
+      <Execution id="2eba002c-1743-4fc2-a7a3-b77cff4a5645" />
+      <TestMethod codeBase="D:\GitHub\Smart Farm mini\Smart-Farm-Mini\backend\SmartFarm.UnitTests\bin\Debug\net10.0\SmartFarm.UnitTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="SmartFarm.UnitTests.Services.MqttPendingCommandDispatcherTests" name="DispatchAsync_ProcessCrashAfterClaim_LeaseExpiryAllowsRecovery" />
+    </UnitTest>
+    <UnitTest name="SmartFarm.UnitTests.Services.MqttPendingCommandDispatcherTests.DispatchAsync_PublishDefinitelyNotStarted_ReleasesLeaseForNextTick" storage="d:\github\smart farm mini\smart-farm-mini\backend\smartfarm.unittests\bin\debug\net10.0\smartfarm.unittests.dll" id="9a058562-d0c7-ee0c-544e-758b8b0b6b07">
+      <Execution id="ea95180c-20c9-4ab2-b9f5-d3d6c4255804" />
+      <TestMethod codeBase="D:\GitHub\Smart Farm mini\Smart-Farm-Mini\backend\SmartFarm.UnitTests\bin\Debug\net10.0\SmartFarm.UnitTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="SmartFarm.UnitTests.Services.MqttPendingCommandDispatcherTests" name="DispatchAsync_PublishDefinitelyNotStarted_ReleasesLeaseForNextTick" />
+    </UnitTest>
+    <UnitTest name="SmartFarm.UnitTests.Services.MqttPendingCommandDispatcherTests.DispatchAsync_ReconnectTick_DoesNotRepublishWhileLeaseIsActive" storage="d:\github\smart farm mini\smart-farm-mini\backend\smartfarm.unittests\bin\debug\net10.0\smartfarm.unittests.dll" id="16b42b36-682e-7bfe-9aac-d9ce6e04f987">
+      <Execution id="b8724c74-855e-4d3e-9000-ca0eec7ecc64" />
+      <TestMethod codeBase="D:\GitHub\Smart Farm mini\Smart-Farm-Mini\backend\SmartFarm.UnitTests\bin\Debug\net10.0\SmartFarm.UnitTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="SmartFarm.UnitTests.Services.MqttPendingCommandDispatcherTests" name="DispatchAsync_ReconnectTick_DoesNotRepublishWhileLeaseIsActive" />
+    </UnitTest>
+    <UnitTest name="SmartFarm.UnitTests.Services.DeviceCommandDispatchTests.CreateCommandAsync_RejectsUnknownActionBeforePersistence" storage="d:\github\smart farm mini\smart-farm-mini\backend\smartfarm.unittests\bin\debug\net10.0\smartfarm.unittests.dll" id="39ad998c-32b3-492c-0950-9e3bece6e2c3">
+      <Execution id="410cfc44-096a-4b30-9a66-87676c384836" />
+      <TestMethod codeBase="D:\GitHub\Smart Farm mini\Smart-Farm-Mini\backend\SmartFarm.UnitTests\bin\Debug\net10.0\SmartFarm.UnitTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="SmartFarm.UnitTests.Services.DeviceCommandDispatchTests" name="CreateCommandAsync_RejectsUnknownActionBeforePersistence" />
+    </UnitTest>
+    <UnitTest name="SmartFarm.UnitTests.Services.MqttPendingCommandDispatcherTests.DispatchAsync_AmbiguousPublish_LeaseSurvivesAndRetryReusesStableCommandId" storage="d:\github\smart farm mini\smart-farm-mini\backend\smartfarm.unittests\bin\debug\net10.0\smartfarm.unittests.dll" id="b79f56be-70b2-69e3-12e7-03ffb6c1a5e8">
+      <Execution id="326ba53b-210b-4e65-abdd-62da5f4a0671" />
+      <TestMethod codeBase="D:\GitHub\Smart Farm mini\Smart-Farm-Mini\backend\SmartFarm.UnitTests\bin\Debug\net10.0\SmartFarm.UnitTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="SmartFarm.UnitTests.Services.MqttPendingCommandDispatcherTests" name="DispatchAsync_AmbiguousPublish_LeaseSurvivesAndRetryReusesStableCommandId" />
+    </UnitTest>
+    <UnitTest name="SmartFarm.UnitTests.Services.DeviceCommandDispatchTests.CreateCommandAsync_PersistsPendingCommandWithoutPublishing" storage="d:\github\smart farm mini\smart-farm-mini\backend\smartfarm.unittests\bin\debug\net10.0\smartfarm.unittests.dll" id="1bb7f623-b6e5-9107-c276-86e5345e4967">
+      <Execution id="5c211b24-564e-4321-87eb-acafbccced47" />
+      <TestMethod codeBase="D:\GitHub\Smart Farm mini\Smart-Farm-Mini\backend\SmartFarm.UnitTests\bin\Debug\net10.0\SmartFarm.UnitTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="SmartFarm.UnitTests.Services.DeviceCommandDispatchTests" name="CreateCommandAsync_PersistsPendingCommandWithoutPublishing" />
+    </UnitTest>
+    <UnitTest name="SmartFarm.UnitTests.Services.MqttPendingCommandDispatcherTests.DispatchAsync_OfflineDevice_DoesNotClaimOrPublish" storage="d:\github\smart farm mini\smart-farm-mini\backend\smartfarm.unittests\bin\debug\net10.0\smartfarm.unittests.dll" id="38c24230-9937-463d-c701-cba22b6ee046">
+      <Execution id="1bd2fe39-3b8f-4874-b737-88a9338956f0" />
+      <TestMethod codeBase="D:\GitHub\Smart Farm mini\Smart-Farm-Mini\backend\SmartFarm.UnitTests\bin\Debug\net10.0\SmartFarm.UnitTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="SmartFarm.UnitTests.Services.MqttPendingCommandDispatcherTests" name="DispatchAsync_OfflineDevice_DoesNotClaimOrPublish" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="d5ede265-99a4-e461-2fa3-48cd4943452c" executionId="05d117d3-010f-442d-89f9-0cddaf21a1f5" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1bb7f623-b6e5-9107-c276-86e5345e4967" executionId="5c211b24-564e-4321-87eb-acafbccced47" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="38c24230-9937-463d-c701-cba22b6ee046" executionId="1bd2fe39-3b8f-4874-b737-88a9338956f0" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="68ae6514-36ce-8524-40ca-55efa2923c73" executionId="d28be50c-9bc7-4d64-89f6-3029875621ad" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="16b42b36-682e-7bfe-9aac-d9ce6e04f987" executionId="b8724c74-855e-4d3e-9000-ca0eec7ecc64" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b79f56be-70b2-69e3-12e7-03ffb6c1a5e8" executionId="326ba53b-210b-4e65-abdd-62da5f4a0671" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a8ae493d-35c9-097e-26dd-7b9804266fc9" executionId="183a8e0c-d91c-4506-bb6c-167f27b95e1e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="39ad998c-32b3-492c-0950-9e3bece6e2c3" executionId="410cfc44-096a-4b30-9a66-87676c384836" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6b50eaf9-a1bd-f6f3-375d-c5e50f19b437" executionId="ef9f34db-9e37-4bd5-8912-eb6f5b4bb0be" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="dc1a0255-af7c-0012-1830-b7b940c2f43b" executionId="029db75b-cb05-4a28-833f-d720f97bbac5" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="9a058562-d0c7-ee0c-544e-758b8b0b6b07" executionId="ea95180c-20c9-4ab2-b9f5-d3d6c4255804" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="174b265a-5fee-ea9d-32df-e7f3e703d5f1" executionId="2eba002c-1743-4fc2-a7a3-b77cff4a5645" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="12" executed="12" passed="12" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>Logging TestHost Diagnostics in file: D:\GitHub\Smart Farm mini\Smart-Farm-Mini\.ai\mqtt-reliability-coordinator.host.26-11-25_08-44-26_41119_5.diag&#xD;
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.4+50e68bbb8b (64-bit .NET 10.0.15)&#xD;
+[xUnit.net 00:00:00.07]   Discovering: SmartFarm.UnitTests&#xD;
+[xUnit.net 00:00:00.12]   Discovered:  SmartFarm.UnitTests&#xD;
+[xUnit.net 00:00:00.14]   Starting:    SmartFarm.UnitTests&#xD;
+[xUnit.net 00:00:00.30]   Finished:    SmartFarm.UnitTests&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

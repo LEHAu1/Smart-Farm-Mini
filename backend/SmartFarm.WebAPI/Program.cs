@@ -48,6 +48,8 @@ namespace SmartFarm.WebAPI
             builder.Services.AddControllers();
             builder.Services.AddSignalR();
             builder.Services.AddSingleton<MqttMessageHandler>();
+            builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
+            builder.Services.AddSingleton<PendingCommandDispatcher>();
             builder.Services.AddSingleton<ISensorHubNotifier, SensorHubNotifier>();
             builder.Services.AddHostedService<MqttHostedService>();
             builder.Services.AddHostedService<DeviceHeartbeatService>();

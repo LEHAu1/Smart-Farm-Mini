@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="5df70f80-951d-431f-89d7-e0e7b6ab5fba" name="Lenovo@LAPTOP-UKV16E8V 2026-11-25 15:47:21" runUser="LAPTOP-UKV16E8V\Lenovo" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-25T15:47:21.9669178+07:00" queuing="2026-11-25T15:47:21.9669183+07:00" start="2026-11-25T15:45:51.6057161+07:00" finish="2026-11-25T15:47:21.9678564+07:00" />
+  <TestSettings name="default" id="12723509-9a40-4a15-8cd4-fbd619b04a2b">
+    <Deployment runDeploymentRoot="Lenovo_LAPTOP-UKV16E8V_2026-11-25_15_47_21" />
+  </TestSettings>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="0" executed="0" passed="0" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <RunInfos>
+      <RunInfo computerName="LAPTOP-UKV16E8V" outcome="Error" timestamp="2026-11-25T15:47:21.7621295+07:00">
+        <Text>vstest.console process failed to connect to testhost process after 90 seconds. This may occur due to machine slowness, please set environment variable VSTEST_CONNECTION_TIMEOUT to increase timeout. The process with id 12340 was still running when this message was reported. Process path: D:\GitHub\Smart Farm mini\Smart-Farm-Mini\backend\SmartFarm.UnitTests\bin\Debug\net10.0\testhost.exe</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

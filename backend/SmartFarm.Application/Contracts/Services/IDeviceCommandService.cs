@@ -13,6 +13,15 @@ namespace SmartFarm.Application.Contracts.Services
         Task<DeviceCommandDto> CreateCommandAsync(CreateDeviceCommandRequest request, CancellationToken cancellationToken = default);
         Task<DeviceCommandDto?> GetByIdAsync(Guid commandId, CancellationToken cancellationToken = default);
         Task<IReadOnlyList<DeviceCommandDto>> GetPendingCommandsAsync(Guid deviceId, CancellationToken cancellationToken = default);
+        Task<bool> TryAcquireDispatchLeaseAsync(
+            Guid commandId,
+            Guid leaseOwnerId,
+            DateTimeOffset nowUtc,
+            DateTimeOffset leaseUntilUtc,
+            DateTimeOffset deviceLastSeenCutoffUtc,
+            int maxAttempts,
+            CancellationToken cancellationToken = default);
+        Task<bool> ReleaseDispatchLeaseAsync(Guid commandId, Guid leaseOwnerId, CancellationToken cancellationToken = default);
         Task<IReadOnlyList<DeviceCommandDto>> GetRecentCommandsAsync(Guid deviceId, int limit = 20, CancellationToken cancellationToken = default);
         Task<DeviceCommandDto> AcknowledgeCommandAsync(Guid commandId, CancellationToken cancellationToken = default);
         Task<DeviceCommandDto> CompleteCommandAsync(Guid commandId, CancellationToken cancellationToken = default);

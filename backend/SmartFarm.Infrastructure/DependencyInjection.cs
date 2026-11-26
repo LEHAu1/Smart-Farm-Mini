@@ -38,6 +38,11 @@ namespace SmartFarm.Infrastructure
                 options.Password = section["Password"] ?? options.Password;
                 options.ClientId = section["ClientId"] ?? options.ClientId;
                 if (bool.TryParse(section["UseTls"], out var useTls)) options.UseTls = useTls;
+                if (bool.TryParse(section["CommandDispatchEnabled"], out var commandDispatchEnabled))
+                    options.CommandDispatchEnabled = commandDispatchEnabled;
+                options.TelemetryTopicFilter = section["TelemetryTopicFilter"] ?? options.TelemetryTopicFilter;
+                options.TelemetryDeviceCode = section["TelemetryDeviceCode"] ?? options.TelemetryDeviceCode;
+                options.AcknowledgementTopicFilter = section["AcknowledgementTopicFilter"] ?? options.AcknowledgementTopicFilter;
                 if (int.TryParse(section["ReconnectDelaySeconds"], out var reconnectDelaySeconds)) options.ReconnectDelaySeconds = reconnectDelaySeconds;
                 if (int.TryParse(section["DeviceOfflineAfterSeconds"], out var deviceOfflineAfterSeconds)) options.DeviceOfflineAfterSeconds = deviceOfflineAfterSeconds;
                 if (int.TryParse(section["HeartbeatIntervalSeconds"], out var heartbeatIntervalSeconds)) options.HeartbeatIntervalSeconds = heartbeatIntervalSeconds;
@@ -45,6 +50,11 @@ namespace SmartFarm.Infrastructure
                 if (int.TryParse(section["MaxPendingCommandRetries"], out var maxPendingCommandRetries)) options.MaxPendingCommandRetries = maxPendingCommandRetries;
                 if (int.TryParse(section["PendingCommandExpiryMinutes"], out var pendingCommandExpiryMinutes)) options.PendingCommandExpiryMinutes = pendingCommandExpiryMinutes;
             });
+            var commandQueueOptions = new DeviceCommandQueueOptions();
+            var commandQueueSection = configuration.GetSection(MqttBrokerSettings.SectionName);
+            if (int.TryParse(commandQueueSection["PendingCommandExpiryMinutes"], out var commandExpiryMinutes))
+                commandQueueOptions.PendingCommandExpiryMinutes = commandExpiryMinutes;
+            services.AddSingleton(commandQueueOptions);
             services.AddSingleton<MqttClientService>();
             services.AddSingleton<IMqttPublisher, MqttPublisher>();
             services.AddSingleton<DeviceStatusSynchronization>();

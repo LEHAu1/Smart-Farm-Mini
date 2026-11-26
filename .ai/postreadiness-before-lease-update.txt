@@ -1,0 +1,5 @@
+TargetDatabase|HistoryRows
+--------------|-----------
+SmartFarmMini_PostReadiness_20261125_7A2F|6
+
+(1 rows affected)

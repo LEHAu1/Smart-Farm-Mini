@@ -139,7 +139,14 @@ namespace SmartFarm.Infrastructure.Persistence.Repositories
 
         public Task UpdateAsync(Device device, CancellationToken cancellationToken = default)
         {
-            _context.Devices.Update(device);
+            var entry = _context.Entry(device);
+            if (entry.State == EntityState.Detached)
+            {
+                throw new InvalidOperationException("Device updates require an entity loaded by this repository context.");
+            }
+
+            // Keep EF's property-level change tracking. Marking the entire entity Modified
+            // can write a stale OwnerId back after an atomic ownership transfer.
             return Task.CompletedTask;
         }
 
@@ -154,6 +161,32 @@ namespace SmartFarm.Infrastructure.Persistence.Repositories
             var code = deviceCode.Trim().ToUpperInvariant();
             return await _context.Devices
                 .AnyAsync(d => d.DeviceCode == code, cancellationToken);
+        }
+
+        public Task<bool> IsEligibleOwnerAsync(Guid userId, DateTimeOffset nowUtc, CancellationToken cancellationToken = default)
+        {
+            return _context.Users.AsNoTracking().AnyAsync(user =>
+                user.Id == userId &&
+                user.EmailConfirmed &&
+                (user.LockoutEnd == null || user.LockoutEnd <= nowUtc), cancellationToken);
+        }
+
+        public async Task<bool> TryTransferOwnershipAsync(
+            Guid deviceId,
+            Guid currentOwnerId,
+            Guid targetOwnerId,
+            DateTimeOffset updatedAtUtc,
+            CancellationToken cancellationToken = default)
+        {
+            // Single conditional UPDATE is an atomic compare-and-swap. Concurrent transfers
+            // from the same owner cannot both succeed; the FK validates the target user.
+            var affected = await _context.Devices
+                .Where(device => device.Id == deviceId && device.OwnerId == currentOwnerId)
+                .ExecuteUpdateAsync(update => update
+                    .SetProperty(device => device.OwnerId, targetOwnerId)
+                    .SetProperty(device => device.UpdatedAtUtc, updatedAtUtc), cancellationToken);
+
+            return affected == 1;
         }
 
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

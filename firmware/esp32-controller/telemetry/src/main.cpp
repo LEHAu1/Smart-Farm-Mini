@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <DHT.h>
 #include <MQTT.h>
+#include <Preferences.h>
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include <time.h>
@@ -14,16 +15,25 @@
 #include <cmath>
 #include <cstdio>
 #include <cstring>
+#include <type_traits>
+#include "command_protocol.h"
 
-// This telemetry path intentionally has no relay, pump, command subscription,
-// or application-level acknowledgement. GPIO34 raw soil ADC is diagnostic only
-// until the probe is calibrated in soil; it is not published as a percentage.
+// This build has no relay/pump actuation. It accepts command envelopes only so
+// it can reject them safely, enforce expiry/deduplication, and report Failed.
+// GPIO34 raw soil ADC is diagnostic only until calibrated in soil.
 constexpr uint8_t SoilMoisturePin = 34;
+constexpr int64_t CommandMaxAgeSeconds = smartfarm::commands::DefaultCommandMaxAgeSeconds;
+constexpr time_t MinimumTrustedUtcEpoch = 1700000000;
+constexpr uint32_t UtcSyncRetryIntervalMs = 60000;
+constexpr char CommandLedgerNamespace[] = "sf-command";
+constexpr char CommandLedgerStorageKey[] = "ledger-v1";
 
 WiFiClientSecure secureNetwork;
 WiFiClient plainNetwork;
-MQTTClient mqtt(256);
+MQTTClient mqtt(512);
 DHT dht(config::DhtDataPin, DHT11);
+Preferences commandPreferences;
+smartfarm::commands::CommandLedger commandLedger{};
 
 struct PendingTelemetry {
   bool occupied = false;
@@ -40,11 +50,16 @@ uint8_t queueSize = 0;
 uint32_t lastSampleAt = 0;
 uint32_t lastWifiAttemptAt = 0;
 uint32_t lastMqttAttemptAt = 0;
-bool timeSyncAttempted = false;
+uint32_t lastUtcSyncAttemptAt = 0;
+bool utcSyncAttempted = false;
 bool wifiAttempted = false;
 bool mqttAttempted = false;
+bool commandSubscribed = false;
+bool commandLedgerReady = false;
 uint32_t lastConfigWarningAt = 0;
 char lastConfigWarning[128] = {};
+
+bool subscribeToCommands();
 
 void warnConfigAtMostOncePerMinute(const char* warning) {
   const uint32_t now = millis();
@@ -62,10 +77,16 @@ bool isPlaceholder(const char* value) {
 
 bool validDeviceCode() {
   if (isPlaceholder(config::DeviceCode)) return false;
+  size_t length = 0;
   for (const char* cursor = config::DeviceCode; *cursor != '\0'; ++cursor) {
-    if (*cursor == '/' || *cursor == '+' || *cursor == '#') return false;
+    const char character = *cursor;
+    const bool allowed = (character >= 'A' && character <= 'Z') ||
+                         (character >= 'a' && character <= 'z') ||
+                         (character >= '0' && character <= '9') ||
+                         character == '_' || character == '-';
+    if (!allowed || ++length > 50) return false;
   }
-  return true;
+  return length >= 1;
 }
 
 void createMessageId(char (&destination)[37]) {
@@ -182,8 +203,12 @@ bool configureTls() {
 }
 
 bool connectMqtt() {
-  if (mqtt.connected()) return true;
+  if (mqtt.connected()) return subscribeToCommands();
   if (WiFi.status() != WL_CONNECTED) return false;
+  if (config::MqttUseTls && time(nullptr) < MinimumTrustedUtcEpoch) {
+    warnConfigAtMostOncePerMinute("Trusted UTC unavailable; refusing TLS MQTT connection.");
+    return false;
+  }
   if (!validDeviceCode() || isPlaceholder(config::MqttHost) ||
       isPlaceholder(config::MqttUsername) || isPlaceholder(config::MqttPassword)) {
     warnConfigAtMostOncePerMinute("MQTT/device config is incomplete; set it in local include/config.h.");
@@ -198,18 +223,180 @@ bool connectMqtt() {
 
   const char* clientId = config::DeviceCode;
   const bool connected = mqtt.connect(clientId, config::MqttUsername, config::MqttPassword);
-  if (connected) Serial.println("MQTT connected.");
-  else Serial.printf("MQTT connect failed (library error %d).\n", static_cast<int>(mqtt.lastError()));
-  return connected;
+  if (!connected) {
+    Serial.printf("MQTT connect failed (library error %d).\n", static_cast<int>(mqtt.lastError()));
+    return false;
+  }
+  Serial.println("MQTT connected.");
+  return subscribeToCommands();
 }
 
 void synchronizeClock() {
-  if (timeSyncAttempted || WiFi.status() != WL_CONNECTED) return;
-  timeSyncAttempted = true;
+  if (time(nullptr) >= MinimumTrustedUtcEpoch || WiFi.status() != WL_CONNECTED) return;
+  const uint32_t now = millis();
+  if (utcSyncAttempted && now - lastUtcSyncAttemptAt < UtcSyncRetryIntervalMs) return;
+  lastUtcSyncAttemptAt = now;
+  utcSyncAttempted = true;
   configTime(0, 0, "pool.ntp.org", "time.nist.gov");
   const uint32_t startedAt = millis();
-  while (time(nullptr) < 1700000000 && millis() - startedAt < 5000) delay(100);
-  if (time(nullptr) < 1700000000) Serial.println("NTP time unavailable; telemetry omits recordedAtUtc.");
+  while (time(nullptr) < MinimumTrustedUtcEpoch && millis() - startedAt < 5000) delay(100);
+  if (time(nullptr) < MinimumTrustedUtcEpoch) {
+    warnConfigAtMostOncePerMinute("Trusted UTC unavailable; TLS MQTT connection is blocked until NTP succeeds.");
+  }
+}
+
+bool initializeCommandLedger() {
+  static_assert(std::is_trivially_copyable_v<smartfarm::commands::CommandLedger>);
+  if (!commandPreferences.begin(CommandLedgerNamespace, false)) {
+    Serial.println("Command NVS unavailable; all commands will be rejected.");
+    return false;
+  }
+
+  const size_t storedSize = commandPreferences.getBytesLength(CommandLedgerStorageKey);
+  if (storedSize == 0) {
+    const size_t written = commandPreferences.putBytes(
+        CommandLedgerStorageKey, &commandLedger, sizeof(commandLedger));
+    if (written != sizeof(commandLedger)) {
+      Serial.println("Command NVS initialization failed; all commands will be rejected.");
+      return false;
+    }
+    return true;
+  }
+
+  if (storedSize != sizeof(commandLedger) ||
+      commandPreferences.getBytes(CommandLedgerStorageKey, &commandLedger, sizeof(commandLedger)) != sizeof(commandLedger)) {
+    Serial.println("Command NVS record is incompatible; all commands will be rejected.");
+    commandLedger = smartfarm::commands::CommandLedger{};
+    return false;
+  }
+
+  for (const auto& entry : commandLedger.entries) {
+    if (entry.valid && (!smartfarm::commands::isValidCommandId(entry.acknowledgement.commandId) ||
+                        std::strcmp(entry.acknowledgement.status, "Failed") != 0)) {
+      Serial.println("Command NVS record failed validation; all commands will be rejected.");
+      commandLedger = smartfarm::commands::CommandLedger{};
+      return false;
+    }
+  }
+  return true;
+}
+
+bool persistCommandLedger() {
+  if (!commandLedgerReady) return false;
+  return commandPreferences.putBytes(
+             CommandLedgerStorageKey, &commandLedger, sizeof(commandLedger)) == sizeof(commandLedger);
+}
+
+bool publishCommandAcknowledgement(const smartfarm::commands::AckRecord& acknowledgement) {
+  if (config::TelemetryOnly || !mqtt.connected()) return false;
+  char topic[128];
+  std::snprintf(topic, sizeof(topic), "smartfarm/device/%s/ack", config::DeviceCode);
+  char payload[256];
+  const int written = std::snprintf(
+      payload, sizeof(payload),
+      "{\"commandId\":\"%s\",\"status\":\"%s\",\"errorMessage\":\"%s\"}",
+      acknowledgement.commandId, acknowledgement.status, acknowledgement.errorMessage);
+  if (written <= 0 || static_cast<size_t>(written) >= sizeof(payload)) return false;
+  return mqtt.publish(topic, payload, static_cast<size_t>(written), false, 1);
+}
+
+smartfarm::commands::AckRecord makeFailedAcknowledgement(
+    const char* commandId, const char* errorMessage, int64_t nowEpoch) {
+  smartfarm::commands::AckRecord acknowledgement{};
+  std::snprintf(acknowledgement.commandId, sizeof(acknowledgement.commandId), "%s", commandId);
+  std::snprintf(acknowledgement.status, sizeof(acknowledgement.status), "Failed");
+  std::snprintf(acknowledgement.errorMessage, sizeof(acknowledgement.errorMessage), "%s", errorMessage);
+  acknowledgement.expiresAtEpoch = nowEpoch + CommandMaxAgeSeconds;
+  return acknowledgement;
+}
+
+void handleCommandMessage(String& topic, String& payload) {
+  if (config::TelemetryOnly) return;
+
+  char expectedTopic[128];
+  std::snprintf(expectedTopic, sizeof(expectedTopic), "smartfarm/device/%s/command", config::DeviceCode);
+  if (topic != expectedTopic) {
+    Serial.println("Ignoring MQTT message on unexpected command topic.");
+    return;
+  }
+
+  smartfarm::commands::CommandRequest command{};
+  const bool parsed = smartfarm::commands::JsonReader(
+      std::string_view(payload.c_str(), payload.length())).parseCommand(command);
+  if (!smartfarm::commands::isValidCommandId(command.commandId)) {
+    Serial.println("Ignoring command without a valid commandId; no ACK can be correlated.");
+    return;
+  }
+
+  const time_t now = time(nullptr);
+  if (now < MinimumTrustedUtcEpoch) {
+    const auto failure = makeFailedAcknowledgement(
+        command.commandId, "UTC unavailable; command expiry cannot be verified.", now);
+    publishCommandAcknowledgement(failure);
+    return;
+  }
+
+  smartfarm::commands::AckRecord previousAcknowledgement{};
+  if (commandLedgerReady && commandLedger.find(command.commandId, now, previousAcknowledgement)) {
+    if (!publishCommandAcknowledgement(previousAcknowledgement))
+      Serial.println("Duplicate command ACK publish failed; it will be replayed on the next delivery.");
+    return;
+  }
+
+  const char* failureReason = nullptr;
+  if (!commandLedgerReady) {
+    failureReason = "Persistent command deduplication unavailable; no action taken.";
+  } else if (!parsed) {
+    failureReason = "Malformed command or missing expiry timestamp; no action taken.";
+  } else {
+    const auto timestampValidity = smartfarm::commands::validateTimestamp(
+        command.createdAtEpoch, now, CommandMaxAgeSeconds);
+    if (timestampValidity == smartfarm::commands::TimestampValidity::Expired) {
+      failureReason = "Command expired; no action taken.";
+    } else if (timestampValidity == smartfarm::commands::TimestampValidity::TooFarInFuture) {
+      failureReason = "Command timestamp is in the future; no action taken.";
+    } else if (!smartfarm::commands::isSupportedAction(command.action)) {
+      failureReason = "Unsupported command action; no action taken.";
+    } else {
+      // This telemetry firmware contains no actuator output by design. Never
+      // report Acknowledged or Completed for a command it cannot execute.
+      failureReason = "Actuator control is not implemented in telemetry firmware.";
+    }
+  }
+
+  auto acknowledgement = makeFailedAcknowledgement(command.commandId, failureReason, now);
+  if (!commandLedger.remember(acknowledgement, now)) {
+    std::snprintf(acknowledgement.errorMessage, sizeof(acknowledgement.errorMessage),
+                  "%s", "Command deduplication storage is full; no action taken.");
+  }
+  if (!persistCommandLedger()) {
+    std::snprintf(acknowledgement.errorMessage, sizeof(acknowledgement.errorMessage),
+                  "%s", "Persistent command deduplication write failed; no action taken.");
+    commandLedgerReady = false;
+  }
+  if (!publishCommandAcknowledgement(acknowledgement))
+    Serial.println("Command Failed ACK publish failed; broker/backend retry may redeliver it.");
+  else
+    Serial.printf("Command rejected safely: %s (%s).\n", acknowledgement.commandId, acknowledgement.errorMessage);
+}
+
+bool subscribeToCommands() {
+  if (config::TelemetryOnly) {
+    commandSubscribed = false;
+    return mqtt.connected();
+  }
+  if (!mqtt.connected()) {
+    commandSubscribed = false;
+    return false;
+  }
+  if (commandSubscribed) return true;
+
+  char topic[128];
+  std::snprintf(topic, sizeof(topic), "smartfarm/device/%s/command", config::DeviceCode);
+  commandSubscribed = mqtt.subscribe(topic, 1);
+  if (commandSubscribed) Serial.printf("Subscribed to command topic %s.\n", topic);
+  else Serial.println("Command topic subscription failed; retrying while connected.");
+  return commandSubscribed;
 }
 
 bool publishNext() {
@@ -255,11 +442,16 @@ void setup() {
   pinMode(config::FloatSwitchPin, INPUT_PULLUP);
   dht.begin();
   WiFi.setAutoReconnect(true);
+  commandLedgerReady = !config::TelemetryOnly && initializeCommandLedger();
+  if (!config::TelemetryOnly) mqtt.onMessage(handleCommandMessage);
 
   if (config::MqttUseTls) mqtt.begin(config::MqttHost, config::MqttPort, secureNetwork);
   else mqtt.begin(config::MqttHost, config::MqttPort, plainNetwork);
   mqtt.setOptions(30, true, 3000);
-  Serial.println("Smart Farm Mini telemetry firmware; no actuator or command path.");
+  if (config::TelemetryOnly)
+    Serial.println("Smart Farm Mini telemetry-only firmware; command subscription and ACK publishing are disabled.");
+  else
+    Serial.println("Smart Farm Mini command intake fails closed and never actuates hardware.");
   Serial.println("YL-69 raw ADC is diagnostic only until in-soil calibration is configured.");
 }
 
@@ -270,6 +462,7 @@ void loop() {
     connectMqtt();
   }
   if (mqtt.connected()) mqtt.loop();
+  else commandSubscribed = false;
 
   const uint32_t now = millis();
   if (now - lastSampleAt >= config::SampleIntervalMs) {

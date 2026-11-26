@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using SmartFarm.Application.Contracts.Persistence;
 using SmartFarm.Application.Contracts.Services;
+using SmartFarm.Application.Common.Configurations;
 using SmartFarm.Application.DTOs.DeviceCommand;
 using SmartFarm.Application.DTOs.Common;
 using SmartFarm.Domain.Enums;
@@ -21,18 +22,18 @@ namespace SmartFarm.Application.Services
 
         private readonly IDeviceCommandRepository _commandRepository;
         private readonly IDeviceRepository _deviceRepository;
-        private readonly IMqttPublisher _mqttPublisher;
+        private readonly DeviceCommandQueueOptions _queueOptions;
         private readonly ILogger<DeviceCommandService> _logger;
 
         public DeviceCommandService(
             IDeviceCommandRepository commandRepository,
             IDeviceRepository deviceRepository,
-            IMqttPublisher mqttPublisher,
+            DeviceCommandQueueOptions queueOptions,
             ILogger<DeviceCommandService> logger)
         {
             _commandRepository = commandRepository ?? throw new ArgumentNullException(nameof(commandRepository));
             _deviceRepository = deviceRepository ?? throw new ArgumentNullException(nameof(deviceRepository));
-            _mqttPublisher = mqttPublisher ?? throw new ArgumentNullException(nameof(mqttPublisher));
+            _queueOptions = queueOptions ?? throw new ArgumentNullException(nameof(queueOptions));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
@@ -59,14 +60,17 @@ namespace SmartFarm.Application.Services
             if (!device.IsOnline)
                 throw new InvalidOperationException("Cannot send commands while the device is offline.");
 
-            var commandCode = $"CMD-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}-{Guid.NewGuid().ToString("N")[..6]}";
+            var createdAtUtc = DateTimeOffset.UtcNow;
+            var commandCode = $"CMD-{createdAtUtc.ToUnixTimeMilliseconds()}-{Guid.NewGuid().ToString("N")[..6]}";
+            var expiresAtUtc = createdAtUtc.AddMinutes(Math.Clamp(_queueOptions.PendingCommandExpiryMinutes, 1, 1440));
 
             var command = new DeviceCommand(
                 request.DeviceId,
                 commandCode,
                 request.Action,
-                DateTimeOffset.UtcNow,
-                request.Payload);
+                createdAtUtc,
+                request.Payload,
+                expiresAtUtc);
 
             await _commandRepository.AddAsync(command, cancellationToken);
             await _commandRepository.SaveChangesAsync(cancellationToken);
@@ -74,27 +78,9 @@ namespace SmartFarm.Application.Services
             _logger.LogInformation("Đã tạo lệnh {Action} ({CommandCode}) cho thiết bị {DeviceId}",
                 command.Action, command.CommandCode, command.DeviceId);
 
-            try
-            {
-                await _mqttPublisher.PublishCommandAsync(device.DeviceCode, MapToDto(command), cancellationToken);
-            }
-            catch (MqttPublishNotStartedException exception)
-            {
-                command.Fail("Không thể gửi lệnh tới thiết bị qua MQTT.", DateTimeOffset.UtcNow);
-                await _commandRepository.UpdateAsync(command, CancellationToken.None);
-                await _commandRepository.SaveChangesAsync(CancellationToken.None);
-                _logger.LogError(exception,
-                    "MQTT publish chưa bắt đầu cho lệnh {CommandId} tới thiết bị {DeviceId}.", command.Id, device.Id);
-            }
-            catch (Exception exception)
-            {
-                // Once the MQTT client begins publishing, an exception may mean the
-                // broker accepted the QoS 1 packet but its PUBACK was lost. Keep the
-                // command Pending so the hosted retry loop can safely resend by ID.
-                _logger.LogError(exception,
-                    "Kết quả gửi MQTT của lệnh {CommandId} không xác định; giữ Pending để thử lại.", command.Id);
-            }
-
+            // The hosted dispatcher is the only publisher. Persisting first makes
+            // every accepted command enter the same leased queue, avoiding an API
+            // publish racing with a background retry.
             return MapToDto(command);
         }
 
@@ -108,6 +94,42 @@ namespace SmartFarm.Application.Services
         {
             var commands = await _commandRepository.GetPendingCommandsByDeviceIdAsync(deviceId, cancellationToken);
             return commands.Select(MapToDto).ToList();
+        }
+
+        public Task<bool> TryAcquireDispatchLeaseAsync(
+            Guid commandId,
+            Guid leaseOwnerId,
+            DateTimeOffset nowUtc,
+            DateTimeOffset leaseUntilUtc,
+            DateTimeOffset deviceLastSeenCutoffUtc,
+            int maxAttempts,
+            CancellationToken cancellationToken = default)
+        {
+            if (leaseUntilUtc <= nowUtc)
+                throw new ArgumentException("Dispatch lease expiry must be later than now.", nameof(leaseUntilUtc));
+            if (deviceLastSeenCutoffUtc > nowUtc)
+                throw new ArgumentException("Device last-seen cutoff cannot be later than now.", nameof(deviceLastSeenCutoffUtc));
+
+            // The persistence layer evaluates eligibility and lease expiry with the
+            // database clock. These values carry durations only; timestamps from
+            // separate Web API hosts must not decide whether another lease expired.
+            var leaseDuration = leaseUntilUtc - nowUtc;
+            var deviceOfflineAfter = nowUtc - deviceLastSeenCutoffUtc;
+            return _commandRepository.TryAcquireDispatchLeaseAsync(
+                commandId,
+                leaseOwnerId,
+                leaseDuration,
+                deviceOfflineAfter,
+                maxAttempts,
+                cancellationToken);
+        }
+
+        public Task<bool> ReleaseDispatchLeaseAsync(
+            Guid commandId,
+            Guid leaseOwnerId,
+            CancellationToken cancellationToken = default)
+        {
+            return _commandRepository.ReleaseDispatchLeaseAsync(commandId, leaseOwnerId, cancellationToken);
         }
 
         public async Task<IReadOnlyList<DeviceCommandDto>> GetRecentCommandsAsync(Guid deviceId, int limit = 20, CancellationToken cancellationToken = default)
@@ -186,7 +208,9 @@ namespace SmartFarm.Application.Services
                 CreatedAtUtc = entity.CreatedAtUtc,
                 AcknowledgedAtUtc = entity.AcknowledgedAtUtc,
                 CompletedAtUtc = entity.CompletedAtUtc,
-                ErrorMessage = entity.ErrorMessage
+                ErrorMessage = entity.ErrorMessage,
+                ExpiresAtUtc = entity.ExpiresAtUtc,
+                DispatchAttemptCount = entity.DispatchAttemptCount
             };
         }
     }

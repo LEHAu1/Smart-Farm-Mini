@@ -15,6 +15,8 @@ namespace SmartFarm.Application.DTOs.DeviceCommand
         public DateTimeOffset? AcknowledgedAtUtc { get; init; }
         public DateTimeOffset? CompletedAtUtc { get; init; }
         public string? ErrorMessage { get; init; }
+        public DateTimeOffset ExpiresAtUtc { get; init; }
+        public int DispatchAttemptCount { get; init; }
     }
 
     public class CreateDeviceCommandRequest

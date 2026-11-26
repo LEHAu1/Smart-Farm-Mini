@@ -68,6 +68,9 @@ namespace SmartFarm.Infrastructure.Persistence.Configurations
 
             builder.Property(d => d.DeletedAtUtc);
 
+            builder.HasIndex(d => d.IsDeleted)
+                .HasDatabaseName("IX_Devices_IsDeleted");
+
             // Global Query Filter: ẩn thiết bị đã bị Soft Delete khỏi mọi query thông thường
             builder.HasQueryFilter(d => !d.IsDeleted);
         }

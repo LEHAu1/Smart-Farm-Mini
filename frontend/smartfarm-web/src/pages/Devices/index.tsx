@@ -57,6 +57,7 @@ export default function DevicesPage() {
 
   const [devices, setDevices] = useState<DeviceDto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasLoadError, setHasLoadError] = useState(false);
   const [actionFeedback, setActionFeedback] = useState<ActionFeedback | null>(null);
 
   // ── Detail drawer ──
@@ -88,13 +89,15 @@ export default function DevicesPage() {
   // 1. Load devices from REST API
   // ─────────────────────────────────────────────────────────
   const loadDevices = useCallback(async () => {
+    setIsLoading(true);
+    setHasLoadError(false);
     try {
       const { data } = await apiClient.get<PageResult<DeviceDto>>('/api/devices', {
         params: { pageNumber: 1, pageSize: 100 },
       });
       if (data?.items) setDevices(data.items);
     } catch {
-      // silent — keep empty state
+      setHasLoadError(true);
     } finally {
       setIsLoading(false);
     }
@@ -144,7 +147,14 @@ export default function DevicesPage() {
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!addCode.trim() || !addName.trim()) return;
+    if (!addCode.trim()) {
+      setAddError(language === 'vi' ? 'Vui lòng nhập mã thiết bị.' : 'Device Code is required.');
+      return;
+    }
+    if (!addName.trim()) {
+      setAddError(language === 'vi' ? 'Vui lòng nhập tên thiết bị.' : 'Device Name is required.');
+      return;
+    }
     if (!/^[A-Za-z0-9_-]{1,50}$/.test(addCode.trim())) {
       setAddError(
         language === 'vi'
@@ -370,6 +380,20 @@ export default function DevicesPage() {
             <span className="size-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
             <span>{language === 'vi' ? 'Đang tải danh sách thiết bị...' : 'Loading devices...'}</span>
           </div>
+        </div>
+      ) : hasLoadError ? (
+        <div role="alert" className="panel py-12 text-center">
+          <AlertCircle className="mx-auto size-10 text-rose-500 mb-2" />
+          <p className="font-semibold text-ink">
+            {language === 'vi' ? 'Không thể tải danh sách thiết bị.' : 'Could not load devices.'}
+          </p>
+          <button
+            type="button"
+            onClick={loadDevices}
+            className="mt-3 rounded-xl border border-line px-4 py-2 text-xs font-semibold text-ink hover:bg-surface-hover"
+          >
+            {language === 'vi' ? 'Thử lại' : 'Retry'}
+          </button>
         </div>
       ) : devices.length === 0 ? (
         <div className="panel py-12 text-center text-muted">
@@ -625,7 +649,7 @@ export default function DevicesPage() {
               </div>
             )}
 
-            <form onSubmit={handleAdd} className="space-y-4">
+            <form onSubmit={handleAdd} noValidate className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-muted mb-1">
                   {language === 'vi' ? 'Mã định danh thiết bị (Device Code)' : 'Device Code'} *
@@ -634,7 +658,7 @@ export default function DevicesPage() {
                   type="text"
                   required
                   maxLength={50}
-                  pattern="[A-Za-z0-9_-]{1,50}"
+                  pattern={'[\\-A-Za-z0-9_]{1,50}'}
                   title={language === 'vi' ? 'Chỉ dùng chữ cái không dấu, chữ số, dấu gạch ngang và gạch dưới (tối đa 50 ký tự).' : 'Use letters, numbers, hyphens, or underscores (up to 50 characters).'}
                   placeholder={language === 'vi' ? 'Ví dụ: SF-NODE-01' : 'e.g. SF-NODE-01'}
                   value={addCode}
