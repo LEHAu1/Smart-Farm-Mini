@@ -1,0 +1,87 @@
+/* ==========================================================================
+   SMART FARM MINI GARDEN — 3D & GLASSMORPHISM DESIGN TOKENS
+   ========================================================================== */
+
+:root {
+  /* 3D Shadows & Layered Depth — Light Mode */
+  --shadow-3d-flat: 0 1px 3px 0 rgba(16, 24, 40, 0.06), 0 1px 2px 0 rgba(16, 24, 40, 0.04);
+  --shadow-3d-raised: 
+    0 4px 10px -1px rgba(16, 24, 40, 0.08),
+    0 2px 4px -2px rgba(16, 24, 40, 0.05),
+    0 0 0 1px rgba(16, 24, 40, 0.04),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.85);
+  --shadow-3d-floating: 
+    0 14px 28px -4px rgba(16, 24, 40, 0.12),
+    0 6px 12px -2px rgba(16, 24, 40, 0.06),
+    0 0 0 1px rgba(16, 24, 40, 0.06),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.95);
+  --shadow-3d-active:
+    inset 0 2px 4px 0 rgba(16, 24, 40, 0.08),
+    0 1px 2px 0 rgba(16, 24, 40, 0.05);
+
+  /* Inner Glows & Radial Highlights */
+  --glow-emerald: 0 0 24px -4px rgba(16, 185, 129, 0.25);
+  --glow-amber: 0 0 24px -4px rgba(245, 158, 11, 0.25);
+  --glow-rose: 0 0 24px -4px rgba(239, 68, 68, 0.25);
+  --glow-water: 0 0 24px -4px rgba(56, 189, 248, 0.25);
+  --glow-sidebar-active: inset 0 0 12px 0 rgba(16, 185, 129, 0.14), 0 2px 8px -1px rgba(16, 185, 129, 0.22);
+
+  /* Glassmorphism Surfaces */
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(226, 232, 240, 0.85);
+  --glass-highlight: rgba(255, 255, 255, 0.95);
+  
+  /* Ambient Orbs */
+  --ambient-orb-1: rgba(16, 185, 129, 0.09);
+  --ambient-orb-2: rgba(14, 165, 233, 0.07);
+  --ambient-orb-3: rgba(20, 184, 166, 0.08);
+
+  /* Semantic Color Constants */
+  --color-3d-emerald: #10b981;
+  --color-3d-amber: #f59e0b;
+  --color-3d-rose: #ef4444;
+  --color-3d-water: #0ea5e9;
+  --color-3d-heat: #f59e0b;
+}
+
+:root.dark, html.dark {
+  /* 3D Shadows & Layered Depth — Dark Mode */
+  --shadow-3d-flat: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-3d-raised: 
+    0 8px 20px -2px rgba(0, 0, 0, 0.55),
+    0 3px 8px -1px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.14);
+  --shadow-3d-floating: 
+    0 18px 36px -4px rgba(0, 0, 0, 0.7),
+    0 8px 16px -2px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.12),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
+  --shadow-3d-active:
+    inset 0 2px 6px 0 rgba(0, 0, 0, 0.65),
+    0 1px 2px 0 rgba(0, 0, 0, 0.45);
+
+  /* Inner Glows & Radial Highlights */
+  --glow-emerald: 0 0 32px -2px rgba(16, 185, 129, 0.38);
+  --glow-amber: 0 0 32px -2px rgba(245, 158, 11, 0.38);
+  --glow-rose: 0 0 32px -2px rgba(239, 68, 68, 0.38);
+  --glow-water: 0 0 32px -2px rgba(56, 189, 248, 0.38);
+  --glow-sidebar-active: inset 0 0 16px 0 rgba(16, 185, 129, 0.22), 0 2px 12px -1px rgba(16, 185, 129, 0.32);
+
+  /* Glassmorphism Surfaces */
+  --glass-bg: rgba(15, 23, 42, 0.78);
+  --glass-border: rgba(255, 255, 255, 0.09);
+  --glass-highlight: rgba(255, 255, 255, 0.15);
+
+  /* Ambient Orbs */
+  --ambient-orb-1: rgba(16, 185, 129, 0.14);
+  --ambient-orb-2: rgba(14, 165, 233, 0.11);
+  --ambient-orb-3: rgba(5, 150, 105, 0.12);
+
+  /* Semantic Color Constants */
+  --color-3d-emerald: #34d399;
+  --color-3d-amber: #fbbf24;
+  --color-3d-rose: #f87171;
+  --color-3d-water: #38bdf8;
+  --color-3d-heat: #fbbf24;
+}

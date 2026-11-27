@@ -53,14 +53,14 @@ export default function Navigation({ isCollapsed = false, onItemClick }: Navigat
             onClick={onItemClick}
             title={isCollapsed ? label : undefined}
             className={({ isActive }) =>
-              `group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
+              `group nav-3d-item flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
                 isActive
-                  ? 'bg-primary-subtle text-primary font-semibold shadow-2xs'
-                  : 'text-muted hover:bg-canvas hover:text-ink'
+                  ? 'nav-3d-active scale-[1.01]'
+                  : 'text-muted hover:bg-surface-hover hover:text-ink hover:translate-x-0.5'
               } ${isCollapsed ? 'justify-center px-2' : ''}`
             }
           >
-            <Icon className="size-5 shrink-0 transition-transform group-hover:scale-105" />
+            <Icon className="size-5 shrink-0 transition-transform duration-200 group-hover:scale-110" />
             {!isCollapsed && <span className="truncate">{label}</span>}
             {!isCollapsed && badge && (
               <span className="ml-auto rounded-full bg-danger px-1.5 py-0.5 text-[10px] font-bold text-white">

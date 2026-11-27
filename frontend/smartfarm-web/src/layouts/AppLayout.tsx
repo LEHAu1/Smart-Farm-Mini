@@ -187,7 +187,12 @@ export default function AppLayout() {
   const unreadAlerts = alerts.filter((a) => !a.isResolved);
 
   return (
-    <div className="min-h-screen bg-canvas text-ink flex">
+    <div className="min-h-screen bg-canvas text-ink flex relative overflow-x-hidden">
+      {/* Ambient Depth Orbs for Soft 3D Lighting */}
+      <div className="ambient-orb ambient-orb-primary" aria-hidden="true" />
+      <div className="ambient-orb ambient-orb-secondary" aria-hidden="true" />
+      <div className="ambient-orb ambient-orb-tertiary" aria-hidden="true" />
+
       {/* Accessibility Skip Link */}
       <a href="#main-content" className="skip-link">
         Đến nội dung chính
@@ -195,25 +200,29 @@ export default function AppLayout() {
 
       {/* ── 1. Desktop Sidebar ── */}
       <aside
-        className={`hidden lg:flex flex-col border-r border-line bg-surface transition-all duration-300 sticky top-0 h-screen z-30 shrink-0 ${
+        className={`hidden lg:flex flex-col border-r border-line/80 bg-surface/90 backdrop-blur-md transition-all duration-300 sticky top-0 h-screen z-30 shrink-0 ${
           isCollapsed ? 'w-18' : 'w-60'
         }`}
       >
         {/* Brand Header */}
-        <div className="flex items-center justify-between h-16 px-4 border-b border-line">
+        <div className="flex items-center justify-between h-16 px-4 border-b border-line/80">
           <Link
             to="/dashboard"
             className={`flex items-center gap-3 font-bold text-primary transition-opacity ${
               isCollapsed ? 'justify-center w-full' : ''
             }`}
           >
-            <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-white shadow-2xs shrink-0">
+            <span className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white shadow-3d-raised shrink-0">
               <Sprout className="size-5" />
             </span>
             {!isCollapsed && (
               <div className="leading-tight">
-                <span className="text-sm font-bold tracking-tight block">{t('brand_name', 'Smart Farm')}</span>
-                <span className="text-[10px] uppercase tracking-widest text-muted block">{t('brand_tagline', 'Mini Garden')}</span>
+                <span className="text-sm font-bold tracking-tight block bg-gradient-to-r from-emerald-600 to-teal-500 dark:from-emerald-400 dark:to-teal-300 bg-clip-text text-transparent">
+                  {t('brand_name', 'Smart Farm')}
+                </span>
+                <span className="text-[10px] uppercase tracking-widest text-muted block font-semibold">
+                  {t('brand_tagline', 'Mini Garden')}
+                </span>
               </div>
             )}
           </Link>
@@ -309,15 +318,15 @@ export default function AppLayout() {
       )}
 
       {/* ── 3. Main Content Wrapper ── */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Top Header */}
-        <header className="h-16 border-b border-line bg-surface sticky top-0 z-20 px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
+      <div className="flex-1 flex flex-col min-w-0 relative z-10">
+        {/* Top Header with Soft 3D & Glassmorphism */}
+        <header className="h-16 border-b border-line/80 bg-surface/85 backdrop-blur-md sticky top-0 z-20 px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4 shadow-3d-flat">
           {/* Left: Mobile hamburger & Breadcrumbs */}
           <div className="flex items-center gap-3 min-w-0">
             <button
               type="button"
               onClick={() => setIsMobileOpen(true)}
-              className="lg:hidden p-2 rounded-lg text-muted hover:bg-canvas hover:text-ink focus-ring"
+              className="lg:hidden p-2 rounded-xl border border-line/70 bg-surface/60 text-muted hover:bg-surface hover:text-ink shadow-3d-flat focus-ring"
               aria-label="Mở menu"
             >
               <Menu className="size-5" />
@@ -341,10 +350,10 @@ export default function AppLayout() {
           </div>
 
           {/* Right: Quick Device Selector, Notification Popover, User Dropdown */}
-          <div className="flex items-center gap-2.5 sm:gap-4 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             {/* Quick Device Selector */}
-            <div className="hidden md:flex items-center gap-1.5 rounded-lg border border-line bg-canvas px-2.5 py-1 text-xs">
-              <Cpu className="size-3.5 text-muted shrink-0" />
+            <div className="hidden md:flex items-center gap-1.5 rounded-xl border border-line/80 bg-surface/60 backdrop-blur-xs px-2.5 py-1.5 text-xs shadow-3d-flat hover:shadow-3d-raised transition-all">
+              <Cpu className="size-3.5 text-primary shrink-0" />
               <select
                 value={selectedDeviceId}
                 onChange={(e) => {
@@ -369,7 +378,7 @@ export default function AppLayout() {
             <button
               type="button"
               onClick={toggleTheme}
-              className="p-2 rounded-lg text-muted hover:bg-canvas hover:text-ink focus-ring transition-colors"
+              className="p-2 rounded-xl border border-line/80 bg-surface/60 backdrop-blur-xs text-muted hover:bg-surface hover:text-ink shadow-3d-flat hover:shadow-3d-raised focus-ring transition-all"
               title={theme === 'dark' ? t('theme_light', 'Chế độ sáng') : t('theme_dark', 'Chế độ tối')}
               aria-label={t('theme_toggle', 'Chuyển đổi giao diện sáng/tối')}
             >
@@ -385,7 +394,7 @@ export default function AppLayout() {
               <button
                 type="button"
                 onClick={() => setIsLangOpen((prev) => !prev)}
-                className="flex items-center gap-1.5 p-1.5 px-2.5 rounded-lg border border-line bg-canvas text-ink hover:bg-surface-hover focus-ring text-xs font-semibold transition-colors"
+                className="flex items-center gap-1.5 p-1.5 px-2.5 rounded-xl border border-line/80 bg-surface/60 backdrop-blur-xs text-ink hover:bg-surface focus-ring text-xs font-semibold shadow-3d-flat hover:shadow-3d-raised transition-all"
                 title={t('language_select', 'Chọn ngôn ngữ')}
                 aria-label={t('language_select', 'Chọn ngôn ngữ')}
                 aria-expanded={isLangOpen}
@@ -399,7 +408,7 @@ export default function AppLayout() {
 
               {isLangOpen && (
                 <div
-                  className="absolute right-0 mt-2 w-36 rounded-xl border border-line bg-surface p-1 shadow-xl z-50 animate-in fade-in-50 zoom-in-95"
+                  className="absolute right-0 mt-2 w-36 rounded-2xl border border-line/80 bg-surface/95 backdrop-blur-xl p-1.5 shadow-3d-floating z-50 animate-in fade-in-50 zoom-in-95"
                   role="menu"
                   aria-label={t('language_select', 'Chọn ngôn ngữ')}
                 >
@@ -451,7 +460,7 @@ export default function AppLayout() {
               <button
                 type="button"
                 onClick={() => setIsNotifOpen((prev) => !prev)}
-                className="relative p-2 rounded-lg text-muted hover:bg-canvas hover:text-ink focus-ring"
+                className="relative p-2 rounded-xl border border-line/80 bg-surface/60 backdrop-blur-xs text-muted hover:bg-surface hover:text-ink shadow-3d-flat hover:shadow-3d-raised focus-ring transition-all"
                 aria-label={`${t('notifications', 'Thông báo')} ${unreadAlerts.length > 0 ? `(${unreadAlerts.length} ${t('unread_alerts', 'chưa đọc')})` : ''}`}
                 aria-expanded={isNotifOpen}
               >
@@ -465,7 +474,7 @@ export default function AppLayout() {
 
               {isNotifOpen && (
                 <div
-                  className="absolute right-0 mt-2 w-80 sm:w-96 rounded-xl border border-line bg-surface p-4 shadow-xl z-50 animate-in fade-in-50 zoom-in-95"
+                  className="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl border border-line/80 bg-surface/95 backdrop-blur-xl p-4 shadow-3d-floating z-50 animate-in fade-in-50 zoom-in-95"
                   role="region"
                   aria-label={t('recent_alerts', 'Hộp thông báo cảnh báo')}
                 >
@@ -490,7 +499,7 @@ export default function AppLayout() {
                       alerts.slice(0, 5).map((a) => (
                         <div
                           key={a.id}
-                          className="rounded-lg p-2.5 text-xs border border-line/60 bg-canvas/60 hover:bg-canvas transition-colors"
+                          className="rounded-xl p-2.5 text-xs border border-line/60 bg-canvas/60 hover:bg-canvas transition-colors"
                         >
                           <p className="font-semibold text-ink">{a.title}</p>
                           <p className="mt-0.5 text-muted line-clamp-2">{a.message}</p>
@@ -510,11 +519,11 @@ export default function AppLayout() {
               <button
                 type="button"
                 onClick={() => setIsUserMenuOpen((prev) => !prev)}
-                className="flex items-center gap-2 p-1.5 rounded-lg text-ink hover:bg-canvas focus-ring"
+                className="flex items-center gap-2 p-1.5 pr-2.5 rounded-xl border border-line/80 bg-surface/60 backdrop-blur-xs text-ink hover:bg-surface shadow-3d-flat hover:shadow-3d-raised focus-ring transition-all"
                 aria-label={t('user_menu', 'Menu tài khoản')}
                 aria-expanded={isUserMenuOpen}
               >
-                <div className="flex size-8 items-center justify-center rounded-full bg-primary-subtle text-primary font-bold text-xs border border-primary-border/40">
+                <div className="flex size-8 items-center justify-center rounded-full bg-primary-subtle text-primary font-bold text-xs border border-primary-border/40 shadow-xs">
                   {user?.displayName?.[0]?.toUpperCase() || user?.userName?.[0]?.toUpperCase() || 'U'}
                 </div>
                 <div className="hidden sm:block text-left text-xs leading-tight">
@@ -530,7 +539,7 @@ export default function AppLayout() {
 
               {isUserMenuOpen && (
                 <div
-                  className="absolute right-0 mt-2 w-56 rounded-xl border border-line bg-surface p-2 shadow-xl z-50 animate-in fade-in-50 zoom-in-95"
+                  className="absolute right-0 mt-2 w-56 rounded-2xl border border-line/80 bg-surface/95 backdrop-blur-xl p-2 shadow-3d-floating z-50 animate-in fade-in-50 zoom-in-95"
                   role="menu"
                 >
                   <div className="px-3 py-2 border-b border-line mb-1">
