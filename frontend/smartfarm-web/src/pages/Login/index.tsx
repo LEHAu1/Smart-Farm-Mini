@@ -180,7 +180,6 @@ export default function LoginPage() {
                   onError={() => {
                     setSubmitError('Đăng nhập Google thất bại hoặc bị hủy bỏ.');
                   }}
-                  useOneTap
                   shape="rectangular"
                   theme={isDark ? 'filled_black' : 'outline'}
                   size="large"

@@ -76,9 +76,13 @@ namespace SmartFarm.WebAPI
 
             app.UseSwaggerDocumentation(app.Environment);
 
-            app.UseHttpsRedirection();
-
+            // CORS PHẢI nằm TRƯỚC HttpsRedirection và Routing/Auth để tránh lỗi Redirect trên Preflight OPTIONS request
             app.UseCors("DevelopmentCors");
+
+            if (!app.Environment.IsDevelopment())
+            {
+                app.UseHttpsRedirection();
+            }
 
             // Authentication PHẢI nằm TRƯỚC Authorization
             app.UseAuthentication();
