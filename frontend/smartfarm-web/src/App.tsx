@@ -24,6 +24,15 @@ import CommandsPage from './pages/Commands';
 import ProfilePage from './pages/Profile';
 import SettingsPage from './pages/Settings';
 import NotFoundPage from './pages/NotFound';
+import { lazy, Suspense } from 'react';
+
+const SylvaPreviewPage = lazy(() => import('./pages/SylvaPreview'));
+
+const isDebug3D =
+  import.meta.env.VITE_DEBUG_3D === 'true' ||
+  (typeof window !== 'undefined' &&
+    (new URLSearchParams(window.location.search).get('debug') === '1' ||
+      localStorage.getItem('smartfarm_debug_3d') === 'true'));
 
 export default function App() {
   return (
@@ -33,6 +42,18 @@ export default function App() {
           <SignalRProvider>
             <ToastProvider>
               <Routes>
+          {/* Standalone Sylva 3D Preview (Isolated from Layout, Debug Mode Only) */}
+          {isDebug3D && (
+            <Route
+              path="/preview-sylva"
+              element={
+                <Suspense fallback={null}>
+                  <SylvaPreviewPage />
+                </Suspense>
+              }
+            />
+          )}
+
           {/* Root redirect */}
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
 

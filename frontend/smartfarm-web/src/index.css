@@ -7,7 +7,7 @@
 
 @theme {
   --font-sans: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  
+
   /* Primary & Brand */
   --color-primary: var(--color-primary);
   --color-primary-hover: var(--color-primary-hover);
@@ -75,7 +75,8 @@
     --color-line-focus: #106493;
   }
 
-  :root.dark, html.dark {
+  :root.dark,
+  html.dark {
     --color-primary: #10b981;
     --color-primary-hover: #34d399;
     --color-primary-active: #059669;
@@ -121,6 +122,7 @@
 }
 
 @layer components {
+
   /* Telemetry number styling */
   .tabular-nums {
     font-variant-numeric: tabular-nums;
@@ -159,43 +161,233 @@
   .button {
     @apply inline-flex items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-xs transition-all hover:bg-primary-hover active:scale-[0.99] focus:outline-none focus:ring-4 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-60;
   }
+
   .login-label {
     @apply mb-1.5 block text-xs font-semibold uppercase tracking-wider text-ink-secondary;
   }
+
   .login-input {
     @apply min-h-12 w-full rounded-xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink shadow-xs transition-all placeholder:text-muted/60 focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/15 disabled:bg-canvas disabled:text-muted;
   }
+
   .login-input[aria-invalid='true'] {
     @apply border-danger-border bg-danger-subtle/30 focus:border-danger focus:ring-danger/15;
   }
+
   .login-field-error {
     @apply mt-1.5 text-xs font-medium text-danger flex items-center gap-1;
   }
 
   /* Decorative garden art on login / auth */
-  .garden-art { position: relative; width: 260px; height: 200px; margin: 40px auto 0; border-bottom: 1px solid #ffffff30; }
-  .garden-stem { position: absolute; bottom: 55px; left: 128px; width: 4px; height: 115px; background: #b5ddab; border-radius: 4px; }
-  .garden-leaf { position: absolute; width: 78px; height: 44px; background: #93d4b3; }
-  .garden-leaf-left { top: 49px; left: 51px; border-radius: 0 70px 0 70px; transform: rotate(20deg); }
-  .garden-leaf-right { top: 22px; left: 131px; border-radius: 70px 0 70px 0; transform: rotate(-20deg); background: #b5ddab; }
-  .garden-pot { position: absolute; bottom: 0; left: 82px; width: 96px; height: 70px; background: #d8b296; clip-path: polygon(0 0, 100% 0, 85% 100%, 15% 100%); }
+  .garden-art {
+    position: relative;
+    width: 260px;
+    height: 200px;
+    margin: 40px auto 0;
+    border-bottom: 1px solid #ffffff30;
+  }
+
+  .garden-stem {
+    position: absolute;
+    bottom: 55px;
+    left: 128px;
+    width: 4px;
+    height: 115px;
+    background: #b5ddab;
+    border-radius: 4px;
+  }
+
+  .garden-leaf {
+    position: absolute;
+    width: 78px;
+    height: 44px;
+    background: #93d4b3;
+  }
+
+  .garden-leaf-left {
+    top: 49px;
+    left: 51px;
+    border-radius: 0 70px 0 70px;
+    transform: rotate(20deg);
+  }
+
+  .garden-leaf-right {
+    top: 22px;
+    left: 131px;
+    border-radius: 70px 0 70px 0;
+    transform: rotate(-20deg);
+    background: #b5ddab;
+  }
+
+  .garden-pot {
+    position: absolute;
+    bottom: 0;
+    left: 82px;
+    width: 96px;
+    height: 70px;
+    background: #d8b296;
+    clip-path: polygon(0 0, 100% 0, 85% 100%, 15% 100%);
+  }
 
   /* ========================================================================
-     3D & Glassmorphism Component Utilities
+     3D & Transparent Glassmorphism Component Utilities
      ======================================================================== */
-  .card-3d {
-    background: var(--glass-bg);
+  .card-3d,
+  .glass-panel,
+  .panel {
+    background-color: var(--glass-bg);
     border: 1px solid var(--glass-border);
+    border-top-color: var(--glass-border-top);
     box-shadow: var(--shadow-3d-raised);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    transition: transform 250ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 250ms cubic-bezier(0.16, 1, 0.3, 1), border-color 250ms ease;
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    transition: transform 250ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 250ms cubic-bezier(0.16, 1, 0.3, 1), border-color 250ms ease, background 200ms ease;
   }
 
   .card-3d-interactive:hover {
     transform: translateY(-3px);
     box-shadow: var(--shadow-3d-floating);
     border-color: var(--color-primary-border);
+  }
+
+  .glass-bar {
+    background: var(--glass-bar-bg);
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    border-color: var(--glass-border);
+  }
+
+  .glass-button-secondary {
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transition: all 200ms ease;
+  }
+
+  .glass-button-secondary:hover {
+    background: rgba(255, 255, 255, 0.22);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Typography Text-Shadow 2 Layers for Crystal Clear Readability */
+  .text-shadow-contrast,
+  .text-contrast-heavy {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85), 0 2px 12px rgba(0, 0, 0, 0.60);
+  }
+
+  :root:not(.dark) .text-shadow-contrast,
+  :root:not(.dark) .text-contrast-heavy {
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.95), 0 2px 10px rgba(255, 255, 255, 0.70);
+  }
+
+  /* ========================================================================
+     Enhanced Text Contrast for Ultra-Transparent Mode
+     ======================================================================== */
+  html[data-glass-mode="transparent"] .card-3d,
+  html[data-glass-mode="transparent"] .glass-bar {
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.75), 0 2px 14px rgba(0, 0, 0, 0.5);
+  }
+
+  html:not(.dark)[data-glass-mode="transparent"] .card-3d,
+  html:not(.dark)[data-glass-mode="transparent"] .glass-bar {
+    text-shadow: 0 1px 3px rgba(255, 255, 255, 0.95), 0 0 8px rgba(255, 255, 255, 0.8);
+  }
+
+  html[data-glass-mode="transparent"] .tabular-nums {
+    font-weight: 800;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9), 0 0 4px rgba(0, 0, 0, 0.6);
+  }
+
+  html:not(.dark)[data-glass-mode="transparent"] .tabular-nums {
+    font-weight: 800;
+    text-shadow: 0 1px 3px rgba(255, 255, 255, 0.95), 0 0 10px rgba(255, 255, 255, 0.9);
+  }
+
+  html[data-glass-mode="transparent"] .font-semibold {
+    font-weight: 700;
+  }
+
+  html[data-glass-mode="transparent"] .font-medium {
+    font-weight: 600;
+  }
+
+  /* Boost low-contrast secondary labels in ultra-transparent mode */
+  html.dark[data-glass-mode="transparent"] .card-3d .text-muted,
+  html[data-glass-mode="transparent"].dark .card-3d .text-muted {
+    color: rgba(229, 231, 235, 0.90);
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85);
+  }
+
+  html:not(.dark)[data-glass-mode="transparent"] .card-3d .text-muted {
+    color: #1e293b;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.95);
+  }
+
+  /* Keep status badges crisp on transparent backgrounds */
+  html[data-glass-mode="transparent"] .card-3d .badge,
+  html[data-glass-mode="transparent"] .card-3d [class*="rounded-full"][class*="bg-"] {
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  /* Large Sensor Metric Text with Subtle Stroke & Heavy Shadow */
+  .sensor-value-3d {
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.90), 0 4px 16px rgba(0, 0, 0, 0.75);
+    paint-order: stroke fill;
+    -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.40);
+  }
+
+  /* Localized Text Backdrop Pill (Masked, No Blur) */
+  .text-backdrop-local {
+    background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.26) 0%, rgba(0, 0, 0, 0) 85%);
+    border-radius: 6px;
+    padding: 1px 6px;
+  }
+
+  :root:not(.dark) .text-backdrop-local {
+    background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.40) 0%, rgba(255, 255, 255, 0) 85%);
+  }
+
+  /* Input Elements for Crystal Mode */
+  .login-input,
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea {
+    background-color: var(--glass-input-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+  }
+
+  .login-input:focus,
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus,
+  select:focus,
+  textarea:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.35);
+  }
+
+  /* Elevated Popups, Modals & Dropdowns (Opacity 75-85%, Blur 12-16px) */
+  [role="menu"],
+  [role="dialog"],
+  [role="region"][aria-label*="thông báo"],
+  [role="region"][aria-label*="alerts"],
+  .glass-modal {
+    background: rgba(15, 23, 42, 0.82);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 20px 48px -4px rgba(0, 0, 0, 0.65);
+  }
+
+  :root:not(.dark) [role="menu"],
+  :root:not(.dark) [role="dialog"],
+  :root:not(.dark) [role="region"][aria-label*="thông báo"],
+  :root:not(.dark) [role="region"][aria-label*="alerts"],
+  :root:not(.dark) .glass-modal {
+    background: rgba(255, 255, 255, 0.85);
   }
 
   /* 3D Sidebar Active Navigation Item */
@@ -255,17 +447,172 @@
     background: radial-gradient(circle, var(--ambient-orb-3) 0%, transparent 70%);
   }
 
+  /* Auth Card Glass: 6-10px blur, 0.25-0.35 alpha for crisp form readability */
+  .auth-card-glass {
+    background-color: rgba(15, 23, 42, 0.32);
+    backdrop-filter: blur(8px) saturate(135%);
+    -webkit-backdrop-filter: blur(8px) saturate(135%);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-top: 1px solid rgba(255, 255, 255, 0.45);
+    box-shadow: 0 20px 48px -8px rgba(0, 0, 0, 0.65), inset 0 1px 0 0 rgba(255, 255, 255, 0.18);
+  }
+
+  :root:not(.dark) .auth-card-glass {
+    background-color: rgba(255, 255, 255, 0.38);
+    border: 1px solid rgba(255, 255, 255, 0.65);
+    border-top: 1px solid rgba(255, 255, 255, 0.90);
+    box-shadow: 0 16px 40px -8px rgba(16, 24, 40, 0.12), inset 0 1px 0 0 rgba(255, 255, 255, 0.70);
+  }
+
+  /* Chrome / Edge / Safari / Firefox Autofill Glass Integration */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active,
+  input:autofill,
+  input:autofill:hover,
+  input:autofill:focus,
+  input:autofill:active {
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: var(--color-ink) !important;
+    transition: background-color 5000s ease-in-out 0s !important;
+    box-shadow: inset 0 0 0px 1000px rgba(15, 23, 42, 0.35) !important;
+    border-color: var(--glass-border) !important;
+  }
+
+  :root:not(.dark) input:-webkit-autofill,
+  :root:not(.dark) input:-webkit-autofill:hover,
+  :root:not(.dark) input:-webkit-autofill:focus,
+  :root:not(.dark) input:-webkit-autofill:active,
+  :root:not(.dark) input:autofill,
+  :root:not(.dark) input:autofill:hover,
+  :root:not(.dark) input:autofill:focus,
+  :root:not(.dark) input:autofill:active {
+    box-shadow: inset 0 0 0px 1000px rgba(255, 255, 255, 0.45) !important;
+    border-color: var(--glass-border) !important;
+  }
+
+  /* Gateway transition after successful login (max 600ms, scale + brightness) */
+  .auth-gateway-transition {
+    transform: scale(1.06);
+    filter: brightness(1.35) contrast(1.05);
+    transition: transform 550ms cubic-bezier(0.16, 1, 0.3, 1), filter 550ms ease-out;
+    pointer-events: none;
+  }
+
+  /* Floating Firefly Particles */
+  @keyframes fireflyFloat {
+    0%, 100% {
+      transform: translate(0, 0) scale(0.85);
+      opacity: 0.25;
+    }
+    35% {
+      transform: translate(14px, -18px) scale(1.15);
+      opacity: 0.85;
+    }
+    70% {
+      transform: translate(-10px, -32px) scale(0.9);
+      opacity: 0.45;
+    }
+  }
+
+  .firefly {
+    position: absolute;
+    border-radius: 9999px;
+    background: radial-gradient(circle, #fbbf24 20%, rgba(245, 158, 11, 0.6) 55%, transparent 75%);
+    box-shadow: 0 0 10px 2px rgba(251, 191, 36, 0.65);
+    pointer-events: none;
+    will-change: transform, opacity;
+    animation: fireflyFloat 6s ease-in-out infinite alternate;
+  }
+
+  .foreground-leaf {
+    position: absolute;
+    pointer-events: none;
+    z-index: 15;
+    user-select: none;
+    filter: blur(14px) drop-shadow(0 12px 24px rgba(0, 0, 0, 0.45));
+    opacity: 0.65;
+    transition: opacity 300ms ease;
+  }
+
+  /* Subtle morning dawn god-rays across auth background (soft-light / screen, low opacity) */
+  .auth-dawn-rays {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      -35deg,
+      rgba(254, 240, 138, 0.055) 0px,
+      rgba(254, 240, 138, 0.055) 60px,
+      transparent 120px,
+      transparent 200px,
+      rgba(253, 230, 138, 0.04) 260px,
+      transparent 360px
+    );
+    mix-blend-mode: screen;
+    opacity: 0.85;
+  }
+
+  :root:not(.dark) .auth-dawn-rays {
+    background: repeating-linear-gradient(
+      -35deg,
+      rgba(253, 224, 71, 0.08) 0px,
+      rgba(253, 224, 71, 0.08) 70px,
+      transparent 140px,
+      transparent 220px,
+      rgba(250, 204, 21, 0.06) 280px,
+      transparent 380px
+    );
+    mix-blend-mode: soft-light;
+    opacity: 0.9;
+  }
+
+  /* Text Contrast Backing Mask for Auth Left Hero Column */
+  .auth-text-backdrop {
+    position: absolute;
+    inset: -1.5rem -2rem;
+    border-radius: 1.5rem;
+    background: radial-gradient(ellipse at center, rgba(6, 25, 20, 0.78) 0%, rgba(6, 25, 20, 0.55) 55%, transparent 85%);
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  :root:not(.dark) .auth-text-backdrop {
+    background: radial-gradient(ellipse at center, rgba(6, 78, 59, 0.72) 0%, rgba(6, 78, 59, 0.45) 55%, transparent 85%);
+  }
+
+  /* Responsive Viewport Height Constraints (for screens <= 768px height) */
+  @media (max-height: 768px) {
+    .auth-card-glass {
+      padding: 1.25rem 1.5rem !important;
+    }
+    .auth-compact-margin {
+      margin-top: 0.5rem !important;
+      margin-bottom: 0.5rem !important;
+    }
+    .auth-hero-plant {
+      height: 10rem !important;
+      margin-bottom: 0.25rem !important;
+    }
+  }
+
   /* Accessibility: Prefers Reduced Motion */
   @media (prefers-reduced-motion: reduce) {
-    *, ::before, ::after {
+
+    *,
+    ::before,
+    ::after {
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
       scroll-behavior: auto !important;
     }
+
     .card-3d-interactive:hover {
       transform: none !important;
     }
+
     .ambient-orb {
       display: none !important;
     }

@@ -267,24 +267,24 @@ export default function SensorsPage() {
           onClick={() => setActiveSensorType(SensorType.SoilMoisture)}
           className={`cursor-pointer rounded-2xl border p-4 transition-all ${
             activeSensorType === SensorType.SoilMoisture
-              ? 'ring-2 ring-primary border-primary bg-primary-subtle/20'
-              : 'border-line bg-surface hover:border-slate-300'
+              ? 'ring-2 ring-primary border-primary bg-primary/20 backdrop-blur-[var(--glass-blur)]'
+              : 'card-3d card-3d-interactive'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-muted">
+            <span className="text-xs font-bold text-ink uppercase tracking-wider text-shadow-contrast">
               {language === 'vi' ? 'Độ ẩm đất' : 'Soil Moisture'}
             </span>
-            <span className="flex size-8 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
+            <span className="flex size-8 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-500 border border-emerald-500/20 shadow-xs">
               <Sprout className="size-4" />
             </span>
           </div>
           <div className="mt-3">
-            <span className="text-xl sm:text-2xl font-bold tracking-tight text-ink">
+            <span className="text-xl sm:text-2xl font-extrabold tracking-tight text-ink tabular-nums sensor-value-3d">
               {formatReading(telemetry?.soilMoisture, '%')}
             </span>
           </div>
-          <p className="mt-1 text-[11px] text-muted">
+          <p className="mt-1 text-[11px] text-muted text-backdrop-local font-medium inline-block">
             {language === 'vi' ? 'Tối ưu: 60 - 80%' : 'Optimal: 60 - 80%'}
           </p>
         </div>
@@ -294,24 +294,24 @@ export default function SensorsPage() {
           onClick={() => setActiveSensorType(SensorType.AirTemperature)}
           className={`cursor-pointer rounded-2xl border p-4 transition-all ${
             activeSensorType === SensorType.AirTemperature
-              ? 'ring-2 ring-primary border-primary bg-primary-subtle/20'
-              : 'border-line bg-surface hover:border-slate-300'
+              ? 'ring-2 ring-primary border-primary bg-primary/20 backdrop-blur-[var(--glass-blur)]'
+              : 'card-3d card-3d-interactive'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-muted">
+            <span className="text-xs font-bold text-ink uppercase tracking-wider text-shadow-contrast">
               {language === 'vi' ? 'Nhiệt độ khí' : 'Air Temp'}
             </span>
-            <span className="flex size-8 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
+            <span className="flex size-8 items-center justify-center rounded-xl bg-amber-500/15 text-amber-500 border border-amber-500/20 shadow-xs">
               <Thermometer className="size-4" />
             </span>
           </div>
           <div className="mt-3">
-            <span className="text-xl sm:text-2xl font-bold tracking-tight text-ink">
+            <span className="text-xl sm:text-2xl font-extrabold tracking-tight text-ink tabular-nums sensor-value-3d">
               {formatReading(telemetry?.airTemperature, '°C')}
             </span>
           </div>
-          <p className="mt-1 text-[11px] text-muted">DHT22 Ambient</p>
+          <p className="mt-1 text-[11px] text-muted text-backdrop-local font-medium inline-block">DHT22 Ambient</p>
         </div>
 
         {/* Air Humidity */}
@@ -319,24 +319,24 @@ export default function SensorsPage() {
           onClick={() => setActiveSensorType(SensorType.AirHumidity)}
           className={`cursor-pointer rounded-2xl border p-4 transition-all ${
             activeSensorType === SensorType.AirHumidity
-              ? 'ring-2 ring-primary border-primary bg-primary-subtle/20'
-              : 'border-line bg-surface hover:border-slate-300'
+              ? 'ring-2 ring-primary border-primary bg-primary/20 backdrop-blur-[var(--glass-blur)]'
+              : 'card-3d card-3d-interactive'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-muted">
+            <span className="text-xs font-bold text-ink uppercase tracking-wider text-shadow-contrast">
               {language === 'vi' ? 'Độ ẩm khí' : 'Air Humidity'}
             </span>
-            <span className="flex size-8 items-center justify-center rounded-xl bg-cyan-500/10 text-cyan-600">
+            <span className="flex size-8 items-center justify-center rounded-xl bg-cyan-500/15 text-cyan-500 border border-cyan-500/20 shadow-xs">
               <Wind className="size-4" />
             </span>
           </div>
           <div className="mt-3">
-            <span className="text-xl sm:text-2xl font-bold tracking-tight text-ink">
+            <span className="text-xl sm:text-2xl font-extrabold tracking-tight text-ink tabular-nums sensor-value-3d">
               {formatReading(telemetry?.airHumidity, '%')}
             </span>
           </div>
-          <p className="mt-1 text-[11px] text-muted">DHT22 Humidity</p>
+          <p className="mt-1 text-[11px] text-muted text-backdrop-local font-medium inline-block">DHT22 Humidity</p>
         </div>
 
         {/* Water Temperature */}
@@ -344,24 +344,24 @@ export default function SensorsPage() {
           onClick={() => setActiveSensorType(SensorType.WaterTemperature)}
           className={`cursor-pointer rounded-2xl border p-4 transition-all ${
             activeSensorType === SensorType.WaterTemperature
-              ? 'ring-2 ring-primary border-primary bg-primary-subtle/20'
-              : 'border-line bg-surface hover:border-slate-300'
+              ? 'ring-2 ring-primary border-primary bg-primary/20 backdrop-blur-[var(--glass-blur)]'
+              : 'card-3d card-3d-interactive'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-muted">
+            <span className="text-xs font-bold text-ink uppercase tracking-wider text-shadow-contrast">
               {language === 'vi' ? 'Nhiệt độ nước' : 'Water Temp'}
             </span>
-            <span className="flex size-8 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600">
+            <span className="flex size-8 items-center justify-center rounded-xl bg-blue-500/15 text-blue-500 border border-blue-500/20 shadow-xs">
               <Droplets className="size-4" />
             </span>
           </div>
           <div className="mt-3">
-            <span className="text-xl sm:text-2xl font-bold tracking-tight text-ink">
+            <span className="text-xl sm:text-2xl font-extrabold tracking-tight text-ink tabular-nums sensor-value-3d">
               {formatReading(telemetry?.waterTemperature, '°C')}
             </span>
           </div>
-          <p className="mt-1 text-[11px] text-muted">DS18B20 Probe</p>
+          <p className="mt-1 text-[11px] text-muted text-backdrop-local font-medium inline-block">DS18B20 Probe</p>
         </div>
 
         {/* Water Level */}
@@ -369,15 +369,15 @@ export default function SensorsPage() {
           onClick={() => setActiveSensorType(SensorType.WaterLevel)}
           className={`col-span-2 lg:col-span-1 cursor-pointer rounded-2xl border p-4 transition-all ${
             activeSensorType === SensorType.WaterLevel
-              ? 'ring-2 ring-primary border-primary bg-primary-subtle/20'
-              : 'border-line bg-surface hover:border-slate-300'
+              ? 'ring-2 ring-primary border-primary bg-primary/20 backdrop-blur-[var(--glass-blur)]'
+              : 'card-3d card-3d-interactive'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-muted">
+            <span className="text-xs font-bold text-ink uppercase tracking-wider text-shadow-contrast">
               {language === 'vi' ? 'Mực nước bồn' : 'Water Level'}
             </span>
-            <span className="flex size-8 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-600">
+            <span className="flex size-8 items-center justify-center rounded-xl bg-indigo-500/15 text-indigo-500 border border-indigo-500/20 shadow-xs">
               <Waves className="size-4" />
             </span>
           </div>
@@ -413,11 +413,10 @@ export default function SensorsPage() {
                 key={range}
                 type="button"
                 onClick={() => setTimeFilter(range)}
-                className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors ${
-                  timeFilter === range
-                    ? 'bg-primary text-white shadow-2xs'
-                    : 'text-muted hover:text-ink'
-                }`}
+                className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors ${timeFilter === range
+                  ? 'bg-primary text-white shadow-2xs'
+                  : 'text-muted hover:text-ink'
+                  }`}
               >
                 {range}
               </button>

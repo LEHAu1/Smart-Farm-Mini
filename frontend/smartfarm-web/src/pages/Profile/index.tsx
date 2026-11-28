@@ -167,7 +167,7 @@ export default function ProfilePage() {
                   type="email"
                   disabled
                   value={profile?.email || user?.email || ''}
-                  className="w-full rounded-xl border border-line bg-canvas/70 px-3 py-2 text-muted font-mono"
+                  className="w-full rounded-xl glass-input px-3 py-2 text-muted font-mono opacity-70"
                 />
                 <Badge variant="success" className="shrink-0">
                   <ShieldCheck className="size-3" />
@@ -184,7 +184,7 @@ export default function ProfilePage() {
                 type="text"
                 disabled
                 value={profile?.userName || user?.userName || ''}
-                className="w-full rounded-xl border border-line bg-canvas/70 px-3 py-2 text-muted font-mono"
+                className="w-full rounded-xl glass-input px-3 py-2 text-muted font-mono opacity-70"
               />
             </div>
 
@@ -197,7 +197,7 @@ export default function ProfilePage() {
                 required
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
-                className="w-full rounded-xl border border-line bg-canvas px-3 py-2 text-ink font-medium focus:border-primary focus:outline-none"
+                className="w-full rounded-xl glass-input px-3 py-2 text-ink font-medium"
               />
             </div>
 
@@ -210,7 +210,7 @@ export default function ProfilePage() {
                 placeholder="+84..."
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
-                className="w-full rounded-xl border border-line bg-canvas px-3 py-2 text-ink font-medium focus:border-primary focus:outline-none"
+                className="w-full rounded-xl glass-input px-3 py-2 text-ink font-medium"
               />
             </div>
 
@@ -265,7 +265,7 @@ export default function ProfilePage() {
                 required
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
-                className="w-full rounded-xl border border-line bg-canvas px-3 py-2 text-ink focus:border-primary focus:outline-none"
+                className="w-full rounded-xl glass-input px-3 py-2 text-ink"
               />
             </div>
 
@@ -279,7 +279,7 @@ export default function ProfilePage() {
                 minLength={6}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full rounded-xl border border-line bg-canvas px-3 py-2 text-ink focus:border-primary focus:outline-none"
+                className="w-full rounded-xl glass-input px-3 py-2 text-ink"
               />
             </div>
 
@@ -293,7 +293,7 @@ export default function ProfilePage() {
                 minLength={6}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full rounded-xl border border-line bg-canvas px-3 py-2 text-ink focus:border-primary focus:outline-none"
+                className="w-full rounded-xl glass-input px-3 py-2 text-ink"
               />
             </div>
 

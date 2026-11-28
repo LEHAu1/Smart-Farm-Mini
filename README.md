@@ -290,7 +290,54 @@ develop (Integration Branch)
 
 ---
 
-## 14. Đội ngũ phát triển (Authors & Contributors)
+## 15. Giao diện 3D Glassmorphism & Cấu hình Cảnh nền
+
+Hệ thống giao diện người dùng được nâng cấp lên chuẩn thiết kế **Kính trong suốt thế hệ mới (Crystal-clear 3D Glassmorphism)** kết hợp thế giới thiên nhiên sống động 3D (ThreeUI Sylva) và cây đại diện tương tác (Three.js WebGL procedural plant):
+
+### 15.1 Cách cài đặt và khởi chạy Frontend
+```bash
+# Di chuyển vào thư mục frontend
+cd frontend/smartfarm-web
+
+# Cài đặt thư viện phụ thuộc
+npm install
+
+# Khởi chạy máy chủ phát triển (Vite)
+npm run dev
+
+# Kiểm tra chất lượng và build production
+npm run typecheck
+npm test
+npm run build
+```
+
+### 15.2 Cấu hình Cảnh nền 3D (`design-tokens-3d.css`)
+Hệ thống token 3D được khai báo tập trung duy nhất tại `frontend/smartfarm-web/src/styles/design-tokens-3d.css`:
+- **Chế độ kính trong vắt (Crystal-clear):**
+  - `--glass-blur: 0px` (loại bỏ hoàn toàn lớp mờ tán xạ che khuất cảnh nền).
+  - `--glass-saturate: 115%` (tăng độ rực rỡ và sức sống của cảnh vật phía sau kính).
+  - `--glass-alpha-card`: `0.05` ở Dark Mode và `0.08` ở Light Mode (thẻ siêu trong suốt).
+  - Khối 3D được định hình bằng viền gradient sáng 1px (`border-top-color`), inner highlight, bóng đổ đa tầng và rim-light mép dưới.
+- **Biến thể cảnh 3D mặc định:**
+  - **Dashboard:** Khóa mặc định variant `living-green` (xanh thiên nhiên tươi mát).
+  - **Trang Xác thực (Login / Register):** Sử dụng variant `sequoia-mist` (xanh ngọc sương mù) kết hợp tia sáng bình minh nhẹ (dawn god-rays) và cây 3D tăng trưởng theo tiến độ hợp lệ của form.
+
+### 15.3 Cách bật Chế độ Debug Cảnh 3D & Kính
+Ở chế độ vận hành thông thường, thanh công cụ điều chỉnh trực tiếp và route xem trước được ẩn an toàn. Để bật thanh điều khiển debug:
+1. **Qua URL Parameter:** Thêm `?debug=1` vào thanh địa chỉ trình duyệt:
+   - `http://localhost:5173/dashboard?debug=1`
+   - `http://localhost:5173/preview-sylva?debug=1` (xem riêng cảnh 3D)
+2. **Qua Biến môi trường:** Thêm `VITE_DEBUG_3D=true` vào tệp `.env` của frontend.
+3. **Qua Browser Console:** Mở Console (F12) và nhập:
+   ```javascript
+   localStorage.setItem('smartfarm_debug_3d', 'true');
+   location.reload();
+   ```
+   *(Để tắt: `localStorage.removeItem('smartfarm_debug_3d'); location.reload();`)*
+
+---
+
+## 16. Đội ngũ phát triển (Authors & Contributors)
 
 Dự án được xây dựng và duy trì bởi nhóm kỹ sư **Smart Farm Mini Team**. Mọi đóng góp xin vui lòng gửi qua GitHub Pull Request.
 

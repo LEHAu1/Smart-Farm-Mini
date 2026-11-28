@@ -276,7 +276,7 @@ export default function IrrigationPage() {
             id="device-select"
             value={selectedDeviceId}
             onChange={(e) => setSelectedDeviceId(e.target.value)}
-            className="rounded-xl border border-line bg-surface px-3 py-2 text-sm font-semibold text-ink shadow-2xs focus:border-primary focus:outline-none"
+            className="rounded-xl glass-input px-3 py-2 text-sm font-semibold text-ink"
           >
             {devices.map((d) => (
               <option key={d.id} value={d.id}>
@@ -419,7 +419,7 @@ export default function IrrigationPage() {
 
           {/* Last Watering Summary */}
           {status?.lastIrrigationStartedAtUtc && (
-            <div className="rounded-xl border border-line bg-canvas p-3 flex items-center justify-between text-xs">
+            <div className="rounded-xl glass-panel-subtle p-3 flex items-center justify-between text-xs">
               <span className="text-muted flex items-center gap-1.5">
                 <Clock className="size-3.5" />
                 {language === 'vi' ? 'Lần tưới gần nhất:' : 'Last watered:'}
@@ -469,7 +469,7 @@ export default function IrrigationPage() {
               {rules.map((rule) => (
                 <div
                   key={rule.id}
-                  className="rounded-xl border border-line bg-canvas p-3.5 flex items-center justify-between gap-3"
+                  className="rounded-xl glass-panel-subtle p-3.5 flex items-center justify-between gap-3"
                 >
                   <div>
                     <div className="flex items-center gap-2">
@@ -508,8 +508,8 @@ export default function IrrigationPage() {
 
       {/* Emergency Stop Modal */}
       {isEmergencyModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
-          <div className="w-full max-w-md rounded-2xl bg-surface p-6 shadow-2xl border border-line">
+        <div className="fixed inset-0 z-50 flex items-center justify-center glass-modal-backdrop p-4">
+          <div className="w-full max-w-md rounded-2xl glass-modal p-6">
             <div className="flex size-12 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-600 mb-4">
               <ShieldAlert className="size-6" />
             </div>
@@ -525,7 +525,7 @@ export default function IrrigationPage() {
               <button
                 type="button"
                 onClick={() => setIsEmergencyModalOpen(false)}
-                className="rounded-xl border border-line px-4 py-2.5 text-xs font-semibold text-ink hover:bg-surface-hover"
+                className="glass-button-secondary rounded-xl px-4 py-2.5 text-xs font-semibold text-ink"
               >
                 {language === 'vi' ? 'Hủy bỏ' : 'Cancel'}
               </button>
@@ -543,8 +543,8 @@ export default function IrrigationPage() {
 
       {/* Add Rule Modal */}
       {isAddRuleOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
-          <div className="w-full max-w-lg rounded-2xl bg-surface p-6 shadow-2xl border border-line">
+        <div className="fixed inset-0 z-50 flex items-center justify-center glass-modal-backdrop p-4">
+          <div className="w-full max-w-lg rounded-2xl glass-modal p-6">
             <div className="flex items-center justify-between border-b border-line pb-4">
               <h3 className="text-base font-bold text-ink">
                 {language === 'vi' ? 'Tạo quy tắc tưới tự động' : 'Create Automatic Rule'}
@@ -565,7 +565,7 @@ export default function IrrigationPage() {
                   placeholder={language === 'vi' ? 'Ví dụ: Tưới hoa hồng sáng' : 'E.g., Morning Rose Watering'}
                   value={newRule.name}
                   onChange={(e) => setNewRule({ ...newRule, name: e.target.value })}
-                  className="w-full rounded-xl border border-line bg-canvas px-3.5 py-2.5 text-sm font-medium text-ink focus:border-primary focus:outline-none"
+                  className="w-full rounded-xl glass-input px-3.5 py-2.5 text-sm font-medium text-ink"
                 />
               </div>
 
@@ -581,7 +581,7 @@ export default function IrrigationPage() {
                     required
                     value={newRule.moistureThreshold}
                     onChange={(e) => setNewRule({ ...newRule, moistureThreshold: Number(e.target.value) })}
-                    className="w-full rounded-xl border border-line bg-canvas px-3.5 py-2.5 text-sm font-medium text-ink focus:border-primary focus:outline-none"
+                    className="w-full rounded-xl glass-input px-3.5 py-2.5 text-sm font-medium text-ink"
                   />
                 </div>
                 <div>
@@ -595,7 +595,7 @@ export default function IrrigationPage() {
                     required
                     value={newRule.targetMoisture}
                     onChange={(e) => setNewRule({ ...newRule, targetMoisture: Number(e.target.value) })}
-                    className="w-full rounded-xl border border-line bg-canvas px-3.5 py-2.5 text-sm font-medium text-ink focus:border-primary focus:outline-none"
+                    className="w-full rounded-xl glass-input px-3.5 py-2.5 text-sm font-medium text-ink"
                   />
                 </div>
               </div>
@@ -612,7 +612,7 @@ export default function IrrigationPage() {
                     required
                     value={newRule.minIntervalMinutes}
                     onChange={(e) => setNewRule({ ...newRule, minIntervalMinutes: Number(e.target.value) })}
-                    className="w-full rounded-xl border border-line bg-canvas px-3.5 py-2.5 text-sm font-medium text-ink focus:border-primary focus:outline-none"
+                    className="w-full rounded-xl glass-input px-3.5 py-2.5 text-sm font-medium text-ink"
                   />
                 </div>
                 <div>
@@ -626,7 +626,7 @@ export default function IrrigationPage() {
                     required
                     value={newRule.maxDurationSeconds}
                     onChange={(e) => setNewRule({ ...newRule, maxDurationSeconds: Number(e.target.value) })}
-                    className="w-full rounded-xl border border-line bg-canvas px-3.5 py-2.5 text-sm font-medium text-ink focus:border-primary focus:outline-none"
+                    className="w-full rounded-xl glass-input px-3.5 py-2.5 text-sm font-medium text-ink"
                   />
                 </div>
               </div>
@@ -635,7 +635,7 @@ export default function IrrigationPage() {
                 <button
                   type="button"
                   onClick={() => setIsAddRuleOpen(false)}
-                  className="rounded-xl border border-line px-4 py-2.5 text-xs font-semibold text-ink hover:bg-surface-hover"
+                  className="glass-button-secondary rounded-xl px-4 py-2.5 text-xs font-semibold text-ink"
                 >
                   {language === 'vi' ? 'Hủy' : 'Cancel'}
                 </button>

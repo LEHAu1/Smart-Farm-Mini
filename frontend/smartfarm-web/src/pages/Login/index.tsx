@@ -9,6 +9,8 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { loginDemo, loginWithGoogle } from '../../services/auth-service';
 import { validateLogin } from '../../utils/validate-login';
 import type { LoginCredentials, LoginErrors } from '../../types/auth';
+import type { PlantMood } from '../../components/auth/auth-plant-mood';
+import type { SylvaLivingWorldVariant } from '../../components/threeui/sylva-living-world/SylvaLivingWorldScene';
 import { Mail, Lock, Eye, EyeOff, AlertCircle, ArrowRight } from 'lucide-react';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '480776599363-msu0jv4a0dl5js8h2kdn9nd4vo97ndga.apps.googleusercontent.com';
@@ -40,6 +42,9 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
+  // Locked to sequoia-mist for auth
+  const authVariant: SylvaLivingWorldVariant = 'sequoia-mist';
+
   let authContext: ReturnType<typeof useAuth> | null = null;
   try {
     authContext = useAuth();
@@ -69,14 +74,51 @@ export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [plantMood, setPlantMood] = useState<PlantMood>('idle');
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const submitting = useRef(false);
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
+
+  // Navigate with <=600ms atmospheric gateway transition or instant bypass
+  const handleTransitionAndRedirect = (targetUrl: string) => {
+    const prefersReducedMotion =
+      typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const isTabHidden = typeof document !== 'undefined' && document.hidden;
+
+    if (prefersReducedMotion || isTabHidden) {
+      navigate(targetUrl, { replace: true });
+      return;
+    }
+
+    setIsTransitioning(true);
+    let didNavigate = false;
+
+    const finish = () => {
+      if (didNavigate) return;
+      didNavigate = true;
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('keydown', finish);
+        window.removeEventListener('pointerdown', finish);
+      }
+      navigate(targetUrl, { replace: true });
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('keydown', finish, { once: true });
+      window.addEventListener('pointerdown', finish, { once: true });
+    }
+
+    setTimeout(finish, 450);
+  };
 
   function updateField(field: keyof LoginCredentials, value: string) {
     setCredentials((current) => ({ ...current, [field]: value }));
     setErrors((current) => ({ ...current, [field]: undefined }));
     setSubmitError('');
+    setPlantMood('focus');
   }
 
   async function handleGoogleSuccess(idToken: string) {
@@ -91,9 +133,11 @@ export default function LoginPage() {
         await loginWithGoogle({ idToken });
       }
 
+      setPlantMood('success');
       const returnUrl = searchParams.get('returnUrl') || '/dashboard';
-      navigate(returnUrl, { replace: true });
+      handleTransitionAndRedirect(returnUrl);
     } catch (error) {
+      setPlantMood('error');
       setSubmitError(getSubmitErrorMessage(error, 'Đăng nhập Google thất bại. Vui lòng thử lại.'));
     } finally {
       setIsGoogleSubmitting(false);
@@ -120,6 +164,7 @@ export default function LoginPage() {
     setSubmitError('');
 
     if (Object.keys(nextErrors).length) {
+      setPlantMood('error');
       if (nextErrors.email) emailRef.current?.focus();
       else passwordRef.current?.focus();
       return;
@@ -138,9 +183,11 @@ export default function LoginPage() {
         await loginDemo(credentials);
       }
 
+      setPlantMood('success');
       const returnUrl = searchParams.get('returnUrl') || '/dashboard';
-      navigate(returnUrl, { replace: true });
+      handleTransitionAndRedirect(returnUrl);
     } catch (error) {
+      setPlantMood('error');
       setSubmitError(getSubmitErrorMessage(error));
     } finally {
       submitting.current = false;
@@ -154,13 +201,16 @@ export default function LoginPage() {
         title={t('auth_login_title', 'Đăng nhập')}
         subtitle={t('auth_login_subtitle', 'Khu vườn của bạn đang chờ được chăm sóc.')}
         eyebrow={t('auth_login_eyebrow', 'CHÀO MỪNG BẠN TRỞ LẠI')}
+        plantMood={plantMood}
+        bgVariant={authVariant}
+        isTransitioning={isTransitioning}
       >
-        <div className="space-y-4">
+        <div className="space-y-3.5">
           {/* Submit Error Alert */}
           {submitError && (
             <div
               role="alert"
-              className="flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50/90 dark:bg-rose-950/40 dark:border-rose-900 p-3.5 text-xs font-medium text-rose-800 dark:text-rose-200 animate-in fade-in duration-200"
+              className="flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50/90 dark:bg-rose-950/40 dark:border-rose-900 p-3 text-xs font-medium text-rose-800 dark:text-rose-200 animate-in fade-in duration-200"
             >
               <AlertCircle className="size-4 shrink-0 text-rose-600 dark:text-rose-400 mt-0.5" />
               <span>{submitError}</span>
@@ -192,10 +242,10 @@ export default function LoginPage() {
                 type="button"
                 disabled={isSubmitting || isGoogleSubmitting}
                 onClick={handleGoogleCustomClick}
-                className="w-full min-h-[44px] rounded-xl border border-line/80 bg-surface hover:bg-surface-hover text-ink font-semibold text-sm shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-3 focus:outline-none focus:ring-4 focus:ring-slate-100 dark:focus:ring-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                className="w-full min-h-[44px] rounded-xl border border-line/80 bg-surface/75 hover:bg-surface text-ink font-semibold text-xs sm:text-sm shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-2.5 focus:outline-none focus:ring-4 focus:ring-slate-100 dark:focus:ring-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {/* Official Google G Logo SVG */}
-                <svg className="size-5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+                <svg className="size-4 sm:size-5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
                   <path
                     fill="#4285F4"
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -218,23 +268,20 @@ export default function LoginPage() {
             )}
           </div>
 
-          {/* Divider */}
-          <div className="relative my-4">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-line/70" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-surface px-3 text-muted/80 font-bold tracking-wider text-[11px]">
-                {t('auth_or_divider', 'HOẶC TIẾP TỤC VỚI EMAIL')}
-              </span>
-            </div>
+          {/* Divider: Clean transparent background with subtle horizontal rules */}
+          <div className="flex items-center gap-3 my-2.5 sm:my-3" aria-hidden="true">
+            <div className="flex-1 h-px bg-white/20 dark:bg-white/15" />
+            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 text-shadow-contrast select-none">
+              {t('auth_or_divider', 'HOẶC TIẾP TỤC VỚI EMAIL')}
+            </span>
+            <div className="flex-1 h-px bg-white/20 dark:bg-white/15" />
           </div>
 
           {/* Traditional Email / Password Form */}
-          <form onSubmit={handleSubmit} noValidate aria-busy={isSubmitting} className="space-y-4">
+          <form onSubmit={handleSubmit} noValidate aria-busy={isSubmitting} className="space-y-3 sm:space-y-3.5">
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-xs font-bold uppercase tracking-wider text-ink mb-1.5">
+              <label htmlFor="email" className="block text-xs font-bold uppercase tracking-wider text-ink mb-1">
                 {t('auth_email_label', 'Email')}
               </label>
               <div className="relative">
@@ -252,9 +299,11 @@ export default function LoginPage() {
                   value={credentials.email}
                   disabled={isSubmitting || isGoogleSubmitting}
                   onChange={(event) => updateField('email', event.target.value)}
+                  onFocus={() => setPlantMood('focus')}
+                  onBlur={() => setPlantMood('idle')}
                   aria-invalid={Boolean(errors.email)}
                   aria-describedby={errors.email ? 'email-error' : undefined}
-                  className={`w-full min-h-[48px] rounded-xl border bg-surface/80 hover:border-slate-300 dark:hover:border-slate-600 focus:bg-surface pl-10 pr-4 py-3 text-base sm:text-sm font-medium text-ink shadow-2xs focus:shadow-xs transition-all placeholder:text-muted/60 focus:outline-none focus:ring-4 disabled:bg-canvas disabled:text-muted ${
+                  className={`w-full min-h-[44px] sm:min-h-[48px] rounded-xl border bg-surface/80 hover:border-slate-300 dark:hover:border-slate-600 focus:bg-surface pl-10 pr-4 py-2.5 text-base sm:text-sm font-medium text-ink shadow-2xs focus:shadow-xs transition-all placeholder:text-muted/60 focus:outline-none focus:ring-4 disabled:bg-canvas disabled:text-muted ${
                     errors.email
                       ? 'border-danger focus:border-danger focus:ring-danger/10'
                       : 'border-line focus:border-primary focus:ring-primary/15'
@@ -262,7 +311,7 @@ export default function LoginPage() {
                 />
               </div>
               {errors.email && (
-                <p id="email-error" role="alert" className="mt-1.5 text-xs font-medium text-danger flex items-center gap-1">
+                <p id="email-error" role="alert" className="mt-1 text-xs font-medium text-danger flex items-center gap-1">
                   {errors.email}
                 </p>
               )}
@@ -270,10 +319,19 @@ export default function LoginPage() {
 
             {/* Password Field */}
             <div>
-              <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center justify-between mb-1">
                 <label htmlFor="password" className="block text-xs font-bold uppercase tracking-wider text-ink">
                   {t('auth_password_label', 'Mật khẩu')}
                 </label>
+                <span
+                  className="text-xs text-slate-700 dark:text-slate-300 cursor-not-allowed select-none inline-flex items-center gap-1.5"
+                  title="Chức năng đang phát triển"
+                >
+                  <span className="font-medium text-shadow-contrast">{langContext?.language === 'en' ? 'Forgot password?' : 'Quên mật khẩu?'}</span>
+                  <span className="text-[10px] bg-white/15 dark:bg-white/10 border border-white/20 px-1.5 py-0.5 rounded text-emerald-700 dark:text-emerald-300 font-semibold shadow-2xs">
+                    {langContext?.language === 'en' ? 'Soon' : 'Sắp có'}
+                  </span>
+                </span>
               </div>
               <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-muted">
@@ -290,9 +348,11 @@ export default function LoginPage() {
                   value={credentials.password}
                   disabled={isSubmitting || isGoogleSubmitting}
                   onChange={(event) => updateField('password', event.target.value)}
+                  onFocus={() => setPlantMood('focus')}
+                  onBlur={() => setPlantMood('idle')}
                   aria-invalid={Boolean(errors.password)}
                   aria-describedby={errors.password ? 'password-error' : undefined}
-                  className={`w-full min-h-[48px] rounded-xl border bg-surface/80 hover:border-slate-300 dark:hover:border-slate-600 focus:bg-surface pl-10 pr-16 py-3 text-base sm:text-sm font-medium text-ink shadow-2xs focus:shadow-xs transition-all placeholder:text-muted/60 focus:outline-none focus:ring-4 disabled:bg-canvas disabled:text-muted ${
+                  className={`w-full min-h-[44px] sm:min-h-[48px] rounded-xl border bg-surface/80 hover:border-slate-300 dark:hover:border-slate-600 focus:bg-surface pl-10 pr-16 py-2.5 text-base sm:text-sm font-medium text-ink shadow-2xs focus:shadow-xs transition-all placeholder:text-muted/60 focus:outline-none focus:ring-4 disabled:bg-canvas disabled:text-muted ${
                     errors.password
                       ? 'border-danger focus:border-danger focus:ring-danger/10'
                       : 'border-line focus:border-primary focus:ring-primary/15'
@@ -311,7 +371,7 @@ export default function LoginPage() {
                 </button>
               </div>
               {errors.password && (
-                <p id="password-error" role="alert" className="mt-1.5 text-xs font-medium text-danger flex items-center gap-1">
+                <p id="password-error" role="alert" className="mt-1 text-xs font-medium text-danger flex items-center gap-1">
                   {errors.password}
                 </p>
               )}
@@ -321,7 +381,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isSubmitting || isGoogleSubmitting}
-              className="w-full min-h-[48px] sm:min-h-[50px] rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-800 hover:from-emerald-700 hover:to-teal-900 active:scale-[0.98] text-white font-semibold text-sm sm:text-base shadow-md shadow-emerald-800/25 hover:shadow-lg hover:shadow-emerald-800/35 transition-all touch-manipulation flex items-center justify-center gap-2 focus:outline-none focus:ring-4 focus:ring-primary/20 disabled:cursor-wait disabled:opacity-70 mt-2"
+              className="w-full min-h-[46px] sm:min-h-[50px] rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-800 hover:from-emerald-700 hover:to-teal-900 active:scale-[0.98] text-white font-semibold text-sm sm:text-base shadow-md shadow-emerald-800/25 hover:shadow-lg hover:shadow-emerald-800/35 transition-all touch-manipulation flex items-center justify-center gap-2 focus:outline-none focus:ring-4 focus:ring-primary/20 disabled:cursor-wait disabled:opacity-70 mt-1"
             >
               {isSubmitting ? (
                 <>
@@ -338,7 +398,7 @@ export default function LoginPage() {
           </form>
 
           {/* Switch to Register */}
-          <div className="mt-5 text-center text-xs sm:text-sm text-muted">
+          <div className="pt-2 text-center text-xs sm:text-sm text-muted">
             {t('auth_no_account', 'Chưa có tài khoản?')}{' '}
             <Link to="/register" className="font-semibold text-primary hover:text-primary-hover hover:underline inline-block py-1.5 px-1 touch-manipulation">
               {t('auth_register_now', 'Đăng ký ngay')}

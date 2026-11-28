@@ -190,7 +190,7 @@ export default function AlertsPage() {
                 setSelectedDeviceId(e.target.value);
                 setPageIndex(1);
               }}
-              className="w-full rounded-xl border border-line bg-canvas px-3 py-2 text-xs font-medium text-ink focus:border-primary focus:outline-none"
+              className="w-full rounded-xl glass-input px-3 py-2 text-xs font-medium text-ink"
             >
               <option value="">{language === 'vi' ? 'Tất cả thiết bị' : 'All Devices'}</option>
               {devices.map((d) => (
@@ -212,7 +212,7 @@ export default function AlertsPage() {
                 setSelectedSeverity(e.target.value);
                 setPageIndex(1);
               }}
-              className="w-full rounded-xl border border-line bg-canvas px-3 py-2 text-xs font-medium text-ink focus:border-primary focus:outline-none"
+              className="w-full rounded-xl glass-input px-3 py-2 text-xs font-medium text-ink"
             >
               <option value="">{language === 'vi' ? 'Tất cả mức độ' : 'All Severities'}</option>
               <option value="3">{language === 'vi' ? 'Nghiêm trọng (Critical)' : 'Critical'}</option>
@@ -232,7 +232,7 @@ export default function AlertsPage() {
                 setSelectedResolved(e.target.value);
                 setPageIndex(1);
               }}
-              className="w-full rounded-xl border border-line bg-canvas px-3 py-2 text-xs font-medium text-ink focus:border-primary focus:outline-none"
+              className="w-full rounded-xl glass-input px-3 py-2 text-xs font-medium text-ink"
             >
               <option value="">{language === 'vi' ? 'Tất cả trạng thái' : 'All Status'}</option>
               <option value="false">{language === 'vi' ? 'Chưa giải quyết' : 'Unresolved'}</option>
@@ -270,7 +270,7 @@ export default function AlertsPage() {
               <div
                 key={alert.id}
                 className={`panel p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 transition-all ${
-                  alert.isResolved ? 'opacity-70 bg-surface/60' : 'border-l-4 border-l-rose-500 bg-surface'
+                  alert.isResolved ? 'opacity-70 glass-panel-subtle' : 'border-l-4 border-l-rose-500 card-3d'
                 }`}
               >
                 <div className="space-y-1 max-w-xl">
@@ -308,7 +308,7 @@ export default function AlertsPage() {
                     <button
                       type="button"
                       onClick={() => handleResolveAlert(alert.id)}
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-line bg-surface hover:bg-emerald-50 hover:border-emerald-300 dark:hover:bg-emerald-950/30 text-xs font-semibold px-3 py-2 text-ink transition-colors shadow-2xs"
+                      className="glass-button-secondary inline-flex items-center gap-1.5 rounded-xl text-xs font-semibold px-3 py-2 text-ink transition-colors"
                     >
                       <Check className="size-4 text-emerald-600" />
                       <span>{language === 'vi' ? 'Đánh dấu đã xử lý' : 'Mark Resolved'}</span>
@@ -339,7 +339,7 @@ export default function AlertsPage() {
                 type="button"
                 disabled={pageIndex <= 1 || isLoading}
                 onClick={() => setPageIndex((p) => Math.max(1, p - 1))}
-                className="flex items-center justify-center size-8 rounded-lg border border-line bg-surface text-ink hover:bg-surface-hover disabled:opacity-40"
+                className="glass-button-secondary flex items-center justify-center size-8 rounded-lg text-ink disabled:opacity-40"
               >
                 <ChevronLeft className="size-4" />
               </button>
@@ -350,7 +350,7 @@ export default function AlertsPage() {
                 type="button"
                 disabled={pageIndex >= totalPages || isLoading}
                 onClick={() => setPageIndex((p) => Math.min(totalPages, p + 1))}
-                className="flex items-center justify-center size-8 rounded-lg border border-line bg-surface text-ink hover:bg-surface-hover disabled:opacity-40"
+                className="glass-button-secondary flex items-center justify-center size-8 rounded-lg text-ink disabled:opacity-40"
               >
                 <ChevronRight className="size-4" />
               </button>

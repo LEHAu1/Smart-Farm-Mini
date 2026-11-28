@@ -104,8 +104,8 @@ export const InfraCard3D = React.memo(function InfraCard3D({
               <ServiceIcon className="size-4.5" />
             </span>
             <div>
-              <h3 className="text-sm font-bold tracking-tight text-ink">{serviceName}</h3>
-              <p className="text-[11px] text-muted line-clamp-1">{description}</p>
+              <h3 className="text-sm font-bold tracking-tight text-ink text-shadow-contrast">{serviceName}</h3>
+              <p className="text-[11px] text-muted line-clamp-1 text-backdrop-local font-medium inline-block mt-0.5">{description}</p>
             </div>
           </div>
 
@@ -130,7 +130,7 @@ export const InfraCard3D = React.memo(function InfraCard3D({
               type="button"
               disabled={isChecking}
               onClick={onRecheck}
-              className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted hover:text-primary transition-colors p-1 rounded-md hover:bg-canvas focus-ring disabled:opacity-50"
+              className="glass-button-secondary inline-flex items-center gap-1.5 text-[11px] font-semibold text-muted hover:text-ink transition-all px-2.5 py-1 rounded-lg focus-ring disabled:opacity-50"
               title={t('infra_recheck', 'Kiểm tra lại')}
               aria-label={`${t('infra_recheck', 'Kiểm tra lại')} ${serviceName}`}
             >

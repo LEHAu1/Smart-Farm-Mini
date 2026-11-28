@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import Navigation from '../components/layout/Navigation';
+import { AppBackgroundScene } from '../components/layout/AppBackgroundScene';
+import { SylvaVariantToolbar } from '../components/layout/SylvaVariantToolbar';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -71,7 +73,7 @@ export default function AppLayout() {
   const [selectedDeviceId, setSelectedDeviceId] = useState<string>('all');
   const [alerts, setAlerts] = useState<AlertDto[]>([]);
 
-  // Close menus on outside click
+  // Close menus on outside click or Escape key
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
@@ -84,8 +86,20 @@ export default function AppLayout() {
         setIsLangOpen(false);
       }
     }
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setIsUserMenuOpen(false);
+        setIsNotifOpen(false);
+        setIsLangOpen(false);
+        setIsMobileOpen(false);
+      }
+    }
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
   }, []);
 
   // Close mobile drawer on route change
@@ -187,11 +201,15 @@ export default function AppLayout() {
   const unreadAlerts = alerts.filter((a) => !a.isResolved);
 
   return (
-    <div className="min-h-screen bg-canvas text-ink flex relative overflow-x-hidden">
-      {/* Ambient Depth Orbs for Soft 3D Lighting */}
-      <div className="ambient-orb ambient-orb-primary" aria-hidden="true" />
-      <div className="ambient-orb ambient-orb-secondary" aria-hidden="true" />
-      <div className="ambient-orb ambient-orb-tertiary" aria-hidden="true" />
+    <div className="min-h-screen bg-transparent text-ink flex relative overflow-x-hidden">
+      {/* ── Full-Page 3D Living World Background (ThreeUI Sylva) ── */}
+      <AppBackgroundScene />
+
+      {/* ── Edge Vignette for Foreground Separation ── */}
+      <div
+        className="fixed inset-0 pointer-events-none z-0 bg-[radial-gradient(ellipse_at_center,transparent_60%,rgba(0,0,0,0.25)_100%)] dark:bg-[radial-gradient(ellipse_at_center,transparent_50%,rgba(0,0,0,0.5)_100%)]"
+        aria-hidden="true"
+      />
 
       {/* Accessibility Skip Link */}
       <a href="#main-content" className="skip-link">
@@ -200,7 +218,7 @@ export default function AppLayout() {
 
       {/* ── 1. Desktop Sidebar ── */}
       <aside
-        className={`hidden lg:flex flex-col border-r border-line/80 bg-surface/90 backdrop-blur-md transition-all duration-300 sticky top-0 h-screen z-30 shrink-0 ${
+        className={`hidden lg:flex flex-col border-r glass-bar transition-all duration-300 sticky top-0 h-screen z-30 shrink-0 ${
           isCollapsed ? 'w-18' : 'w-60'
         }`}
       >
@@ -282,7 +300,7 @@ export default function AppLayout() {
 
           {/* Drawer content */}
           <div
-            className="fixed inset-y-0 left-0 w-72 bg-surface shadow-2xl flex flex-col z-50 p-4 border-r border-line animate-in slide-in-from-left duration-200"
+            className="fixed inset-y-0 left-0 w-72 glass-bar shadow-2xl flex flex-col z-50 p-4 border-r animate-in slide-in-from-left duration-200"
             role="dialog"
             aria-modal="true"
             aria-label="Menu điều hướng"
@@ -320,7 +338,7 @@ export default function AppLayout() {
       {/* ── 3. Main Content Wrapper ── */}
       <div className="flex-1 flex flex-col min-w-0 relative z-10">
         {/* Top Header with Soft 3D & Glassmorphism */}
-        <header className="h-16 border-b border-line/80 bg-surface/85 backdrop-blur-md sticky top-0 z-20 px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4 shadow-3d-flat">
+        <header className="h-16 border-b glass-bar sticky top-0 z-20 px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4 shadow-3d-flat">
           {/* Left: Mobile hamburger & Breadcrumbs */}
           <div className="flex items-center gap-3 min-w-0">
             <button
@@ -408,7 +426,7 @@ export default function AppLayout() {
 
               {isLangOpen && (
                 <div
-                  className="absolute right-0 mt-2 w-36 rounded-2xl border border-line/80 bg-surface/95 backdrop-blur-xl p-1.5 shadow-3d-floating z-50 animate-in fade-in-50 zoom-in-95"
+                  className="absolute right-0 mt-2 w-36 glass-modal rounded-2xl p-1.5 shadow-3d-floating z-50 animate-in fade-in-50 zoom-in-95"
                   role="menu"
                   aria-label={t('language_select', 'Chọn ngôn ngữ')}
                 >
@@ -474,7 +492,7 @@ export default function AppLayout() {
 
               {isNotifOpen && (
                 <div
-                  className="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl border border-line/80 bg-surface/95 backdrop-blur-xl p-4 shadow-3d-floating z-50 animate-in fade-in-50 zoom-in-95"
+                  className="absolute right-0 mt-2 w-80 sm:w-96 glass-modal rounded-2xl p-4 shadow-3d-floating z-50 animate-in fade-in-50 zoom-in-95"
                   role="region"
                   aria-label={t('recent_alerts', 'Hộp thông báo cảnh báo')}
                 >
@@ -539,7 +557,7 @@ export default function AppLayout() {
 
               {isUserMenuOpen && (
                 <div
-                  className="absolute right-0 mt-2 w-56 rounded-2xl border border-line/80 bg-surface/95 backdrop-blur-xl p-2 shadow-3d-floating z-50 animate-in fade-in-50 zoom-in-95"
+                  className="absolute right-0 mt-2 w-56 glass-modal rounded-2xl p-2 shadow-3d-floating z-50 animate-in fade-in-50 zoom-in-95"
                   role="menu"
                 >
                   <div className="px-3 py-2 border-b border-line mb-1">
@@ -589,6 +607,9 @@ export default function AppLayout() {
           <Outlet />
         </main>
       </div>
+
+      {/* ── Real-time 3D Scene & Glass Toolbar (Active Across All Pages) ── */}
+      <SylvaVariantToolbar />
     </div>
   );
 }

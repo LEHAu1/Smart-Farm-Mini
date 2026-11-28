@@ -17,11 +17,10 @@ export const MiniSparkline = React.memo(function MiniSparkline({
   className = '',
   isMockFallback = false,
 }: MiniSparklineProps) {
-  // TODO: Tích hợp API lịch sử /api/Sensors/history nếu có deviceId được chọn.
-  // Hiện tại sử dụng dữ liệu mẫu (mock trend 24h) khi chưa có đầy đủ chuỗi thời gian telemetry.
+  // Khi chưa có chuỗi đo telemetry thực tế, hiển thị đường xu hướng minh họa
   const points = useMemo(() => {
     if (data && data.length >= 2) return data;
-    // Default gentle wave fallback trend
+    // Dữ liệu sóng minh họa mẫu (fallback trend)
     return [40, 42, 45, 43, 48, 52, 50, 54, 58, 55, 60, 62];
   }, [data]);
 
@@ -56,7 +55,10 @@ export const MiniSparkline = React.memo(function MiniSparkline({
   const gradientId = useMemo(() => `sparkline-grad-${Math.random().toString(36).substring(2, 9)}`, []);
 
   return (
-    <div className={`relative flex items-center ${className}`} title={isMockFallback ? 'TODO: Mock trend 24h' : 'Xu hướng thời gian thực'}>
+    <div
+      className={`relative flex items-center ${className}`}
+      title={isMockFallback ? 'Xu hướng minh họa 24h (chờ chuỗi đo lịch sử)' : 'Xu hướng thời gian thực'}
+    >
       <svg width={width} height={height} className="overflow-visible" aria-hidden="true">
         <defs>
           <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">

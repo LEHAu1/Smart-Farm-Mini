@@ -248,10 +248,10 @@ export default function DashboardPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <p className="eyebrow">{t('dashboard_eyebrow', 'SMART FARM MINI')}</p>
-          <h1 className="mt-1 text-2xl font-extrabold tracking-tight md:text-3xl text-ink">
+          <h1 className="mt-1 text-2xl font-extrabold tracking-tight md:text-3xl text-ink text-shadow-contrast">
             {t('dashboard_title', 'Tổng quan khu vườn')}
           </h1>
-          <p className="mt-1 text-xs sm:text-sm text-muted">
+          <p className="mt-1 text-xs sm:text-sm text-muted text-shadow-contrast">
             {t('dashboard_subtitle', 'Một không gian để theo dõi cây trồng và chăm sóc khu vườn mỗi ngày.')}
           </p>
         </div>
@@ -314,19 +314,20 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      {/* ── 3. Hero Banner with 3D Three.js Plant Scene (Khối Banner 3D) ── */}
+      {/* ── 3. Hero Banner with 3D Three.js Plant Scene (Kính trong suốt 45-50% Emerald) ── */}
       <section
-        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-950 p-6 md:p-8 text-white shadow-3d-floating border border-emerald-500/20"
+        className="relative overflow-hidden rounded-3xl bg-emerald-950/45 backdrop-blur-[var(--glass-blur)] backdrop-saturate-[var(--glass-saturate)] p-6 md:p-8 text-white shadow-3d-floating border border-emerald-400/30"
         aria-labelledby="welcome-title"
       >
         {/* Soft Background Radial Light */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-emerald-600/25 via-emerald-800/15 to-transparent" />
         <div className="pointer-events-none absolute -top-24 -right-24 size-80 rounded-full bg-emerald-400/20 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-24 -left-24 size-80 rounded-full bg-teal-400/15 blur-3xl" />
 
         <div className="relative z-10 grid grid-cols-1 md:grid-cols-12 items-center gap-6">
           {/* Left Text & Actions */}
           <div className="md:col-span-7 space-y-4">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold backdrop-blur-xs border border-white/20">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold backdrop-blur-md border border-white/20 [text-shadow:0_1px_3px_rgba(0,0,0,0.5)]">
               <Radio className={`size-3.5 ${isConnected ? 'text-emerald-300 animate-pulse' : 'text-slate-300'}`} />
               <span>
                 {isConnected
@@ -339,11 +340,11 @@ export default function DashboardPage() {
               </span>
             </div>
 
-            <h2 id="welcome-title" className="text-xl md:text-3xl font-extrabold text-white tracking-tight leading-snug">
+            <h2 id="welcome-title" className="text-xl md:text-3xl font-extrabold text-white tracking-tight leading-snug [text-shadow:0_2px_10px_rgba(0,0,0,0.65)]">
               {t('dashboard_banner_title', 'Bắt đầu từ một khu vườn nhỏ.')}
             </h2>
 
-            <p className="text-xs md:text-sm leading-relaxed text-emerald-100/90 max-w-xl">
+            <p className="text-xs md:text-sm leading-relaxed text-emerald-100 max-w-xl [text-shadow:0_1px_4px_rgba(0,0,0,0.55)]">
               {t(
                 'dashboard_banner_desc',
                 'Hệ thống IoT cập nhật chỉ số đất, nước và không khí tức thời qua SignalR. Quản lý tưới tiêu chính xác cho từng chậu cây.'
@@ -356,7 +357,7 @@ export default function DashboardPage() {
                 type="button"
                 onClick={handleQuickIrrigate}
                 disabled={isQuickIrrigating}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-2.5 text-xs sm:text-sm font-bold text-emerald-900 hover:bg-emerald-50 shadow-3d-raised transition-all active:scale-95 disabled:opacity-75 focus-ring cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-white/90 hover:bg-white text-emerald-950 px-5 py-2.5 text-xs sm:text-sm font-bold shadow-3d-raised transition-all active:scale-95 disabled:opacity-75 focus-ring cursor-pointer border border-white/40"
               >
                 {isQuickIrrigating ? (
                   <Loader2 className="size-4 animate-spin text-emerald-800" />
@@ -372,7 +373,7 @@ export default function DashboardPage() {
 
               <Link
                 to="/sensors"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-white/15 hover:bg-white/25 px-4 py-2.5 text-xs sm:text-sm font-semibold text-white transition-all backdrop-blur-xs border border-white/20 focus-ring"
+                className="glass-button-secondary inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-semibold text-white transition-all focus-ring"
               >
                 <span>{t('view_sensors', 'Xem cảm biến chi tiết')}</span>
                 <ArrowRight className="size-4" />

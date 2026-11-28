@@ -43,7 +43,7 @@ export const SensorCard3D = React.memo(function SensorCard3D({
   isLoading = false,
   isSignalRConnected = true,
 }: SensorCard3DProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   // Smooth Count-Up Animation using requestAnimationFrame
   const [displayValue, setDisplayValue] = useState<number | null>(value ?? null);
@@ -168,14 +168,14 @@ export const SensorCard3D = React.memo(function SensorCard3D({
               <Icon className="size-4.5" />
             </span>
             <div>
-              <h3 className="text-xs font-semibold text-muted uppercase tracking-wider">{title}</h3>
-              <p className="text-[11px] text-muted/80">{sensorDetail}</p>
+              <h3 className="text-xs font-bold text-ink uppercase tracking-wider text-shadow-contrast">{title}</h3>
+              {sensorDetail && <p className="text-[11px] text-muted font-medium text-backdrop-local inline-block mt-0.5">{sensorDetail}</p>}
             </div>
           </div>
 
           {/* Status Badge */}
           <span
-            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold border ${statusConfig.badgeClass} shrink-0`}
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold border ${statusConfig.badgeClass} shrink-0 backdrop-blur-xs`}
           >
             <span
               className="size-1.5 rounded-full"
@@ -192,10 +192,10 @@ export const SensorCard3D = React.memo(function SensorCard3D({
         <div className="mt-4 flex items-center justify-between gap-3">
           <div>
             <div className="flex items-baseline gap-1">
-              <span className="text-2xl sm:text-3xl font-extrabold text-ink tabular-nums tracking-tight">
+              <span className="text-2xl sm:text-3xl font-extrabold text-ink tabular-nums tracking-tight sensor-value-3d">
                 {numValue !== null ? numValue.toFixed(1) : '--'}
               </span>
-              <span className="text-sm font-semibold text-muted">{unit}</span>
+              <span className="text-sm font-bold text-ink text-shadow-contrast">{unit}</span>
             </div>
 
             {/* Offline Alert Indicator */}
@@ -231,9 +231,16 @@ export const SensorCard3D = React.memo(function SensorCard3D({
 
       {/* Bottom: Mini Sparkline Trend */}
       <div className="mt-3 pt-2.5 border-t border-line/60 flex items-center justify-between">
-        <span className="text-[10px] font-medium text-muted/70 tracking-wider uppercase">
-          {t('metric_trend_24h', 'Xu hướng 24h')}
-        </span>
+        <div className="flex items-center gap-1.5">
+          <span className="text-[10px] font-medium text-muted/70 tracking-wider uppercase">
+            {t('metric_trend_24h', 'Xu hướng 24h')}
+          </span>
+          {(!historyData || historyData.length === 0) && (
+            <span className="text-[9px] px-1 py-0.5 rounded bg-muted/10 text-muted font-normal tracking-normal">
+              {language === 'vi' ? 'Minh họa' : 'Sample'}
+            </span>
+          )}
+        </div>
         <MiniSparkline
           data={historyData}
           color={accentColor}

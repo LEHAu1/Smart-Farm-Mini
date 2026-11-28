@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { HeroPlantFallback } from './HeroPlantFallback';
+import { createPlantGroup, disposePlantGroup } from '../common/plant-builder';
 
 export interface HeroPlantSceneProps {
   className?: string;
@@ -74,100 +75,10 @@ export default function HeroPlantScene({ className = '', isIrrigating = false }:
     pointLight.position.set(-2, 2, 2);
     scene.add(pointLight);
 
-    // 3. 3D Model: Group
-    const plantGroup = new THREE.Group();
+    // 3. 3D Model: Shared Procedural Plant Group
+    const plant = createPlantGroup();
+    const plantGroup = plant.group;
     scene.add(plantGroup);
-
-    // Bệ tròn (Pedestal)
-    const pedestalGeo = new THREE.CylinderGeometry(1.2, 1.35, 0.15, 32);
-    const pedestalMat = new THREE.MeshStandardMaterial({
-      color: 0x064e3b,
-      metalness: 0.3,
-      roughness: 0.4,
-    });
-    const pedestal = new THREE.Mesh(pedestalGeo, pedestalMat);
-    pedestal.position.y = -0.55;
-    plantGroup.add(pedestal);
-
-    // Vành phát quang trên bệ
-    const haloGeo = new THREE.TorusGeometry(1.22, 0.03, 16, 48);
-    const haloMat = new THREE.MeshBasicMaterial({ color: 0x34d399 });
-    const halo = new THREE.Mesh(haloGeo, haloMat);
-    halo.rotation.x = Math.PI / 2;
-    halo.position.y = -0.47;
-    plantGroup.add(halo);
-
-    // Chậu cây (Pot)
-    const potGeo = new THREE.CylinderGeometry(0.72, 0.52, 0.9, 24);
-    const potMat = new THREE.MeshStandardMaterial({
-      color: 0xf1f5f9,
-      roughness: 0.3,
-      metalness: 0.1,
-    });
-    const pot = new THREE.Mesh(potGeo, potMat);
-    pot.position.y = -0.05;
-    plantGroup.add(pot);
-
-    // Đất (Soil)
-    const soilGeo = new THREE.CylinderGeometry(0.68, 0.68, 0.05, 24);
-    const soilMat = new THREE.MeshStandardMaterial({ color: 0x27272a, roughness: 0.9 });
-    const soil = new THREE.Mesh(soilGeo, soilMat);
-    soil.position.y = 0.38;
-    plantGroup.add(soil);
-
-    // Thân cây (Stem)
-    const stemGeo = new THREE.CylinderGeometry(0.045, 0.06, 0.9, 12);
-    const stemMat = new THREE.MeshStandardMaterial({ color: 0x059669, roughness: 0.5 });
-    const stem = new THREE.Mesh(stemGeo, stemMat);
-    stem.position.y = 0.8;
-    plantGroup.add(stem);
-
-    // Lá cây (Leaves - Low poly soft shaded)
-    const leafGeo = new THREE.SphereGeometry(0.42, 8, 6);
-    leafGeo.scale(1.2, 0.22, 0.55);
-
-    const leafMat = new THREE.MeshStandardMaterial({
-      color: 0x10b981,
-      roughness: 0.35,
-      metalness: 0.15,
-      flatShading: true,
-    });
-
-    const leaf1 = new THREE.Mesh(leafGeo, leafMat);
-    leaf1.position.set(-0.35, 0.95, 0.1);
-    leaf1.rotation.set(0.2, 0.3, 0.5);
-    plantGroup.add(leaf1);
-
-    const leaf2 = new THREE.Mesh(leafGeo, leafMat);
-    leaf2.position.set(0.35, 1.1, -0.1);
-    leaf2.rotation.set(-0.2, -0.4, -0.5);
-    plantGroup.add(leaf2);
-
-    const leaf3 = new THREE.Mesh(leafGeo, leafMat);
-    leaf3.position.set(0.05, 1.3, 0.25);
-    leaf3.rotation.set(0.5, 0.1, 0.1);
-    plantGroup.add(leaf3);
-
-    // 4. Energy Floating Particles
-    const particleCount = 20;
-    const particleGeo = new THREE.BufferGeometry();
-    const particlePositions = new Float32Array(particleCount * 3);
-
-    for (let i = 0; i < particleCount * 3; i += 3) {
-      particlePositions[i] = (Math.random() - 0.5) * 2.2;
-      particlePositions[i + 1] = Math.random() * 2.2 - 0.3;
-      particlePositions[i + 2] = (Math.random() - 0.5) * 2.2;
-    }
-    particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
-
-    const particleMat = new THREE.PointsMaterial({
-      color: 0x34d399,
-      size: 0.05,
-      transparent: true,
-      opacity: 0.75,
-    });
-    const particles = new THREE.Points(particleGeo, particleMat);
-    plantGroup.add(particles);
 
     // 5. Rain Drops System for Quick Irrigation Animation
     const rainCount = 40;
@@ -263,20 +174,7 @@ export default function HeroPlantScene({ className = '', isIrrigating = false }:
       }
 
       // Dispose geometries and materials
-      pedestalGeo.dispose();
-      pedestalMat.dispose();
-      haloGeo.dispose();
-      haloMat.dispose();
-      potGeo.dispose();
-      potMat.dispose();
-      soilGeo.dispose();
-      soilMat.dispose();
-      stemGeo.dispose();
-      stemMat.dispose();
-      leafGeo.dispose();
-      leafMat.dispose();
-      particleGeo.dispose();
-      particleMat.dispose();
+      disposePlantGroup(plant);
       rainGeo.dispose();
       rainMat.dispose();
       renderer.dispose();

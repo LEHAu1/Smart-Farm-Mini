@@ -170,8 +170,8 @@ export default function CommandsPage() {
       {/* Commands Table Panel */}
       <section className="panel overflow-hidden p-0">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-canvas border-b border-line text-[11px] font-bold text-muted uppercase tracking-wider">
+          <table className="glass-table text-left text-xs">
+            <thead className="text-[11px] font-bold text-muted uppercase tracking-wider">
               <tr>
                 <th className="py-3 px-4">{language === 'vi' ? 'Mã lệnh' : 'Command Code'}</th>
                 <th className="py-3 px-4">{language === 'vi' ? 'Thiết bị' : 'Device'}</th>
@@ -210,7 +210,7 @@ export default function CommandsPage() {
                     <tr
                       key={cmd.id}
                       onClick={() => setSelectedCmd(cmd)}
-                      className="hover:bg-surface-hover cursor-pointer transition-colors"
+                      className="cursor-pointer transition-colors"
                     >
                       <td className="py-3 px-4 font-mono font-semibold text-primary">{cmd.commandCode}</td>
                       <td className="py-3 px-4 font-medium">{deviceName}</td>
@@ -237,8 +237,8 @@ export default function CommandsPage() {
 
       {/* Command Lifecycle Drawer / Modal */}
       {selectedCmd && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
-          <div className="w-full max-w-lg rounded-2xl bg-surface p-6 shadow-2xl border border-line space-y-5">
+        <div className="fixed inset-0 z-50 flex items-center justify-center glass-modal-backdrop p-4">
+          <div className="w-full max-w-lg rounded-2xl glass-modal p-6 space-y-5">
             <div className="flex items-start justify-between border-b border-line pb-4">
               <div>
                 <span className="text-[11px] font-mono font-bold text-primary uppercase">{selectedCmd.commandCode}</span>
@@ -250,7 +250,7 @@ export default function CommandsPage() {
             </div>
 
             {/* Visual Timeline of Command Lifecycle */}
-            <div className="rounded-xl border border-line bg-canvas p-4 space-y-3">
+            <div className="rounded-xl glass-panel-subtle p-4 space-y-3">
               <span className="text-xs font-bold uppercase tracking-wider text-muted block">
                 {language === 'vi' ? 'Tiến trình vòng đời lệnh' : 'Command Lifecycle Progression'}
               </span>
@@ -294,7 +294,7 @@ export default function CommandsPage() {
               {selectedCmd.payload && (
                 <div className="pt-2">
                   <span className="text-muted block mb-1">Payload JSON:</span>
-                  <pre className="rounded-xl border border-line bg-canvas p-3 font-mono text-[11px] text-ink overflow-x-auto">
+                  <pre className="rounded-xl glass-panel-subtle p-3 font-mono text-[11px] text-ink overflow-x-auto">
                     {selectedCmd.payload}
                   </pre>
                 </div>
@@ -322,8 +322,8 @@ export default function CommandsPage() {
 
       {/* Dispatch Command Modal */}
       {isDispatchModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
-          <div className="w-full max-w-md rounded-2xl bg-surface p-6 shadow-2xl border border-line space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center glass-modal-backdrop p-4">
+          <div className="w-full max-w-md rounded-2xl glass-modal p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-line pb-3">
               <h3 className="text-base font-bold text-ink">
                 {language === 'vi' ? 'Phát lệnh điều khiển thiết bị' : 'Dispatch Node Command'}
@@ -342,7 +342,7 @@ export default function CommandsPage() {
                   required
                   value={targetDeviceId}
                   onChange={(e) => setTargetDeviceId(e.target.value)}
-                  className="w-full rounded-xl border border-line bg-canvas px-3.5 py-2.5 text-sm font-medium text-ink focus:border-primary focus:outline-none"
+                  className="w-full rounded-xl glass-input px-3.5 py-2.5 text-sm font-medium text-ink"
                 >
                   {devices.map((d) => (
                     <option key={d.id} value={d.id}>
@@ -360,7 +360,7 @@ export default function CommandsPage() {
                   required
                   value={selectedAction}
                   onChange={(e) => setSelectedAction(e.target.value)}
-                  className="w-full rounded-xl border border-line bg-canvas px-3.5 py-2.5 text-sm font-medium text-ink focus:border-primary focus:outline-none"
+                  className="w-full rounded-xl glass-input px-3.5 py-2.5 text-sm font-medium text-ink"
                 >
                   <option value="START_PUMP">START_PUMP (Kích hoạt máy bơm)</option>
                   <option value="STOP_PUMP">STOP_PUMP (Dừng máy bơm)</option>
@@ -378,7 +378,7 @@ export default function CommandsPage() {
                   placeholder='{"durationSeconds": 30}'
                   value={commandPayload}
                   onChange={(e) => setCommandPayload(e.target.value)}
-                  className="w-full rounded-xl border border-line bg-canvas px-3.5 py-2.5 text-sm font-mono text-ink focus:border-primary focus:outline-none"
+                  className="w-full rounded-xl glass-input px-3.5 py-2.5 text-sm font-mono text-ink"
                 />
               </div>
 
@@ -386,7 +386,7 @@ export default function CommandsPage() {
                 <button
                   type="button"
                   onClick={() => setIsDispatchModalOpen(false)}
-                  className="rounded-xl border border-line px-4 py-2.5 text-xs font-semibold text-ink hover:bg-surface-hover"
+                  className="glass-button-secondary rounded-xl px-4 py-2.5 text-xs font-semibold text-ink"
                 >
                   {language === 'vi' ? 'Hủy' : 'Cancel'}
                 </button>

@@ -104,6 +104,20 @@ export default function DevicesPage() {
     loadDevices();
   }, [loadDevices]);
 
+  // Close open modal on Escape key for accessibility
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (isAddOpen) setIsAddOpen(false);
+        else if (editDevice) setEditDevice(null);
+        else if (deleteTarget && !isDeleting) setDeleteTarget(null);
+        else if (selectedDevice) setSelectedDevice(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isAddOpen, editDevice, deleteTarget, isDeleting, selectedDevice]);
+
   // 2. Real-time SignalR connection status
   useEffect(() => {
     const unsub = onDeviceStatus((status) => {
@@ -209,8 +223,8 @@ export default function DevicesPage() {
         err instanceof Error
           ? err.message
           : language === 'vi'
-          ? 'Lỗi khi cập nhật thiết bị.'
-          : 'Failed to update device.';
+            ? 'Lỗi khi cập nhật thiết bị.'
+            : 'Failed to update device.';
       setEditError(msg);
     } finally {
       setIsEditSubmitting(false);
@@ -242,8 +256,8 @@ export default function DevicesPage() {
         err instanceof Error
           ? err.message
           : language === 'vi'
-          ? 'Lỗi khi xóa thiết bị.'
-          : 'Failed to delete device.';
+            ? 'Lỗi khi xóa thiết bị.'
+            : 'Failed to delete device.';
       showFeedback('error', msg);
       setDeleteTarget(null);
     } finally {
@@ -316,11 +330,10 @@ export default function DevicesPage() {
       {/* Feedback Banner */}
       {actionFeedback && (
         <div
-          className={`flex items-center justify-between rounded-xl p-4 text-sm font-medium ${
-            actionFeedback.type === 'success'
-              ? 'border border-emerald-200 bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:border-emerald-800 dark:text-emerald-300'
-              : 'border border-rose-200 bg-rose-50 text-rose-800 dark:bg-rose-950/40 dark:border-rose-800 dark:text-rose-300'
-          }`}
+          className={`flex items-center justify-between rounded-xl p-4 text-sm font-medium ${actionFeedback.type === 'success'
+            ? 'border border-emerald-200 bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:border-emerald-800 dark:text-emerald-300'
+            : 'border border-rose-200 bg-rose-50 text-rose-800 dark:bg-rose-950/40 dark:border-rose-800 dark:text-rose-300'
+            }`}
         >
           <div className="flex items-center gap-2">
             {actionFeedback.type === 'success' ? (
@@ -330,36 +343,46 @@ export default function DevicesPage() {
             )}
             <span>{actionFeedback.text}</span>
           </div>
-          <button onClick={() => setActionFeedback(null)} className="text-xs opacity-75 hover:opacity-100">
+          <button
+            onClick={() => setActionFeedback(null)}
+            className="text-xs opacity-75 hover:opacity-100"
+            aria-label={language === 'vi' ? 'Đóng thông báo' : 'Dismiss notification'}
+          >
             <X className="size-4" />
           </button>
         </div>
       )}
 
-      {/* Stat Counters */}
+      {/* Stat Counters with 3D Transparent Glass */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
-        <div className="rounded-2xl border border-line bg-surface p-4">
+        <div className="card-3d card-3d-interactive rounded-2xl p-4">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted">{language === 'vi' ? 'Tổng số nút' : 'Total Nodes'}</span>
-            <span className="flex size-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <span className="text-xs font-bold text-ink uppercase tracking-wider text-shadow-contrast">
+              {language === 'vi' ? 'Tổng số nút' : 'Total Nodes'}
+            </span>
+            <span className="flex size-7 items-center justify-center rounded-lg bg-primary/15 text-primary border border-primary/20 shadow-xs">
               <Cpu className="size-4" />
             </span>
           </div>
-          <p className="mt-2 text-2xl font-bold tracking-tight text-ink">{devices.length}</p>
+          <p className="mt-2 text-2xl font-extrabold tracking-tight text-ink tabular-nums sensor-value-3d">{devices.length}</p>
         </div>
-        <div className="rounded-2xl border border-line bg-surface p-4">
+        <div className="card-3d card-3d-interactive rounded-2xl p-4">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted">{language === 'vi' ? 'Đang trực tuyến' : 'Online'}</span>
+            <span className="text-xs font-bold text-ink uppercase tracking-wider text-shadow-contrast">
+              {language === 'vi' ? 'Đang trực tuyến' : 'Online'}
+            </span>
             <StatusDot status="online" size="sm" />
           </div>
-          <p className="mt-2 text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400">{onlineCount}</p>
+          <p className="mt-2 text-2xl font-extrabold tracking-tight text-emerald-400 tabular-nums sensor-value-3d">{onlineCount}</p>
         </div>
-        <div className="col-span-2 sm:col-span-1 rounded-2xl border border-line bg-surface p-4">
+        <div className="col-span-2 sm:col-span-1 card-3d card-3d-interactive rounded-2xl p-4">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted">{language === 'vi' ? 'Ngoại tuyến' : 'Offline'}</span>
+            <span className="text-xs font-bold text-ink uppercase tracking-wider text-shadow-contrast">
+              {language === 'vi' ? 'Ngoại tuyến' : 'Offline'}
+            </span>
             <StatusDot status="offline" size="sm" />
           </div>
-          <p className="mt-2 text-2xl font-bold tracking-tight text-slate-500">{offlineCount}</p>
+          <p className="mt-2 text-2xl font-extrabold tracking-tight text-slate-400 tabular-nums sensor-value-3d">{offlineCount}</p>
         </div>
       </div>
 
@@ -389,11 +412,10 @@ export default function DevicesPage() {
             <div
               key={device.id}
               onClick={() => setSelectedDevice(device)}
-              className={`cursor-pointer rounded-2xl border p-5 hover:border-primary/50 hover:shadow-sm transition-all space-y-3 relative group ${
-                device.isActive
-                  ? 'border-line bg-surface'
-                  : 'border-dashed border-slate-300 bg-slate-50/50 dark:bg-slate-900/30 dark:border-slate-700'
-              }`}
+              className={`cursor-pointer card-3d card-3d-interactive rounded-2xl p-5 transition-all space-y-3 relative group ${device.isActive
+                ? ''
+                : 'opacity-70 border-dashed border-slate-500/40'
+                }`}
             >
               {/* Card header */}
               <div className="flex items-start justify-between">
@@ -448,6 +470,7 @@ export default function DevicesPage() {
                   <button
                     type="button"
                     title={language === 'vi' ? 'Chỉnh sửa' : 'Edit'}
+                    aria-label={language === 'vi' ? 'Chỉnh sửa thiết bị' : 'Edit device'}
                     onClick={(e) => openEditModal(device, e)}
                     className="rounded-lg p-1 text-muted hover:text-primary hover:bg-primary/10 transition-colors"
                   >
@@ -461,12 +484,14 @@ export default function DevicesPage() {
                     title={device.isActive
                       ? (language === 'vi' ? 'Vô hiệu hóa' : 'Deactivate')
                       : (language === 'vi' ? 'Kích hoạt lại' : 'Activate')}
+                    aria-label={device.isActive
+                      ? (language === 'vi' ? 'Vô hiệu hóa thiết bị' : 'Deactivate device')
+                      : (language === 'vi' ? 'Kích hoạt thiết bị' : 'Activate device')}
                     onClick={(e) => handleToggleActive(device, e)}
-                    className={`rounded-lg p-1 transition-colors ${
-                      device.isActive
-                        ? 'text-muted hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/40'
-                        : 'text-muted hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40'
-                    }`}
+                    className={`rounded-lg p-1 transition-colors ${device.isActive
+                      ? 'text-muted hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/40'
+                      : 'text-muted hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40'
+                      }`}
                   >
                     {togglingId === device.id ? (
                       <span className="size-3.5 block animate-spin rounded-full border-2 border-current border-t-transparent" />
@@ -481,6 +506,7 @@ export default function DevicesPage() {
                   <button
                     type="button"
                     title={language === 'vi' ? 'Xóa thiết bị' : 'Delete device'}
+                    aria-label={language === 'vi' ? 'Xóa thiết bị' : 'Delete device'}
                     onClick={(e) => openDeleteConfirm(device, e)}
                     className="rounded-lg p-1 text-muted hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
                   >
@@ -497,7 +523,8 @@ export default function DevicesPage() {
       {selectedDevice && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4" onClick={() => setSelectedDevice(null)}>
           <div
-            className="w-full max-w-lg rounded-2xl bg-surface p-6 shadow-2xl border border-line space-y-5"
+            className="w-full max-w-lg rounded-2xl glass-modal p-6 shadow-2xl space-y-5"
+            role="dialog"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between border-b border-line pb-4">
@@ -505,7 +532,11 @@ export default function DevicesPage() {
                 <span className="text-[11px] font-mono font-bold text-primary uppercase">{selectedDevice.deviceCode}</span>
                 <h2 className="text-lg font-bold text-ink mt-0.5">{selectedDevice.name}</h2>
               </div>
-              <button onClick={() => setSelectedDevice(null)} className="text-muted hover:text-ink">
+              <button
+                onClick={() => setSelectedDevice(null)}
+                className="text-muted hover:text-ink"
+                aria-label={language === 'vi' ? 'Đóng chi tiết thiết bị' : 'Close device details'}
+              >
                 <X className="size-5" />
               </button>
             </div>
@@ -573,11 +604,10 @@ export default function DevicesPage() {
                   type="button"
                   disabled={togglingId === selectedDevice.id}
                   onClick={() => handleToggleActive(selectedDevice)}
-                  className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors ${
-                    selectedDevice.isActive
-                      ? 'border-amber-300 text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/40'
-                      : 'border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/40'
-                  }`}
+                  className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors ${selectedDevice.isActive
+                    ? 'border-amber-300 text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/40'
+                    : 'border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/40'
+                    }`}
                 >
                   {selectedDevice.isActive ? <PowerOff className="size-3.5" /> : <Power className="size-3.5" />}
                   {selectedDevice.isActive
@@ -608,12 +638,21 @@ export default function DevicesPage() {
       {/* ══ ADD DEVICE MODAL ═════════════════════════════════════ */}
       {isAddOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4" onClick={() => setIsAddOpen(false)}>
-          <div className="w-full max-w-md rounded-2xl bg-surface p-6 shadow-2xl border border-line space-y-4" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="w-full max-w-md rounded-2xl glass-modal p-6 shadow-2xl space-y-4"
+            role="dialog"
+            aria-label={language === 'vi' ? 'Đăng ký thiết bị phần cứng mới' : 'Register New Hardware Node'}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between border-b border-line pb-3">
               <h3 className="text-base font-bold text-ink">
                 {language === 'vi' ? 'Đăng ký thiết bị phần cứng mới' : 'Register New Hardware Node'}
               </h3>
-              <button onClick={() => setIsAddOpen(false)} className="text-muted hover:text-ink">
+              <button
+                onClick={() => setIsAddOpen(false)}
+                className="text-muted hover:text-ink"
+                aria-label={language === 'vi' ? 'Đóng biểu mẫu thêm thiết bị' : 'Close add device form'}
+              >
                 <X className="size-5" />
               </button>
             </div>
@@ -700,7 +739,12 @@ export default function DevicesPage() {
       {/* ══ EDIT DEVICE MODAL ════════════════════════════════════ */}
       {editDevice && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4" onClick={() => setEditDevice(null)}>
-          <div className="w-full max-w-md rounded-2xl bg-surface p-6 shadow-2xl border border-line space-y-4" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="w-full max-w-md rounded-2xl glass-modal p-6 shadow-2xl space-y-4"
+            role="dialog"
+            aria-label={language === 'vi' ? 'Chỉnh sửa thiết bị' : 'Edit Device'}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between border-b border-line pb-3">
               <div>
                 <h3 className="text-base font-bold text-ink">
@@ -708,7 +752,11 @@ export default function DevicesPage() {
                 </h3>
                 <p className="text-[11px] font-mono text-muted mt-0.5">{editDevice.deviceCode}</p>
               </div>
-              <button onClick={() => setEditDevice(null)} className="text-muted hover:text-ink">
+              <button
+                onClick={() => setEditDevice(null)}
+                className="text-muted hover:text-ink"
+                aria-label={language === 'vi' ? 'Đóng biểu mẫu chỉnh sửa' : 'Close edit device form'}
+              >
                 <X className="size-5" />
               </button>
             </div>
@@ -779,7 +827,8 @@ export default function DevicesPage() {
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4" onClick={() => !isDeleting && setDeleteTarget(null)}>
           <div
-            className="w-full max-w-sm rounded-2xl bg-surface p-6 shadow-2xl border border-rose-200 dark:border-rose-900 space-y-4"
+            className="w-full max-w-sm rounded-2xl glass-modal p-6 shadow-2xl border border-rose-200/80 dark:border-rose-900/80 space-y-4"
+            role="dialog"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start gap-3">

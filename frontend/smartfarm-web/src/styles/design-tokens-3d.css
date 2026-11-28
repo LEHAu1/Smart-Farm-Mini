@@ -1,23 +1,44 @@
 /* ==========================================================================
-   SMART FARM MINI GARDEN — 3D & GLASSMORPHISM DESIGN TOKENS
+   SMART FARM MINI GARDEN — 3D & ULTRA-TRANSPARENT GLASSMORPHISM DESIGN TOKENS
    ========================================================================== */
 
 :root {
-  /* 3D Shadows & Layered Depth — Light Mode */
-  --shadow-3d-flat: 0 1px 3px 0 rgba(16, 24, 40, 0.06), 0 1px 2px 0 rgba(16, 24, 40, 0.04);
+  /* ── 1. Global Ultra-Transparent Glass Settings (Light Mode) ── */
+  --glass-blur: 0px;
+  --glass-saturate: 115%;
+  --glass-alpha-card: 0.08;
+  --glass-alpha-bar: 0.10;
+  --glass-alpha-hero: 0.18;
+  --glass-alpha-input: 0.20;
+  --sylva-softness: 0.20;
+
+  /* Dynamic Glass Surfaces — Light Mode */
+  --glass-bg: rgba(255, 255, 255, var(--glass-alpha-card));
+  --glass-bar-bg: rgba(255, 255, 255, var(--glass-alpha-bar));
+  --glass-hero-bg: rgba(16, 185, 129, var(--glass-alpha-hero));
+  --glass-input-bg: rgba(255, 255, 255, var(--glass-alpha-input));
+
+  /* 3D Glass Borders & Rim Highlights — Light Mode */
+  --glass-border: rgba(255, 255, 255, 0.55);
+  --glass-border-top: rgba(255, 255, 255, 0.85);
+  --glass-highlight: rgba(255, 255, 255, 0.65);
+  --glass-rim-bottom: rgba(255, 255, 255, 0.35);
+
+  /* Multi-layered Soft Shadows & Rim Glow — Light Mode */
+  --shadow-3d-flat: 0 1px 3px 0 rgba(16, 24, 40, 0.05), 0 1px 2px 0 rgba(16, 24, 40, 0.03);
   --shadow-3d-raised: 
-    0 4px 10px -1px rgba(16, 24, 40, 0.08),
-    0 2px 4px -2px rgba(16, 24, 40, 0.05),
-    0 0 0 1px rgba(16, 24, 40, 0.04),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.85);
+    0 8px 24px -2px rgba(16, 24, 40, 0.08),
+    0 2px 6px -2px rgba(16, 24, 40, 0.04),
+    inset 0 1px 0 0 var(--glass-highlight),
+    inset 0 -1px 0 0 var(--glass-rim-bottom);
   --shadow-3d-floating: 
-    0 14px 28px -4px rgba(16, 24, 40, 0.12),
+    0 16px 36px -4px rgba(16, 24, 40, 0.12),
     0 6px 12px -2px rgba(16, 24, 40, 0.06),
-    0 0 0 1px rgba(16, 24, 40, 0.06),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.95);
+    inset 0 1px 0 0 var(--glass-highlight),
+    inset 0 -1px 0 0 var(--glass-rim-bottom);
   --shadow-3d-active:
     inset 0 2px 4px 0 rgba(16, 24, 40, 0.08),
-    0 1px 2px 0 rgba(16, 24, 40, 0.05);
+    0 1px 2px 0 rgba(16, 24, 40, 0.04);
 
   /* Inner Glows & Radial Highlights */
   --glow-emerald: 0 0 24px -4px rgba(16, 185, 129, 0.25);
@@ -25,16 +46,6 @@
   --glow-rose: 0 0 24px -4px rgba(239, 68, 68, 0.25);
   --glow-water: 0 0 24px -4px rgba(56, 189, 248, 0.25);
   --glow-sidebar-active: inset 0 0 12px 0 rgba(16, 185, 129, 0.14), 0 2px 8px -1px rgba(16, 185, 129, 0.22);
-
-  /* Glassmorphism Surfaces */
-  --glass-bg: rgba(255, 255, 255, 0.85);
-  --glass-border: rgba(226, 232, 240, 0.85);
-  --glass-highlight: rgba(255, 255, 255, 0.95);
-  
-  /* Ambient Orbs */
-  --ambient-orb-1: rgba(16, 185, 129, 0.09);
-  --ambient-orb-2: rgba(14, 165, 233, 0.07);
-  --ambient-orb-3: rgba(20, 184, 166, 0.08);
 
   /* Semantic Color Constants */
   --color-3d-emerald: #10b981;
@@ -45,21 +56,42 @@
 }
 
 :root.dark, html.dark {
-  /* 3D Shadows & Layered Depth — Dark Mode */
-  --shadow-3d-flat: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  /* ── 1. Global Ultra-Transparent Glass Settings (Dark Mode) ── */
+  --glass-blur: 0px;
+  --glass-saturate: 115%;
+  --glass-alpha-card: 0.05;
+  --glass-alpha-bar: 0.07;
+  --glass-alpha-hero: 0.14;
+  --glass-alpha-input: 0.16;
+  --sylva-softness: 0.26;
+
+  /* Dynamic Glass Surfaces — Dark Mode */
+  --glass-bg: rgba(15, 23, 42, var(--glass-alpha-card));
+  --glass-bar-bg: rgba(15, 23, 42, var(--glass-alpha-bar));
+  --glass-hero-bg: rgba(6, 78, 59, var(--glass-alpha-hero));
+  --glass-input-bg: rgba(15, 23, 42, var(--glass-alpha-input));
+
+  /* 3D Glass Borders & Rim Highlights — Dark Mode */
+  --glass-border: rgba(255, 255, 255, 0.18);
+  --glass-border-top: rgba(255, 255, 255, 0.38);
+  --glass-highlight: rgba(255, 255, 255, 0.20);
+  --glass-rim-bottom: rgba(255, 255, 255, 0.09);
+
+  /* Multi-layered Soft Shadows & Rim Glow — Dark Mode */
+  --shadow-3d-flat: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
   --shadow-3d-raised: 
-    0 8px 20px -2px rgba(0, 0, 0, 0.55),
-    0 3px 8px -1px rgba(0, 0, 0, 0.4),
-    0 0 0 1px rgba(255, 255, 255, 0.08),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.14);
+    0 10px 28px -4px rgba(0, 0, 0, 0.6),
+    0 4px 10px -2px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 0 var(--glass-highlight),
+    inset 0 -1px 0 0 var(--glass-rim-bottom);
   --shadow-3d-floating: 
-    0 18px 36px -4px rgba(0, 0, 0, 0.7),
+    0 20px 44px -4px rgba(0, 0, 0, 0.75),
     0 8px 16px -2px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(255, 255, 255, 0.12),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
+    inset 0 1px 0 0 var(--glass-highlight),
+    inset 0 -1px 0 0 var(--glass-rim-bottom);
   --shadow-3d-active:
-    inset 0 2px 6px 0 rgba(0, 0, 0, 0.65),
-    0 1px 2px 0 rgba(0, 0, 0, 0.45);
+    inset 0 2px 6px 0 rgba(0, 0, 0, 0.6),
+    0 1px 2px 0 rgba(0, 0, 0, 0.4);
 
   /* Inner Glows & Radial Highlights */
   --glow-emerald: 0 0 32px -2px rgba(16, 185, 129, 0.38);
@@ -67,16 +99,6 @@
   --glow-rose: 0 0 32px -2px rgba(239, 68, 68, 0.38);
   --glow-water: 0 0 32px -2px rgba(56, 189, 248, 0.38);
   --glow-sidebar-active: inset 0 0 16px 0 rgba(16, 185, 129, 0.22), 0 2px 12px -1px rgba(16, 185, 129, 0.32);
-
-  /* Glassmorphism Surfaces */
-  --glass-bg: rgba(15, 23, 42, 0.78);
-  --glass-border: rgba(255, 255, 255, 0.09);
-  --glass-highlight: rgba(255, 255, 255, 0.15);
-
-  /* Ambient Orbs */
-  --ambient-orb-1: rgba(16, 185, 129, 0.14);
-  --ambient-orb-2: rgba(14, 165, 233, 0.11);
-  --ambient-orb-3: rgba(5, 150, 105, 0.12);
 
   /* Semantic Color Constants */
   --color-3d-emerald: #34d399;

@@ -75,7 +75,7 @@ export default function SettingsPage() {
                   className={`rounded-xl border p-2.5 text-xs font-bold transition-all ${
                     language === 'vi'
                       ? 'border-primary bg-primary text-white shadow-xs'
-                      : 'border-line bg-canvas text-ink hover:bg-surface-hover'
+                      : 'border-line glass-panel-subtle text-ink hover:bg-white/10'
                   }`}
                 >
                   🇻🇳 Tiếng Việt
@@ -86,7 +86,7 @@ export default function SettingsPage() {
                   className={`rounded-xl border p-2.5 text-xs font-bold transition-all ${
                     language === 'en'
                       ? 'border-primary bg-primary text-white shadow-xs'
-                      : 'border-line bg-canvas text-ink hover:bg-surface-hover'
+                      : 'border-line glass-panel-subtle text-ink hover:bg-white/10'
                   }`}
                 >
                   🇬🇧 English
@@ -106,7 +106,7 @@ export default function SettingsPage() {
                   className={`rounded-xl border p-2.5 text-xs font-bold transition-all flex items-center justify-center gap-2 ${
                     theme === 'light'
                       ? 'border-primary bg-primary text-white shadow-xs'
-                      : 'border-line bg-canvas text-ink hover:bg-surface-hover'
+                      : 'border-line glass-panel-subtle text-ink hover:bg-white/10'
                   }`}
                 >
                   <Sun className="size-4" />
@@ -118,7 +118,7 @@ export default function SettingsPage() {
                   className={`rounded-xl border p-2.5 text-xs font-bold transition-all flex items-center justify-center gap-2 ${
                     theme === 'dark'
                       ? 'border-primary bg-primary text-white shadow-xs'
-                      : 'border-line bg-canvas text-ink hover:bg-surface-hover'
+                      : 'border-line glass-panel-subtle text-ink hover:bg-white/10'
                   }`}
                 >
                   <Moon className="size-4" />
@@ -136,7 +136,7 @@ export default function SettingsPage() {
             <select
               value={timezone}
               onChange={(e) => setTimezone(e.target.value)}
-              className="w-full sm:w-1/2 rounded-xl border border-line bg-canvas px-3 py-2 text-xs font-medium text-ink focus:border-primary focus:outline-none"
+              className="w-full sm:w-1/2 rounded-xl glass-input px-3 py-2 text-xs font-medium text-ink"
             >
               <option value="Asia/Ho_Chi_Minh">UTC+07:00 (Hà Nội, TP.HCM, Bangkok)</option>
               <option value="Asia/Tokyo">UTC+09:00 (Tokyo, Seoul)</option>
@@ -157,7 +157,7 @@ export default function SettingsPage() {
           </div>
 
           <div className="space-y-3 text-xs">
-            <label className="flex items-center justify-between rounded-xl border border-line bg-canvas p-3 cursor-pointer">
+            <label className="flex items-center justify-between rounded-xl glass-panel-subtle p-3 cursor-pointer">
               <div>
                 <p className="font-bold text-ink">
                   {language === 'vi' ? 'Cảnh báo cạn nước bình chứa (< 15%)' : 'Low water reservoir warning (< 15%)'}
@@ -176,7 +176,7 @@ export default function SettingsPage() {
               />
             </label>
 
-            <label className="flex items-center justify-between rounded-xl border border-line bg-canvas p-3 cursor-pointer">
+            <label className="flex items-center justify-between rounded-xl glass-panel-subtle p-3 cursor-pointer">
               <div>
                 <p className="font-bold text-ink">
                   {language === 'vi' ? 'Cảnh báo nhiệt độ khí cực đoan (> 38°C)' : 'Extreme temperature warning (> 38°C)'}
@@ -226,7 +226,7 @@ export default function SettingsPage() {
         </section>
 
         {/* System Version & Security Disclaimer */}
-        <section className="panel space-y-3 bg-canvas/60">
+        <section className="panel space-y-3 glass-panel-subtle">
           <div className="flex items-center justify-between text-xs">
             <span className="flex items-center gap-1.5 font-semibold text-muted">
               <Shield className="size-3.5" />

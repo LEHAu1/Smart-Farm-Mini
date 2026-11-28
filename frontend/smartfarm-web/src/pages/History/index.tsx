@@ -158,7 +158,7 @@ export default function HistoryPage() {
                 setSelectedDeviceId(e.target.value);
                 setPageIndex(1);
               }}
-              className="w-full rounded-xl border border-line bg-canvas px-3 py-2 text-xs font-medium text-ink focus:border-primary focus:outline-none"
+              className="w-full rounded-xl glass-input px-3 py-2 text-xs font-medium text-ink"
             >
               <option value="">{language === 'vi' ? 'Tất cả thiết bị' : 'All Devices'}</option>
               {devices.map((d) => (
@@ -180,7 +180,7 @@ export default function HistoryPage() {
                 setSelectedMode(e.target.value);
                 setPageIndex(1);
               }}
-              className="w-full rounded-xl border border-line bg-canvas px-3 py-2 text-xs font-medium text-ink focus:border-primary focus:outline-none"
+              className="w-full rounded-xl glass-input px-3 py-2 text-xs font-medium text-ink"
             >
               <option value="">{language === 'vi' ? 'Tất cả chế độ' : 'All Modes'}</option>
               <option value="1">{language === 'vi' ? 'Thủ công (Manual)' : 'Manual'}</option>
@@ -200,7 +200,7 @@ export default function HistoryPage() {
                 setFromUtc(e.target.value);
                 setPageIndex(1);
               }}
-              className="w-full rounded-xl border border-line bg-canvas px-3 py-2 text-xs font-medium text-ink focus:border-primary focus:outline-none"
+              className="w-full rounded-xl glass-input px-3 py-2 text-xs font-medium text-ink"
             />
           </div>
 
@@ -216,7 +216,7 @@ export default function HistoryPage() {
                 setToUtc(e.target.value);
                 setPageIndex(1);
               }}
-              className="w-full rounded-xl border border-line bg-canvas px-3 py-2 text-xs font-medium text-ink focus:border-primary focus:outline-none"
+              className="w-full rounded-xl glass-input px-3 py-2 text-xs font-medium text-ink"
             />
           </div>
         </div>
@@ -225,8 +225,8 @@ export default function HistoryPage() {
       {/* Logs Table Panel */}
       <section className="panel overflow-hidden p-0">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-canvas border-b border-line text-[11px] font-bold text-muted uppercase tracking-wider">
+          <table className="glass-table text-left text-xs">
+            <thead className="text-[11px] font-bold text-muted uppercase tracking-wider">
               <tr>
                 <th className="py-3 px-4">{language === 'vi' ? 'Thời gian bắt đầu' : 'Start Time'}</th>
                 <th className="py-3 px-4">{language === 'vi' ? 'Thiết bị' : 'Device'}</th>
@@ -263,7 +263,7 @@ export default function HistoryPage() {
                 logs.map((log) => {
                   const deviceName = devices.find((d) => d.id === log.deviceId)?.name || log.deviceId.substring(0, 8);
                   return (
-                    <tr key={log.id} className="hover:bg-surface-hover transition-colors">
+                    <tr key={log.id} className="transition-colors">
                       <td className="py-3 px-4 whitespace-nowrap font-medium">
                         {new Date(log.startedAtUtc).toLocaleString([], {
                           year: 'numeric',
@@ -313,7 +313,7 @@ export default function HistoryPage() {
               type="button"
               disabled={pageIndex <= 1 || isLoading}
               onClick={() => setPageIndex((p) => Math.max(1, p - 1))}
-              className="flex items-center justify-center size-8 rounded-lg border border-line bg-surface text-ink hover:bg-surface-hover disabled:opacity-40"
+              className="glass-button-secondary flex items-center justify-center size-8 rounded-lg text-ink disabled:opacity-40"
             >
               <ChevronLeft className="size-4" />
             </button>
@@ -324,7 +324,7 @@ export default function HistoryPage() {
               type="button"
               disabled={pageIndex >= totalPages || isLoading}
               onClick={() => setPageIndex((p) => Math.min(totalPages, p + 1))}
-              className="flex items-center justify-center size-8 rounded-lg border border-line bg-surface text-ink hover:bg-surface-hover disabled:opacity-40"
+              className="glass-button-secondary flex items-center justify-center size-8 rounded-lg text-ink disabled:opacity-40"
             >
               <ChevronRight className="size-4" />
             </button>
