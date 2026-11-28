@@ -568,32 +568,112 @@
     opacity: 0.9;
   }
 
-  /* Text Contrast Backing Mask for Auth Left Hero Column */
+  /* Scrollbar hiding utility while preserving wheel, touch, and keyboard scrolling */
+  .auth-scrollable,
+  .no-scrollbar {
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+  }
+
+  .auth-scrollable::-webkit-scrollbar,
+  .no-scrollbar::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  /* Text Contrast Backing Mask for Auth Left Hero Column - Soft Feathered Oval */
   .auth-text-backdrop {
     position: absolute;
-    inset: -1.5rem -2rem;
-    border-radius: 1.5rem;
-    background: radial-gradient(ellipse at center, rgba(6, 25, 20, 0.78) 0%, rgba(6, 25, 20, 0.55) 55%, transparent 85%);
+    inset: -2.5rem -3.5rem;
+    border-radius: 9999px;
+    background: radial-gradient(
+      ellipse 65% 55% at 50% 50%,
+      rgba(4, 30, 24, 0.42) 0%,
+      rgba(4, 30, 24, 0.28) 45%,
+      rgba(4, 30, 24, 0.10) 70%,
+      transparent 100%
+    );
     pointer-events: none;
     z-index: -1;
+    filter: blur(14px);
   }
 
   :root:not(.dark) .auth-text-backdrop {
-    background: radial-gradient(ellipse at center, rgba(6, 78, 59, 0.72) 0%, rgba(6, 78, 59, 0.45) 55%, transparent 85%);
+    background: radial-gradient(
+      ellipse 65% 55% at 50% 50%,
+      rgba(6, 78, 59, 0.32) 0%,
+      rgba(6, 78, 59, 0.20) 45%,
+      rgba(6, 78, 59, 0.06) 70%,
+      transparent 100%
+    );
+    filter: blur(14px);
   }
 
-  /* Responsive Viewport Height Constraints (for screens <= 768px height) */
-  @media (max-height: 768px) {
+  /* Viewport Height Responsive Adaptations for Auth Left Column & Form Card */
+  @media (max-height: 840px) {
     .auth-card-glass {
       padding: 1.25rem 1.5rem !important;
     }
-    .auth-compact-margin {
-      margin-top: 0.5rem !important;
-      margin-bottom: 0.5rem !important;
+    .auth-hero-plant {
+      height: 11rem !important;
+      margin-bottom: 0.25rem !important;
+    }
+  }
+
+  /* Height <= 800px: collapse 3 feature cards into a compact row of icons, hide secondary descriptions */
+  @media (max-height: 800px) {
+    .auth-card-glass {
+      padding: 1rem 1.25rem !important;
     }
     .auth-hero-plant {
-      height: 10rem !important;
-      margin-bottom: 0.25rem !important;
+      height: 9.5rem !important;
+    }
+    .auth-feature-cards {
+      display: grid !important;
+      grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+      gap: 0.5rem !important;
+      margin-top: 0.5rem !important;
+    }
+    .auth-feature-card {
+      padding: 0.4rem 0.5rem !important;
+      justify-content: center !important;
+      text-align: center !important;
+      flex-direction: column !important;
+      gap: 0.25rem !important;
+    }
+    .auth-feature-card-desc {
+      display: none !important;
+    }
+    .auth-feature-card p.text-xs {
+      font-size: 10px !important;
+      line-height: 1.2 !important;
+      text-overflow: ellipsis !important;
+      overflow: hidden !important;
+      white-space: nowrap !important;
+      max-width: 100% !important;
+    }
+    .auth-story-subtitle {
+      font-size: 0.8125rem !important;
+      line-height: 1.4 !important;
+      margin-top: 0.375rem !important;
+    }
+  }
+
+  /* Height <= 700px: hide feature cards completely, shrink hero plant to guarantee no scroll */
+  @media (max-height: 700px) {
+    .auth-feature-cards {
+      display: none !important;
+    }
+    .auth-story-subtitle {
+      display: none !important;
+    }
+    .auth-hero-plant {
+      height: 7.5rem !important;
+      margin-bottom: 0 !important;
+    }
+    .auth-card-glass {
+      padding: 0.875rem 1.25rem !important;
     }
   }
 

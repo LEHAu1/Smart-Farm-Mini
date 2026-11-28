@@ -38,7 +38,7 @@ export default function AuthLayout({
   const { language, toggleLanguage, t } = useLanguage();
 
   return (
-    <main className="min-h-[100dvh] flex flex-col lg:grid lg:grid-cols-2 bg-transparent text-ink transition-colors duration-200 overflow-x-hidden relative">
+    <main className="min-h-[100dvh] flex flex-col lg:grid lg:grid-cols-2 bg-transparent text-ink transition-colors duration-200 overflow-x-hidden relative auth-scrollable">
       {/* ── Background Scene Wrapper with Scale/Brightness Gateway Transition ── */}
       <div
         className={`fixed inset-0 z-0 pointer-events-none ${
@@ -103,53 +103,57 @@ export default function AuthLayout({
 
       {/* ── Cột trái: Brand Story & 3D Interactive Plant Visual Panel (Laptop, Desktop) ── */}
       <aside
-        className="hidden flex-col justify-between overflow-y-auto p-6 lg:p-10 xl:p-14 text-white lg:flex relative z-10 max-h-[100dvh]"
+        className="hidden flex-col justify-between overflow-y-auto auth-scrollable p-5 lg:p-8 xl:p-12 text-white lg:flex relative z-10 max-h-[100dvh]"
         aria-label="Smart Farm Mini"
       >
         {/* Top brand header */}
-        <div className="relative z-10 flex items-center gap-3">
-          <span className="flex size-10 items-center justify-center rounded-2xl bg-white/15 border border-white/20 text-white shadow-inner backdrop-blur-md shrink-0">
-            <Sprout className="size-5 text-emerald-300" />
+        <div className="relative z-10 flex items-center gap-3 shrink-0">
+          <span className="flex size-9 items-center justify-center rounded-xl bg-white/15 border border-white/20 text-white shadow-inner backdrop-blur-md shrink-0">
+            <Sprout className="size-4 sm:size-5 text-emerald-300" />
           </span>
           <div className="flex flex-col">
-            <span className="text-base font-bold tracking-tight text-white leading-tight drop-shadow-md">Smart Farm Mini</span>
+            <span className="text-sm sm:text-base font-bold tracking-tight text-white leading-tight drop-shadow-md">
+              Smart Farm Mini
+            </span>
             <span className="text-[10px] font-medium tracking-wider text-emerald-200/90 uppercase mt-0.5 drop-shadow-sm">
               Smart IoT Agriculture
             </span>
           </div>
         </div>
 
-        {/* 3D Interactive Plant Display (Desktop) */}
-        <div className="relative z-10 my-auto py-3 max-w-lg xl:max-w-xl 2xl:max-w-2xl flex flex-col items-center">
-          <div className="w-full max-w-xs h-48 sm:h-56 short:h-36 mb-2 flex items-center justify-center auth-hero-plant">
+        {/* 3D Interactive Plant Display & Story Block */}
+        <div className="relative z-10 my-auto py-1 max-w-lg xl:max-w-xl 2xl:max-w-2xl flex flex-col items-center w-full">
+          {/* Plant Canvas Container: Scaled cleanly without overlapping pill or footer */}
+          <div className="w-full max-w-xs h-40 sm:h-48 short:h-32 mb-1 flex items-center justify-center auth-hero-plant shrink-0">
             {plantSlot || (
               <AuthPlantScene mood={plantMood} progress={plantProgress} className="w-full h-full" />
             )}
           </div>
 
-          <div className="inline-flex items-center gap-2 rounded-full bg-black/35 dark:bg-black/45 border border-white/20 px-3 py-1 text-xs font-semibold text-emerald-300 backdrop-blur-md shadow-xs">
-            <Sparkles className="size-3.5 text-emerald-300" />
-            <span>{language === 'en' ? 'PRECISION DIGITAL FARMING' : 'NÔNG NGHIỆP SỐ CHUẨN XÁC'}</span>
-          </div>
-
-          {/* Text Contrast Mask: subtle dark radial backing strictly behind text block */}
-          <div className="relative mt-3 flex flex-col items-center">
+          {/* Text block with soft feathered radial backdrop */}
+          <div className="relative mt-1 sm:mt-2 flex flex-col items-center text-center max-w-md xl:max-w-lg">
             <div className="auth-text-backdrop" aria-hidden="true" />
 
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold leading-tight tracking-tight text-white text-center whitespace-pre-line text-contrast-heavy drop-shadow-md">
+            {/* Eyebrow badge: positioned cleanly right above title, never overlapping plant pedestal */}
+            <div className="inline-flex items-center gap-2 rounded-full bg-emerald-950/60 dark:bg-black/50 border border-emerald-400/30 px-3 py-1 text-[11px] font-semibold text-emerald-300 backdrop-blur-md shadow-xs mb-2">
+              <Sparkles className="size-3 text-emerald-300" />
+              <span>{language === 'en' ? 'PRECISION DIGITAL FARMING' : 'NÔNG NGHIỆP SỐ CHUẨN XÁC'}</span>
+            </div>
+
+            <h2 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-extrabold leading-tight tracking-tight text-white text-center whitespace-pre-line text-contrast-heavy drop-shadow-md">
               {language === 'en' ? 'Nurturing green shoots.\nGrowing everyday peace.' : storyTitle}
             </h2>
 
-            <p className="mt-2.5 max-w-md text-sm sm:text-base leading-relaxed text-slate-100 font-medium text-center text-shadow-contrast">
+            <p className="mt-2 text-xs sm:text-sm lg:text-base leading-relaxed text-slate-100 font-medium text-center text-shadow-contrast auth-story-subtitle">
               {language === 'en'
                 ? 'An IoT platform for plant irrigation, soil moisture sensing, and water reservoir tracking across multiple nodes.'
                 : storySubtitle}
             </p>
           </div>
 
-          {/* Feature Highlights Glass Cards */}
-          <div className="mt-5 grid grid-cols-1 gap-2 w-full pt-1">
-            <div className="flex items-center gap-3 rounded-xl bg-slate-900/50 dark:bg-black/45 border border-white/15 p-2.5 backdrop-blur-md transition-all hover:bg-slate-900/65 shadow-sm">
+          {/* Feature Highlights Glass Cards: Adaptable to viewport height */}
+          <div className="mt-4 grid grid-cols-1 gap-2 w-full pt-0.5 auth-feature-cards">
+            <div className="flex items-center gap-3 rounded-xl bg-slate-900/50 dark:bg-black/45 border border-white/15 p-2.5 backdrop-blur-md transition-all hover:bg-slate-900/65 shadow-sm auth-feature-card">
               <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-emerald-500/25 text-emerald-300">
                 <Activity className="size-3.5" />
               </div>
@@ -157,7 +161,7 @@ export default function AuthLayout({
                 <p className="text-xs font-semibold text-white truncate">
                   {language === 'en' ? 'Multi-Device Plant Monitoring' : 'Quản lý nhiều thiết bị trồng cây'}
                 </p>
-                <p className="text-[11px] text-emerald-200/90 truncate">
+                <p className="text-[11px] text-emerald-200/90 truncate auth-feature-card-desc">
                   {language === 'en'
                     ? 'Track soil moisture and ambient temperature across all nodes'
                     : 'Một tài khoản theo dõi độ ẩm đất, nhiệt độ của nhiều chậu cây'}
@@ -165,7 +169,7 @@ export default function AuthLayout({
               </div>
             </div>
 
-            <div className="flex items-center gap-3 rounded-xl bg-slate-900/50 dark:bg-black/45 border border-white/15 p-2.5 backdrop-blur-md transition-all hover:bg-slate-900/65 shadow-sm">
+            <div className="flex items-center gap-3 rounded-xl bg-slate-900/50 dark:bg-black/45 border border-white/15 p-2.5 backdrop-blur-md transition-all hover:bg-slate-900/65 shadow-sm auth-feature-card">
               <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-cyan-500/25 text-cyan-300">
                 <Droplets className="size-3.5" />
               </div>
@@ -173,7 +177,7 @@ export default function AuthLayout({
                 <p className="text-xs font-semibold text-white truncate">
                   {language === 'en' ? 'Soil & Reservoir Tracking' : 'Đo độ ẩm đất & Mực nước bồn'}
                 </p>
-                <p className="text-[11px] text-emerald-200/90 truncate">
+                <p className="text-[11px] text-emerald-200/90 truncate auth-feature-card-desc">
                   {language === 'en'
                     ? 'Ensure optimal soil wetness and monitor reservoir water levels'
                     : 'Giữ ẩm tối ưu cho rễ cây và giám sát lượng nước còn lại'}
@@ -181,7 +185,7 @@ export default function AuthLayout({
               </div>
             </div>
 
-            <div className="flex items-center gap-3 rounded-xl bg-slate-900/50 dark:bg-black/45 border border-white/15 p-2.5 backdrop-blur-md transition-all hover:bg-slate-900/65 shadow-sm">
+            <div className="flex items-center gap-3 rounded-xl bg-slate-900/50 dark:bg-black/45 border border-white/15 p-2.5 backdrop-blur-md transition-all hover:bg-slate-900/65 shadow-sm auth-feature-card">
               <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-amber-500/25 text-amber-300">
                 <BellRing className="size-3.5" />
               </div>
@@ -189,7 +193,7 @@ export default function AuthLayout({
                 <p className="text-xs font-semibold text-white truncate">
                   {language === 'en' ? 'Smart Irrigation Control' : 'Điều khiển tưới tiêu thông minh'}
                 </p>
-                <p className="text-[11px] text-emerald-200/90 truncate">
+                <p className="text-[11px] text-emerald-200/90 truncate auth-feature-card-desc">
                   {language === 'en'
                     ? 'Automate pump cycles by soil threshold or execute watering'
                     : 'Thiết lập tự động bơm tưới theo ngưỡng ẩm hoặc điều khiển tưới'}
@@ -200,7 +204,7 @@ export default function AuthLayout({
         </div>
 
         {/* Footer info */}
-        <div className="relative z-10 flex items-center justify-between border-t border-white/15 pt-3 text-xs text-emerald-200/80">
+        <div className="relative z-10 flex items-center justify-between border-t border-white/15 pt-2.5 text-xs text-emerald-200/80 shrink-0">
           <span>{language === 'en' ? 'A small garden. A greener tomorrow.' : 'Một khu vườn nhỏ. Một khởi đầu xanh.'}</span>
           <span className="font-mono text-[11px] bg-white/15 px-2 py-0.5 rounded-md">SmartFarm v2.1</span>
         </div>
@@ -208,7 +212,7 @@ export default function AuthLayout({
 
       {/* ── Cột phải: Form Content Side (Mobile, Tablet, Desktop, Touch) ── */}
       <section
-        className="flex min-h-[100dvh] items-center justify-center px-4 py-6 sm:py-8 md:px-8 lg:px-12 2xl:px-16 bg-transparent relative z-10 overflow-y-auto"
+        className="flex min-h-[100dvh] items-center justify-center px-4 py-6 sm:py-8 md:px-8 lg:px-12 2xl:px-16 bg-transparent relative z-10 overflow-y-auto auth-scrollable"
         aria-labelledby="auth-title"
       >
         {/* Top-Right Theme & Language Toolbar (Touch friendly, >=44px touch target) */}

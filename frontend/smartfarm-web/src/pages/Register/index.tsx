@@ -251,11 +251,11 @@ export default function RegisterPage() {
       <div className="space-y-4">
         {/* ── Accessible Stepper Indicator (aria-current="step" & aria-live) ── */}
         <div className="space-y-2 pb-1" aria-label="Tiến trình đăng ký">
-          <div className="flex items-center justify-between text-xs font-semibold text-muted">
+          <div className="flex items-center justify-between text-xs font-bold text-slate-800 dark:text-slate-100">
             <span aria-live="polite">
               {language === 'en' ? `Step ${currentStep} of 3` : `Bước ${currentStep}/3`}
             </span>
-            <span className="text-[11px] font-bold text-primary tabular-nums">
+            <span className="text-[11px] font-extrabold text-emerald-700 dark:text-emerald-300 tabular-nums">
               {currentStep === 1
                 ? (language === 'en' ? 'Account identity' : 'Tên tài khoản')
                 : currentStep === 2
@@ -309,7 +309,7 @@ export default function RegisterPage() {
               <div>
                 <label
                   htmlFor="reg-username"
-                  className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5"
+                  className="block text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white mb-1.5"
                 >
                   {t('auth_username_label', 'Tên người dùng')} <span className="text-rose-500">*</span>
                 </label>
@@ -351,7 +351,7 @@ export default function RegisterPage() {
                 <div className="flex items-center justify-between mb-1.5">
                   <label
                     htmlFor="reg-display-name"
-                    className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300"
+                    className="block text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white"
                   >
                     {t('auth_display_name_label', 'Tên hiển thị (Tùy chọn)')}
                   </label>
@@ -393,7 +393,7 @@ export default function RegisterPage() {
               <div>
                 <label
                   htmlFor="reg-email"
-                  className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5"
+                  className="block text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white mb-1.5"
                 >
                   {t('auth_email_label', 'Email')} <span className="text-rose-500">*</span>
                 </label>
@@ -459,7 +459,7 @@ export default function RegisterPage() {
               <div>
                 <label
                   htmlFor="reg-password"
-                  className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5"
+                  className="block text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white mb-1.5"
                 >
                   {t('auth_password_label', 'Mật khẩu')} <span className="text-rose-500">*</span>
                 </label>
@@ -512,7 +512,7 @@ export default function RegisterPage() {
               <div>
                 <label
                   htmlFor="reg-confirm-password"
-                  className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5"
+                  className="block text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white mb-1.5"
                 >
                   {t('auth_confirm_password_label', 'Xác nhận mật khẩu')} <span className="text-rose-500">*</span>
                 </label>
@@ -593,9 +593,9 @@ export default function RegisterPage() {
           )}
 
           {/* Link back to Login */}
-          <p className="pt-2 text-center text-xs sm:text-sm text-muted">
+          <p className="pt-2 text-center text-xs sm:text-sm text-slate-800 dark:text-slate-200">
             {t('auth_already_have_account', 'Đã có tài khoản?')}{' '}
-            <Link to="/login" className="font-semibold text-primary hover:underline inline-block py-1.5 px-1 touch-manipulation">
+            <Link to="/login" className="font-extrabold text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 hover:underline inline-block py-1.5 px-1 touch-manipulation">
               {t('auth_login_now', 'Đăng nhập ngay')}
             </Link>
           </p>

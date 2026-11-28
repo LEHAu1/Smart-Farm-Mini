@@ -270,22 +270,22 @@ export default function LoginPage() {
 
           {/* Divider: Clean transparent background with subtle horizontal rules */}
           <div className="flex items-center gap-3 my-2.5 sm:my-3" aria-hidden="true">
-            <div className="flex-1 h-px bg-white/20 dark:bg-white/15" />
-            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 text-shadow-contrast select-none">
+            <div className="flex-1 h-px bg-slate-300 dark:bg-white/20" />
+            <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-slate-800 dark:text-slate-100 text-shadow-contrast select-none">
               {t('auth_or_divider', 'HOẶC TIẾP TỤC VỚI EMAIL')}
             </span>
-            <div className="flex-1 h-px bg-white/20 dark:bg-white/15" />
+            <div className="flex-1 h-px bg-slate-300 dark:bg-white/20" />
           </div>
 
           {/* Traditional Email / Password Form */}
           <form onSubmit={handleSubmit} noValidate aria-busy={isSubmitting} className="space-y-3 sm:space-y-3.5">
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-xs font-bold uppercase tracking-wider text-ink mb-1">
+              <label htmlFor="email" className="block text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white mb-1">
                 {t('auth_email_label', 'Email')}
               </label>
               <div className="relative">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-muted">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-500 dark:text-slate-400">
                   <Mail className="size-4" />
                 </div>
                 <input
@@ -320,15 +320,17 @@ export default function LoginPage() {
             {/* Password Field */}
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label htmlFor="password" className="block text-xs font-bold uppercase tracking-wider text-ink">
+                <label htmlFor="password" className="block text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
                   {t('auth_password_label', 'Mật khẩu')}
                 </label>
                 <span
-                  className="text-xs text-slate-700 dark:text-slate-300 cursor-not-allowed select-none inline-flex items-center gap-1.5"
+                  className="text-xs text-slate-800 dark:text-slate-100 cursor-not-allowed select-none inline-flex items-center gap-1.5"
                   title="Chức năng đang phát triển"
                 >
-                  <span className="font-medium text-shadow-contrast">{langContext?.language === 'en' ? 'Forgot password?' : 'Quên mật khẩu?'}</span>
-                  <span className="text-[10px] bg-white/15 dark:bg-white/10 border border-white/20 px-1.5 py-0.5 rounded text-emerald-700 dark:text-emerald-300 font-semibold shadow-2xs">
+                  <span className="font-semibold text-shadow-contrast">
+                    {langContext?.language === 'en' ? 'Forgot password?' : 'Quên mật khẩu?'}
+                  </span>
+                  <span className="text-[10px] bg-emerald-500/20 dark:bg-emerald-400/20 border border-emerald-600/40 dark:border-emerald-400/40 px-1.5 py-0.5 rounded text-emerald-950 dark:text-emerald-200 font-bold shadow-2xs">
                     {langContext?.language === 'en' ? 'Soon' : 'Sắp có'}
                   </span>
                 </span>
@@ -398,9 +400,9 @@ export default function LoginPage() {
           </form>
 
           {/* Switch to Register */}
-          <div className="pt-2 text-center text-xs sm:text-sm text-muted">
+          <div className="pt-2 text-center text-xs sm:text-sm text-slate-800 dark:text-slate-200">
             {t('auth_no_account', 'Chưa có tài khoản?')}{' '}
-            <Link to="/register" className="font-semibold text-primary hover:text-primary-hover hover:underline inline-block py-1.5 px-1 touch-manipulation">
+            <Link to="/register" className="font-extrabold text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 hover:underline inline-block py-1.5 px-1 touch-manipulation">
               {t('auth_register_now', 'Đăng ký ngay')}
             </Link>
           </div>
